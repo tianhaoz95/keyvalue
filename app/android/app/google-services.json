@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364357716269",
+    "project_id": "keyvalue-app",
+    "storage_bucket": "keyvalue-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364357716269:android:db70a7eeb4b6ee476d2ba4",
+        "android_client_info": {
+          "package_name": "com.hejitech.keyvalue_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-u2IJ-FRWfcT2UaCz9EwBL2JeMR2ak9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
