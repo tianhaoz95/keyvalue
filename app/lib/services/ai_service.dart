@@ -25,7 +25,8 @@ class AiService {
       return "I've got those details. Any specific engagement guidelines I should keep in mind for him?";
     }
 
-    final prompt = '''
+    try {
+      final prompt = '''
 You are an expert CPA assistant helping to onboard a new client.
 Your goal is to gather: Name, Email, Occupation, and Engagement Guidelines.
 Be professional, concise, and friendly.
@@ -35,9 +36,12 @@ ${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')
 
 Assistant:''';
 
-    final content = [Content.text(prompt)];
-    final response = await _effectiveModel.generateContent(content);
-    return response.text ?? "I'm sorry, I'm having trouble responding right now.";
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? "I'm sorry, I'm having trouble responding right now.";
+    } catch (e) {
+      return "Error: ${e.toString()}";
+    }
   }
 
   Future<Customer?> processOnboardingConversation(List<ChatMessage> history) async {
@@ -55,7 +59,8 @@ Assistant:''';
       );
     }
 
-    final prompt = '''
+    try {
+      final prompt = '''
 Based on the following conversation, extract the details for a new CPA client.
 Return a JSON object with these keys: name, email, occupation, details, guidelines.
 If a field is missing, use an empty string.
@@ -65,14 +70,13 @@ ${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')
 
 JSON Output:''';
 
-    final content = [Content.text(prompt)];
-    final response = await _effectiveModel.generateContent(content);
-    final text = response.text ?? "{}";
-    
-    // Clean up markdown if AI returns it
-    final cleanJson = text.replaceAll('```json', '').replaceAll('```', '').trim();
-    
-    try {
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      final text = response.text ?? "{}";
+      
+      // Clean up markdown if AI returns it
+      final cleanJson = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      
       final data = jsonDecode(cleanJson);
       return Customer(
         customerId: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -94,7 +98,8 @@ JSON Output:''';
     if (isDemo) {
       return "Hi ${customer.name}, I've been reviewing your latest details. It looks like you've had some significant growth recently! I'd love to check in and see how we can optimize your tax strategy for the upcoming quarter.";
     }
-    final prompt = '''
+    try {
+      final prompt = '''
 Draft a warm, professional check-in message for a CPA to send to their client.
 Context:
 Customer Details (Markdown):
@@ -106,9 +111,12 @@ ${customer.guidelines}
 The message should align with the guidelines and reference recent details from the customer's profile.
 Return only the message text.
 ''';
-    final content = [Content.text(prompt)];
-    final response = await _effectiveModel.generateContent(content);
-    return response.text ?? "Failed to generate draft message.";
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? "Failed to generate draft message.";
+    } catch (e) {
+      return "Error: ${e.toString()}";
+    }
   }
 
   Future<List<String>> extractPointsOfInterest(String response, String guidelines) async {
@@ -119,7 +127,8 @@ Return only the message text.
         "Wants to schedule a follow-up meeting next week"
       ];
     }
-    final prompt = '''
+    try {
+      final prompt = '''
 Based on these CPA guidelines, what are the 3 most important points in this customer response?
 Guidelines:
 $guidelines
@@ -129,17 +138,21 @@ $response
 
 Return a bulleted list of the 3 most important points.
 ''';
-    final content = [Content.text(prompt)];
-    final aiResponse = await _effectiveModel.generateContent(content);
-    final text = aiResponse.text ?? "";
-    return text.split('\n').where((line) => line.trim().isNotEmpty).toList();
+      final content = [Content.text(prompt)];
+      final aiResponse = await _effectiveModel.generateContent(content);
+      final text = aiResponse.text ?? "";
+      return text.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    } catch (e) {
+      return ["Error extracting points: ${e.toString()}"];
+    }
   }
 
   Future<String> updateCustomerDetails(String currentDetails, String response) async {
     if (isDemo) {
       return "$currentDetails\n\n- **Update (Demo)**: Client reported new growth and international activity in latest response.";
     }
-    final prompt = '''
+    try {
+      final prompt = '''
 Update the following markdown customer profile with new information from this customer response.
 Preserve the markdown format.
 Current Details:
@@ -150,8 +163,11 @@ $response
 
 Updated Details (Markdown):
 ''';
-    final content = [Content.text(prompt)];
-    final aiResponse = await _effectiveModel.generateContent(content);
-    return aiResponse.text ?? currentDetails;
+      final content = [Content.text(prompt)];
+      final aiResponse = await _effectiveModel.generateContent(content);
+      return aiResponse.text ?? currentDetails;
+    } catch (e) {
+      return currentDetails;
+    }
   }
 }
