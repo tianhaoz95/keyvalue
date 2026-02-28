@@ -14,8 +14,15 @@ class CpaRepository {
   Future<Cpa?> getCpa(String uid) async {
     final doc = await _firestore.collection('cpas').doc(uid).get();
     if (doc.exists) {
-      return Cpa.fromMap(doc.data()!);
+      final data = doc.data();
+      if (data != null) {
+        return Cpa.fromMap(data);
+      }
     }
     return null;
+  }
+
+  Future<void> deleteCpa(String uid) async {
+    await _firestore.collection('cpas').doc(uid).delete();
   }
 }

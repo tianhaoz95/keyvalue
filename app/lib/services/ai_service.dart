@@ -2,11 +2,13 @@ import 'package:firebase_ai/firebase_ai.dart';
 import '../models/customer.dart';
 
 class AiService {
-  final GenerativeModel _model;
+  final GenerativeModel? _model;
   final bool isDemo;
 
   AiService({GenerativeModel? model, this.isDemo = false})
-      : _model = model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-1.5-flash');
+      : _model = model;
+
+  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-1.5-flash');
 
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) {
@@ -25,7 +27,7 @@ The message should align with the guidelines and reference recent details from t
 Return only the message text.
 ''';
     final content = [Content.text(prompt)];
-    final response = await _model.generateContent(content);
+    final response = await _effectiveModel.generateContent(content);
     return response.text ?? "Failed to generate draft message.";
   }
 
@@ -48,7 +50,7 @@ $response
 Return a bulleted list of the 3 most important points.
 ''';
     final content = [Content.text(prompt)];
-    final aiResponse = await _model.generateContent(content);
+    final aiResponse = await _effectiveModel.generateContent(content);
     final text = aiResponse.text ?? "";
     return text.split('\n').where((line) => line.trim().isNotEmpty).toList();
   }
@@ -69,7 +71,7 @@ $response
 Updated Details (Markdown):
 ''';
     final content = [Content.text(prompt)];
-    final aiResponse = await _model.generateContent(content);
+    final aiResponse = await _effectiveModel.generateContent(content);
     return aiResponse.text ?? currentDetails;
   }
 }

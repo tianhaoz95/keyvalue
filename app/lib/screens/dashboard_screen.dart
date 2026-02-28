@@ -20,11 +20,26 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(cpa.firmName),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'profile') {
+                _showEditProfileDialog(context, provider);
+              } else if (value == 'delete') {
+                _showDeleteAccountDialog(context, provider);
+              } else if (value == 'logout') {
+                provider.logout();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'profile', child: Text('Modify Profile')),
+              const PopupMenuItem(value: 'logout', child: Text('Logout')),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Text('Delete Account', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
         ],
       ),
@@ -91,6 +106,64 @@ class DashboardScreen extends StatelessWidget {
           _showAddCustomerDialog(context, provider);
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context, CpaProvider provider) {
+    final cpa = provider.currentCpa!;
+    final nameController = TextEditingController(text: cpa.name);
+    final firmController = TextEditingController(text: cpa.firmName);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modify Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
+            TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedCpa = cpa.copyWith(
+                name: nameController.text.trim(),
+                firmName: firmController.text.trim(),
+              );
+              await provider.updateProfile(updatedCpa);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, CpaProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account?'),
+        content: const Text('This action cannot be undone. All your data will be permanently removed.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              await provider.deleteAccount();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+              }
+            },
+            child: const Text('Delete Permanently'),
+          ),
+        ],
       ),
     );
   }

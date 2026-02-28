@@ -28,4 +28,18 @@ class Cpa {
       'email': email,
     };
   }
+
+  Cpa copyWith({
+    String? uid,
+    String? name,
+    String? firmName,
+    String? email,
+  }) {
+    return Cpa(
+      uid: uid ?? this.uid,
+      name: name ?? this.name,
+      firmName: firmName ?? this.firmName,
+      email: email ?? this.email,
+    );
+  }
 }

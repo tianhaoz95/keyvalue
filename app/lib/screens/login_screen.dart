@@ -12,11 +12,24 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _uidController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CpaProvider>(context);
+    // Auto-navigate if already logged in via remember me
+    if (provider.currentCpa != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('CPA Engagement App')),
       body: Center(
@@ -33,12 +46,35 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
               TextField(
-                controller: _uidController,
+                controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'CPA UID',
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.email),
                 ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (value) {
+                      setState(() => _rememberMe = value ?? false);
+                    },
+                  ),
+                  const Text('Remember Me'),
+                ],
               ),
               const SizedBox(height: 16),
               if (_isLoading)
@@ -72,40 +108,36 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _enterDemoMode() async {
-    final provider = Provider.of<CpaProvider>(context, listen: false);
-    final demoCpa = Cpa(
-      uid: 'demo_user',
-      name: 'Demo Accountant',
-      firmName: 'Sample Firm LLC',
-      email: 'demo@example.com',
+    // Demo mode currently unavailable with Firebase Auth.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Demo mode currently unavailable with Firebase Auth.')),
     );
-    await provider.register(demoCpa);
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
-    }
   }
 
   Future<void> _login() async {
-    if (_uidController.text.isEmpty) return;
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
     setState(() => _isLoading = true);
     final provider = Provider.of<CpaProvider>(context, listen: false);
-    await provider.login(_uidController.text);
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      if (provider.currentCpa != null) {
+    try {
+      await provider.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        rememberMe: _rememberMe,
+      );
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
-      } else {
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile not found. Please register.')),
+          SnackBar(content: Text('Login failed: $e')),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -113,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final nameController = TextEditingController();
     final firmController = TextEditingController();
     final emailController = TextEditingController();
-    final uidController = TextEditingController();
+    final passwordController = TextEditingController();
     bool isRegistering = false;
 
     showDialog(
@@ -126,10 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: uidController, decoration: const InputDecoration(labelText: 'Preferred UID (required)')),
+                TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email (required)')),
+                TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password (required)'), obscureText: true),
                 TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
                 TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
-                TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email Address')),
                 if (isRegistering)
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
@@ -145,31 +177,25 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             ElevatedButton(
               onPressed: isRegistering ? null : () async {
-                if (uidController.text.trim().isEmpty) {
+                if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('UID is required')),
+                    const SnackBar(content: Text('Email and Password are required')),
                   );
                   return;
                 }
 
                 setDialogState(() => isRegistering = true);
-                if (mounted) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('Starting registration...'), duration: Duration(seconds: 1)),
-                  );
-                }
 
                 try {
                   final cpa = Cpa(
-                    uid: uidController.text.trim(),
+                    uid: '', // Will be set by Firebase Auth
                     name: nameController.text.trim(),
                     firmName: firmController.text.trim(),
                     email: emailController.text.trim(),
                   );
                   
-                  // Use the outer context's provider to avoid route issues
                   final provider = Provider.of<CpaProvider>(this.context, listen: false);
-                  await provider.register(cpa);
+                  await provider.register(cpa, passwordController.text.trim());
 
                   if (mounted) {
                     Navigator.of(dialogContext).pop(); // Close dialog
