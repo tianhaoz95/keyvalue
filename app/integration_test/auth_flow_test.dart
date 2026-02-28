@@ -22,7 +22,7 @@ void main() {
     final cpaRepo = CpaRepository(firestore: firestore);
     final customerRepo = CustomerRepository(firestore: firestore);
     final engagementRepo = EngagementRepository(firestore: firestore);
-    final aiService = AiService(); // Can mock if needed, but for auth flow we mainly need repos
+    final aiService = AiService(isDemo: true); // Use demo mode for tests to avoid FirebaseAI initialization issues
 
     final provider = CpaProvider(
       cpaRepo: cpaRepo,

@@ -9,6 +9,7 @@ class Customer {
   final int engagementFrequencyDays;
   final DateTime nextEngagementDate;
   final DateTime lastEngagementDate;
+  final bool hasActiveDraft;
 
   Customer({
     required this.customerId,
@@ -19,6 +20,7 @@ class Customer {
     required this.engagementFrequencyDays,
     required this.nextEngagementDate,
     required this.lastEngagementDate,
+    this.hasActiveDraft = false,
   });
 
   factory Customer.fromMap(Map<String, dynamic> map) {
@@ -31,6 +33,7 @@ class Customer {
       engagementFrequencyDays: map['engagementFrequencyDays'] as int,
       nextEngagementDate: (map['nextEngagementDate'] as Timestamp).toDate(),
       lastEngagementDate: (map['lastEngagementDate'] as Timestamp).toDate(),
+      hasActiveDraft: map['hasActiveDraft'] as bool? ?? false,
     );
   }
 
@@ -44,6 +47,7 @@ class Customer {
       'engagementFrequencyDays': engagementFrequencyDays,
       'nextEngagementDate': Timestamp.fromDate(nextEngagementDate),
       'lastEngagementDate': Timestamp.fromDate(lastEngagementDate),
+      'hasActiveDraft': hasActiveDraft,
     };
   }
 
@@ -55,6 +59,7 @@ class Customer {
     int? engagementFrequencyDays,
     DateTime? nextEngagementDate,
     DateTime? lastEngagementDate,
+    bool? hasActiveDraft,
   }) {
     return Customer(
       customerId: customerId,
@@ -65,6 +70,7 @@ class Customer {
       engagementFrequencyDays: engagementFrequencyDays ?? this.engagementFrequencyDays,
       nextEngagementDate: nextEngagementDate ?? this.nextEngagementDate,
       lastEngagementDate: lastEngagementDate ?? this.lastEngagementDate,
+      hasActiveDraft: hasActiveDraft ?? this.hasActiveDraft,
     );
   }
 }

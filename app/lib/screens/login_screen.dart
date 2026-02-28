@@ -108,10 +108,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _enterDemoMode() async {
-    // Demo mode currently unavailable with Firebase Auth.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Demo mode currently unavailable with Firebase Auth.')),
-    );
+    setState(() => _isLoading = true);
+    final provider = Provider.of<CpaProvider>(context, listen: false);
+    try {
+      await provider.loginDemo();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Demo mode failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _login() async {

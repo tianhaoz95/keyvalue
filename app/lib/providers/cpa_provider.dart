@@ -23,6 +23,12 @@ class CpaProvider with ChangeNotifier {
   List<Customer> _customers = [];
   List<Customer> get customers => _customers;
 
+  bool _isDiscovering = false;
+  bool get isDiscovering => _isDiscovering;
+
+  bool _isProcessingResponse = false;
+  bool get isProcessingResponse => _isProcessingResponse;
+
   CpaProvider({
     CpaRepository? cpaRepo,
     CustomerRepository? customerRepo,
@@ -75,6 +81,17 @@ class CpaProvider with ChangeNotifier {
     } on auth.FirebaseAuthException catch (e) {
       throw e.message ?? 'Login failed';
     }
+  }
+
+  Future<void> loginDemo() async {
+    _currentCpa = const Cpa(
+      uid: 'demo_user',
+      name: 'Demo User',
+      firmName: 'Demo Accounting Firm',
+      email: 'demo@example.com',
+    );
+    notifyListeners();
+    _setupCustomerListener();
   }
 
   Future<void> register(Cpa cpa, String password) async {
@@ -132,7 +149,9 @@ class CpaProvider with ChangeNotifier {
   }
 
   Future<void> _discoverProactiveTasks() async {
-    if (_currentCpa == null) return;
+    if (_currentCpa == null || _isDiscovering) return;
+    _isDiscovering = true;
+    notifyListeners();
     try {
       final dueCustomers = await _customerRepo.getCustomersDue(_currentCpa!.uid);
       for (var customer in dueCustomers) {
@@ -150,10 +169,21 @@ class CpaProvider with ChangeNotifier {
             createdAt: DateTime.now(),
           );
           await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+          
+          // Update customer hasActiveDraft flag
+          final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+          await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+        } else if (!customer.hasActiveDraft) {
+          // If it has a draft in repo but the customer object doesn't show it (stale or out of sync)
+          final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+          await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
         }
       }
     } catch (e) {
       debugPrint('Error in proactive task discovery: $e');
+    } finally {
+      _isDiscovering = false;
+      notifyListeners();
     }
   }
 
@@ -169,24 +199,43 @@ class CpaProvider with ChangeNotifier {
     final updatedCustomer = customer.copyWith(
       lastEngagementDate: DateTime.now(),
       nextEngagementDate: nextDate,
+      hasActiveDraft: false,
     );
     await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
   }
 
   Future<void> receiveResponse(Customer customer, Engagement engagement, String response) async {
+    if (_currentCpa == null || _isProcessingResponse) return;
+    _isProcessingResponse = true;
+    notifyListeners();
+    try {
+      // AI processing
+      final poi = await _aiService.extractPointsOfInterest(response, customer.guidelines);
+      final updatedDetails = await _aiService.updateCustomerDetails(customer.details, response);
+
+      final updatedEngagement = engagement.copyWith(
+        status: EngagementStatus.received,
+        customerResponse: response,
+        pointsOfInterest: poi,
+        updatedDetailsDiff: updatedDetails, // Storing the full suggested new state here for review
+      );
+      await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    } finally {
+      _isProcessingResponse = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> approveResponse(Customer customer, Engagement engagement) async {
     if (_currentCpa == null) return;
-    final poi = await _aiService.extractPointsOfInterest(response, customer.guidelines);
-    final updatedDetails = await _aiService.updateCustomerDetails(customer.details, response);
 
-    final updatedEngagement = engagement.copyWith(
-      status: EngagementStatus.received,
-      customerResponse: response,
-      pointsOfInterest: poi,
-    );
-    await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
-
-    final updatedCustomer = customer.copyWith(details: updatedDetails);
+    // Update the customer with the suggested details from the engagement
+    final updatedCustomer = customer.copyWith(details: engagement.updatedDetailsDiff);
     await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+
+    // Mark the engagement as completed
+    final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
+    await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
   }
 
   Stream<List<Engagement>> getCustomerEngagements(String customerId) {

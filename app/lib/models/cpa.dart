@@ -4,7 +4,7 @@ class Cpa {
   final String firmName;
   final String email;
 
-  Cpa({
+  const Cpa({
     required this.uid,
     required this.name,
     required this.firmName,
