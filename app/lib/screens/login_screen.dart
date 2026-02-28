@@ -103,9 +103,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const Divider(),
                 TextButton.icon(
-                  onPressed: _enterDemoMode,
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Review Demo Mode (No Login Required)'),
+                  onPressed: _enterGuestMode,
+                  icon: const Icon(Icons.person_outline),
+                  label: const Text('Continue as Guest (Local Only)'),
                 ),
               ],
             ],
@@ -115,11 +115,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _enterDemoMode() async {
+  void _enterGuestMode() async {
     setState(() => _isLoading = true);
     final provider = Provider.of<CpaProvider>(context, listen: false);
     try {
-      await provider.loginDemo();
+      await provider.loginGuest(rememberMe: _rememberMe);
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Demo mode failed: $e')),
+          SnackBar(content: Text('Guest mode failed: $e')),
         );
       }
     } finally {

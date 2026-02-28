@@ -1,15 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hive/hive.dart';
 
-enum EngagementStatus { draft, pendingReview, sent, received, completed }
+part 'engagement.g.dart';
 
+@HiveType(typeId: 2)
+enum EngagementStatus {
+  @HiveField(0)
+  draft,
+  @HiveField(1)
+  pendingReview,
+  @HiveField(2)
+  sent,
+  @HiveField(3)
+  received,
+  @HiveField(4)
+  completed
+}
+
+@HiveType(typeId: 3)
 class Engagement {
+  @HiveField(0)
   final String engagementId;
+  @HiveField(1)
   final EngagementStatus status;
+  @HiveField(2)
   final String draftMessage;
+  @HiveField(3)
   final String sentMessage;
+  @HiveField(4)
   final String customerResponse;
+  @HiveField(5)
   final List<String> pointsOfInterest;
+  @HiveField(6)
   final String updatedDetailsDiff;
+  @HiveField(7)
   final DateTime createdAt;
 
   Engagement({

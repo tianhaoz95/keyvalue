@@ -1,0 +1,116 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'engagement.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class EngagementAdapter extends TypeAdapter<Engagement> {
+  @override
+  final int typeId = 3;
+
+  @override
+  Engagement read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Engagement(
+      engagementId: fields[0] as String,
+      status: fields[1] as EngagementStatus,
+      draftMessage: fields[2] as String,
+      sentMessage: fields[3] as String,
+      customerResponse: fields[4] as String,
+      pointsOfInterest: (fields[5] as List).cast<String>(),
+      updatedDetailsDiff: fields[6] as String,
+      createdAt: fields[7] as DateTime,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Engagement obj) {
+    writer
+      ..writeByte(8)
+      ..writeByte(0)
+      ..write(obj.engagementId)
+      ..writeByte(1)
+      ..write(obj.status)
+      ..writeByte(2)
+      ..write(obj.draftMessage)
+      ..writeByte(3)
+      ..write(obj.sentMessage)
+      ..writeByte(4)
+      ..write(obj.customerResponse)
+      ..writeByte(5)
+      ..write(obj.pointsOfInterest)
+      ..writeByte(6)
+      ..write(obj.updatedDetailsDiff)
+      ..writeByte(7)
+      ..write(obj.createdAt);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EngagementAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class EngagementStatusAdapter extends TypeAdapter<EngagementStatus> {
+  @override
+  final int typeId = 2;
+
+  @override
+  EngagementStatus read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return EngagementStatus.draft;
+      case 1:
+        return EngagementStatus.pendingReview;
+      case 2:
+        return EngagementStatus.sent;
+      case 3:
+        return EngagementStatus.received;
+      case 4:
+        return EngagementStatus.completed;
+      default:
+        return EngagementStatus.draft;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, EngagementStatus obj) {
+    switch (obj) {
+      case EngagementStatus.draft:
+        writer.writeByte(0);
+        break;
+      case EngagementStatus.pendingReview:
+        writer.writeByte(1);
+        break;
+      case EngagementStatus.sent:
+        writer.writeByte(2);
+        break;
+      case EngagementStatus.received:
+        writer.writeByte(3);
+        break;
+      case EngagementStatus.completed:
+        writer.writeByte(4);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EngagementStatusAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

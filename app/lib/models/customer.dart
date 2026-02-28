@@ -1,14 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hive/hive.dart';
 
+part 'customer.g.dart';
+
+@HiveType(typeId: 1)
 class Customer {
+  @HiveField(0)
   final String customerId;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final String email;
+  @HiveField(3)
   final String details; // Markdown
+  @HiveField(4)
   final String guidelines; // Markdown
+  @HiveField(5)
   final int engagementFrequencyDays;
+  @HiveField(6)
   final DateTime nextEngagementDate;
+  @HiveField(7)
   final DateTime lastEngagementDate;
+  @HiveField(8)
   final bool hasActiveDraft;
 
   Customer({

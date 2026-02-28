@@ -8,12 +8,20 @@ import '../models/engagement.dart';
 import '../repositories/cpa_repository.dart';
 import '../repositories/customer_repository.dart';
 import '../repositories/engagement_repository.dart';
+import '../repositories/local_cpa_repository.dart';
+import '../repositories/local_customer_repository.dart';
+import '../repositories/local_engagement_repository.dart';
 import '../services/ai_service.dart';
 
 class CpaProvider with ChangeNotifier {
   final CpaRepository _cpaRepo;
   final CustomerRepository _customerRepo;
   final EngagementRepository _engagementRepo;
+  
+  final LocalCpaRepository _localCpaRepo = LocalCpaRepository();
+  final LocalCustomerRepository _localCustomerRepo = LocalCustomerRepository();
+  final LocalEngagementRepository _localEngagementRepo = LocalEngagementRepository();
+
   final auth.FirebaseAuth _firebaseAuth;
   AiService _aiService;
 
@@ -32,6 +40,8 @@ class CpaProvider with ChangeNotifier {
   bool _isGeneratingDraft = false;
   bool get isGeneratingDraft => _isGeneratingDraft;
 
+  bool get isGuestMode => _currentCpa?.uid == 'local_user';
+
   CpaProvider({
     CpaRepository? cpaRepo,
     CustomerRepository? customerRepo,
@@ -49,14 +59,21 @@ class CpaProvider with ChangeNotifier {
   Future<void> _checkRememberedUser() async {
     final prefs = await SharedPreferences.getInstance();
     final rememberMe = prefs.getBool('rememberMe') ?? false;
+    final lastLoginMethod = prefs.getString('lastLoginMethod');
+
     if (rememberMe) {
-      final user = _firebaseAuth.currentUser;
-      if (user != null) {
-        _currentCpa = await _cpaRepo.getCpa(user.uid);
-        if (_currentCpa != null) {
-          notifyListeners();
-          _setupCustomerListener();
+      if (lastLoginMethod == 'guest') {
+        _currentCpa = await _localCpaRepo.getCpa('local_user');
+      } else {
+        final user = _firebaseAuth.currentUser;
+        if (user != null) {
+          _currentCpa = await _cpaRepo.getCpa(user.uid);
         }
+      }
+
+      if (_currentCpa != null) {
+        notifyListeners();
+        _setupCustomerListener();
       }
     }
   }
@@ -72,11 +89,10 @@ class CpaProvider with ChangeNotifier {
         if (_currentCpa != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('rememberMe', rememberMe);
+          await prefs.setString('lastLoginMethod', 'firebase');
           notifyListeners();
           _setupCustomerListener();
         } else {
-          // If user exists in Auth but not in Firestore, we should still notify
-          // or throw so the UI knows to stop loading.
           notifyListeners();
           throw 'CPA profile not found. Please register.';
         }
@@ -86,13 +102,24 @@ class CpaProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loginDemo() async {
-    _currentCpa = const Cpa(
-      uid: 'demo_user',
-      name: 'Demo User',
-      firmName: 'Demo Accounting Firm',
-      email: 'demo@example.com',
-    );
+  Future<void> loginGuest({bool rememberMe = false}) async {
+    final existing = await _localCpaRepo.getCpa('local_user');
+    if (existing == null) {
+      _currentCpa = const Cpa(
+        uid: 'local_user',
+        name: 'Guest CPA',
+        firmName: 'My Local Firm',
+        email: 'guest@local.app',
+      );
+      await _localCpaRepo.saveCpa(_currentCpa!);
+    } else {
+      _currentCpa = existing;
+    }
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('rememberMe', rememberMe);
+    await prefs.setString('lastLoginMethod', 'guest');
+    
     notifyListeners();
     _setupCustomerListener();
   }
@@ -119,12 +146,20 @@ class CpaProvider with ChangeNotifier {
     await _firebaseAuth.signOut();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('rememberMe');
+    await prefs.remove('lastLoginMethod');
     _currentCpa = null;
     _customers = [];
     notifyListeners();
   }
 
   Future<void> deleteAccount() async {
+    if (isGuestMode) {
+      await _localCpaRepo.deleteCpa('local_user');
+      await _localCustomerRepo.clearAll();
+      await _localEngagementRepo.clearAll();
+      await logout();
+      return;
+    }
     final user = _firebaseAuth.currentUser;
     if (user != null) {
       final uid = user.uid;
@@ -136,7 +171,11 @@ class CpaProvider with ChangeNotifier {
 
   Future<void> updateProfile(Cpa updatedCpa) async {
     if (_currentCpa != null) {
-      await _cpaRepo.saveCpa(updatedCpa);
+      if (isGuestMode) {
+        await _localCpaRepo.saveCpa(updatedCpa);
+      } else {
+        await _cpaRepo.saveCpa(updatedCpa);
+      }
       _currentCpa = updatedCpa;
       notifyListeners();
     }
@@ -144,7 +183,12 @@ class CpaProvider with ChangeNotifier {
 
   void _setupCustomerListener() {
     if (_currentCpa == null) return;
-    _customerRepo.getCustomers(_currentCpa!.uid).listen((customers) {
+    
+    final stream = isGuestMode 
+        ? _localCustomerRepo.getCustomers(_currentCpa!.uid)
+        : _customerRepo.getCustomers(_currentCpa!.uid);
+
+    stream.listen((customers) {
       _customers = customers;
       notifyListeners();
       _discoverProactiveTasks();
@@ -156,9 +200,15 @@ class CpaProvider with ChangeNotifier {
     _isDiscovering = true;
     notifyListeners();
     try {
-      final dueCustomers = await _customerRepo.getCustomersDue(_currentCpa!.uid);
+      final dueCustomers = isGuestMode 
+          ? await _localCustomerRepo.getCustomersDue(_currentCpa!.uid)
+          : await _customerRepo.getCustomersDue(_currentCpa!.uid);
+
       for (var customer in dueCustomers) {
-        final hasDraft = await _engagementRepo.hasDraft(_currentCpa!.uid, customer.customerId);
+        final hasDraft = isGuestMode
+            ? await _localEngagementRepo.hasDraft(_currentCpa!.uid, customer.customerId)
+            : await _engagementRepo.hasDraft(_currentCpa!.uid, customer.customerId);
+
         if (!hasDraft) {
           final draft = await _aiService.generateDraftMessage(customer);
           final engagement = Engagement(
@@ -171,15 +221,23 @@ class CpaProvider with ChangeNotifier {
             updatedDetailsDiff: '',
             createdAt: DateTime.now(),
           );
-          await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
           
-          // Update customer hasActiveDraft flag
-          final updatedCustomer = customer.copyWith(hasActiveDraft: true);
-          await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          if (isGuestMode) {
+            await _localEngagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+            final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+            await _localCustomerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          } else {
+            await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+            final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+            await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          }
         } else if (!customer.hasActiveDraft) {
-          // If it has a draft in repo but the customer object doesn't show it (stale or out of sync)
           final updatedCustomer = customer.copyWith(hasActiveDraft: true);
-          await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          if (isGuestMode) {
+            await _localCustomerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          } else {
+            await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+          }
         }
       }
     } catch (e) {
@@ -196,7 +254,12 @@ class CpaProvider with ChangeNotifier {
       status: EngagementStatus.sent,
       sentMessage: message,
     );
-    await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    
+    if (isGuestMode) {
+      await _localEngagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    } else {
+      await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    }
 
     final nextDate = DateTime.now().add(Duration(days: customer.engagementFrequencyDays));
     final updatedCustomer = customer.copyWith(
@@ -204,7 +267,12 @@ class CpaProvider with ChangeNotifier {
       nextEngagementDate: nextDate,
       hasActiveDraft: false,
     );
-    await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+    
+    if (isGuestMode) {
+      await _localCustomerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+    } else {
+      await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+    }
   }
 
   Future<void> receiveResponse(Customer customer, Engagement engagement, String response) async {
@@ -212,7 +280,6 @@ class CpaProvider with ChangeNotifier {
     _isProcessingResponse = true;
     notifyListeners();
     try {
-      // AI processing
       final poi = await _aiService.extractPointsOfInterest(response, customer.guidelines);
       final updatedDetails = await _aiService.updateCustomerDetails(customer.details, response);
 
@@ -220,9 +287,14 @@ class CpaProvider with ChangeNotifier {
         status: EngagementStatus.received,
         customerResponse: response,
         pointsOfInterest: poi,
-        updatedDetailsDiff: updatedDetails, // Storing the full suggested new state here for review
+        updatedDetailsDiff: updatedDetails,
       );
-      await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+      
+      if (isGuestMode) {
+        await _localEngagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+      } else {
+        await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+      }
     } finally {
       _isProcessingResponse = false;
       notifyListeners();
@@ -232,23 +304,33 @@ class CpaProvider with ChangeNotifier {
   Future<void> approveResponse(Customer customer, Engagement engagement) async {
     if (_currentCpa == null) return;
 
-    // Update the customer with the suggested details from the engagement
     final updatedCustomer = customer.copyWith(details: engagement.updatedDetailsDiff);
-    await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
-
-    // Mark the engagement as completed
-    final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
-    await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    
+    if (isGuestMode) {
+      await _localCustomerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+      final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
+      await _localEngagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    } else {
+      await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+      final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
+      await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    }
   }
 
   Stream<List<Engagement>> getCustomerEngagements(String customerId) {
     if (_currentCpa == null) return Stream.value([]);
-    return _engagementRepo.getEngagements(_currentCpa!.uid, customerId);
+    return isGuestMode 
+        ? _localEngagementRepo.getEngagements(_currentCpa!.uid, customerId)
+        : _engagementRepo.getEngagements(_currentCpa!.uid, customerId);
   }
 
   Future<void> addCustomer(Customer customer) async {
     if (_currentCpa == null) return;
-    await _customerRepo.saveCustomer(_currentCpa!.uid, customer);
+    if (isGuestMode) {
+      await _localCustomerRepo.saveCustomer(_currentCpa!.uid, customer);
+    } else {
+      await _customerRepo.saveCustomer(_currentCpa!.uid, customer);
+    }
   }
 
   Future<void> generateManualDraft(Customer customer) async {
@@ -267,10 +349,16 @@ class CpaProvider with ChangeNotifier {
         updatedDetailsDiff: '',
         createdAt: DateTime.now(),
       );
-      await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
       
-      final updatedCustomer = customer.copyWith(hasActiveDraft: true);
-      await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+      if (isGuestMode) {
+        await _localEngagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+        final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+        await _localCustomerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+      } else {
+        await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+        final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+        await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+      }
     } catch (e) {
       debugPrint('Error generating manual draft: $e');
     } finally {
