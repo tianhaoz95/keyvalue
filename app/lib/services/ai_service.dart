@@ -170,4 +170,114 @@ Updated Details (Markdown):
       return currentDetails;
     }
   }
+
+  Future<String> generateProfileRefinementResponse(Customer customer, List<ChatMessage> history) async {
+    if (isDemo) {
+      if (history.isEmpty) return "I can help you build a more descriptive profile for ${customer.name}. What recent updates or background information should we add?";
+      return "Got it. I'll incorporate that into the profile. Anything else about their financial goals or recent business activities?";
+    }
+
+    try {
+      final prompt = '''
+You are an expert CPA assistant. You are helping a CPA refine and expand the profile of their client, ${customer.name}.
+Current Profile:
+${customer.details}
+
+Your goal is to have a professional conversation with the CPA to gather more descriptive details and then summarize them into a high-quality markdown profile.
+Be concise, inquisitive, and professional.
+
+Conversation History:
+${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+
+Assistant:''';
+
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? "I'm having trouble assisting with the profile right now.";
+    } catch (e) {
+      return "Error: ${e.toString()}";
+    }
+  }
+
+  Future<String> finalizeProfileRefinement(Customer customer, List<ChatMessage> history) async {
+    if (isDemo) {
+      return "${customer.details}\n\n### Business & Strategy (Updated via AI)\n- New tech venture launched in Q1.\n- Focus on scaling international operations.\n- Seeking R&D tax credit optimization.";
+    }
+
+    try {
+      final prompt = '''
+Based on the following conversation between a CPA and an AI assistant, update the client profile for ${customer.name}.
+The output must be a clean, professional markdown document that merges the current profile with the new insights.
+
+Current Profile:
+${customer.details}
+
+Conversation:
+${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+
+Updated Markdown Profile:''';
+
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? customer.details;
+    } catch (e) {
+      return customer.details;
+    }
+  }
+
+  Future<String> generateGuidelinesRefinementResponse(Customer customer, List<ChatMessage> history) async {
+    if (isDemo) {
+      if (history.isEmpty) return "I can help you craft personalized engagement guidelines for ${customer.name}. What is your primary focus for this client? (e.g., proactive tax planning, monthly check-ins, or R&D focus?)";
+      return "Understood. I'll include that. Should we also set specific rules for communication frequency or document request styles?";
+    }
+
+    try {
+      final prompt = '''
+You are an expert CPA assistant. You are helping a CPA define "Engagement Guidelines" for their client, ${customer.name}.
+Current Guidelines:
+${customer.guidelines}
+
+Your goal is to have a professional conversation with the CPA to define how they should proactively engage with this client.
+Gather details like: Communication style, proactive focus areas, preferred frequency, and tone.
+Then, you will summarize these into a high-quality markdown guideline.
+Be concise, inquisitive, and professional.
+
+Conversation History:
+${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+
+Assistant:''';
+
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? "I'm having trouble assisting with the guidelines right now.";
+    } catch (e) {
+      return "Error: ${e.toString()}";
+    }
+  }
+
+  Future<String> finalizeGuidelinesRefinement(Customer customer, List<ChatMessage> history) async {
+    if (isDemo) {
+      return "${customer.guidelines}\n\n- **Focus**: Strategic tax planning.\n- **Tone**: Professional and direct.\n- **Frequency**: Monthly touchpoints for R&D review.";
+    }
+
+    try {
+      final prompt = '''
+Based on the following conversation between a CPA and an AI assistant, update the Engagement Guidelines for ${customer.name}.
+The output must be a clean, professional markdown list of guidelines that the AI will use to draft future messages.
+
+Current Guidelines:
+${customer.guidelines}
+
+Conversation:
+${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+
+Updated Markdown Guidelines:''';
+
+      final content = [Content.text(prompt)];
+      final response = await _effectiveModel.generateContent(content);
+      return response.text ?? customer.guidelines;
+    } catch (e) {
+      return customer.guidelines;
+    }
+  }
 }

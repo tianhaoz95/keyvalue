@@ -191,11 +191,10 @@ class CpaProvider with ChangeNotifier {
     stream.listen((customers) {
       _customers = customers;
       notifyListeners();
-      _discoverProactiveTasks();
     });
   }
 
-  Future<void> _discoverProactiveTasks() async {
+  Future<void> discoverProactiveTasks() async {
     if (_currentCpa == null || _isDiscovering) return;
     _isDiscovering = true;
     notifyListeners();
@@ -317,6 +316,18 @@ class CpaProvider with ChangeNotifier {
     }
   }
 
+  Future<void> dismissResponse(Customer customer, Engagement engagement) async {
+    if (_currentCpa == null) return;
+    
+    final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
+    
+    if (isGuestMode) {
+      await _localEngagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    } else {
+      await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
+    }
+  }
+
   Stream<List<Engagement>> getCustomerEngagements(String customerId) {
     if (_currentCpa == null) return Stream.value([]);
     return isGuestMode 
@@ -330,6 +341,22 @@ class CpaProvider with ChangeNotifier {
 
   Future<Customer?> extractCustomerFromOnboarding(List<ChatMessage> history) async {
     return _aiService.processOnboardingConversation(history);
+  }
+
+  Future<String> getProfileRefinementResponse(Customer customer, List<ChatMessage> history) async {
+    return _aiService.generateProfileRefinementResponse(customer, history);
+  }
+
+  Future<String> finalizeProfileRefinement(Customer customer, List<ChatMessage> history) async {
+    return _aiService.finalizeProfileRefinement(customer, history);
+  }
+
+  Future<String> getGuidelinesRefinementResponse(Customer customer, List<ChatMessage> history) async {
+    return _aiService.generateGuidelinesRefinementResponse(customer, history);
+  }
+
+  Future<String> finalizeGuidelinesRefinement(Customer customer, List<ChatMessage> history) async {
+    return _aiService.finalizeGuidelinesRefinement(customer, history);
   }
 
   Future<void> addCustomer(Customer customer) async {

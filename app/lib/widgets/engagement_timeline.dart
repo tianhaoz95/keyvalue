@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
-import '../screens/intelligence_hub_screen.dart';
 import '../screens/engagement_review_screen.dart';
 
 class EngagementTimeline extends StatelessWidget {
@@ -181,12 +180,7 @@ class EngagementTimeline extends StatelessWidget {
           minimumSize: const Size(120, 36),
         ),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => IntelligenceHubScreen(customer: customer, engagement: engagement),
-            ),
-          );
+          DefaultTabController.of(context).animateTo(0);
         },
         child: const Text('Review AI Insights'),
       );

@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
 import '../widgets/pending_review_list.dart';
-import '../widgets/search_field.dart';
 import '../widgets/loading_overlay.dart';
 import 'customer_detail_screen.dart';
 import 'settings_screen.dart';
@@ -21,11 +20,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   CustomerSortOption _sortOption = CustomerSortOption.nextContact;
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _loadSortPreference();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
   }
 
   Future<void> _loadSortPreference() async {
@@ -81,25 +86,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
       message: 'AI Thinking...',
       child: Scaffold(
         appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/images/logo_120_white.png', height: 32),
-            const SizedBox(width: 8),
-            Text(cpa.firmName),
-          ],
-        ),
+        title: _isSearching 
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'Search clients...',
+                hintStyle: TextStyle(color: Colors.white70),
+                border: InputBorder.none,
+              ),
+            )
+          : Row(
+              children: [
+                Image.asset('assets/images/logo_120_white.png', height: 32),
+                const SizedBox(width: 8),
+                Text(cpa.firmName),
+              ],
+            ),
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'AI Scan for Actions',
+            onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
+          ),
           PopupMenuButton<CustomerSortOption>(
             icon: const Icon(Icons.sort),
             onSelected: _updateSortPreference,
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              CheckedPopupMenuItem(
                 value: CustomerSortOption.name,
-                child: Text('Sort by Name'),
+                checked: _sortOption == CustomerSortOption.name,
+                child: const Text('Sort by Name'),
               ),
-              const PopupMenuItem(
+              CheckedPopupMenuItem(
                 value: CustomerSortOption.nextContact,
-                child: Text('Sort by Next Contact'),
+                checked: _sortOption == CustomerSortOption.nextContact,
+                child: const Text('Sort by Next Contact'),
               ),
             ],
           ),
@@ -151,16 +187,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           // Urgent Actions Section
           PendingReviewList(customers: pendingReviews),
-
-          // Search Bar
-          SearchField(
-            controller: _searchController,
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
-          ),
 
           const Padding(
             padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
