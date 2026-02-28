@@ -50,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         appBar: AppBar(
         title: Row(
           children: [
-            Image.asset('assets/images/logo_120.png', height: 32),
+            Image.asset('assets/images/logo_120_white.png', height: 32),
             const SizedBox(width: 8),
             Text(cpa.firmName),
           ],
