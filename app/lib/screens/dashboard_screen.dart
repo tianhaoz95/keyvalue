@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
 import '../widgets/pending_review_list.dart';
@@ -7,6 +8,7 @@ import '../widgets/search_field.dart';
 import '../widgets/loading_overlay.dart';
 import 'customer_detail_screen.dart';
 import 'settings_screen.dart';
+import 'ai_onboarding_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,6 +20,29 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  CustomerSortOption _sortOption = CustomerSortOption.nextContact;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSortPreference();
+  }
+
+  Future<void> _loadSortPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final sortIndex = prefs.getInt('customerSortOption') ?? CustomerSortOption.nextContact.index;
+    setState(() {
+      _sortOption = CustomerSortOption.values[sortIndex];
+    });
+  }
+
+  Future<void> _updateSortPreference(CustomerSortOption option) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('customerSortOption', option.index);
+    setState(() {
+      _sortOption = option;
+    });
+  }
 
   @override
   void dispose() {
@@ -37,11 +62,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Filter customers with drafts for Urgent Actions
     final pendingReviews = allCustomers.where((c) => c.hasActiveDraft).toList();
 
-    // Filter customers for the main list based on search
+    // Filter and sort customers for the main list based on search and sort option
     final filteredCustomers = allCustomers.where((c) {
       return c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
              c.email.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+
+    filteredCustomers.sort((a, b) {
+      if (_sortOption == CustomerSortOption.name) {
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      } else {
+        return a.nextEngagementDate.compareTo(b.nextEngagementDate);
+      }
+    });
 
     return LoadingOverlay(
       isLoading: isDiscovering,
@@ -56,6 +89,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
+          PopupMenuButton<CustomerSortOption>(
+            icon: const Icon(Icons.sort),
+            onSelected: _updateSortPreference,
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: CustomerSortOption.name,
+                child: Text('Sort by Name'),
+              ),
+              const PopupMenuItem(
+                value: CustomerSortOption.nextContact,
+                child: Text('Sort by Next Contact'),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
@@ -136,11 +183,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddCustomerDialog(context, provider);
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'ai_onboarding',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AiOnboardingScreen()));
+            },
+            icon: const Icon(Icons.auto_awesome),
+            label: const Text('Discover via AI'),
+            backgroundColor: Theme.of(context).secondaryHeaderColor,
+            foregroundColor: Theme.of(context).primaryColor,
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: 'add_customer',
+            onPressed: () {
+              _showAddCustomerDialog(context, provider);
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     ));
   }
@@ -230,6 +294,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showAddCustomerDialog(BuildContext context, CpaProvider provider) {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
+    final occupationController = TextEditingController();
+    final phoneController = TextEditingController();
+    final addressController = TextEditingController();
     final detailsController = TextEditingController();
     final guidelinesController = TextEditingController();
 
@@ -244,6 +311,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
               const SizedBox(height: 12),
               TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+              const SizedBox(height: 12),
+              TextField(controller: occupationController, decoration: const InputDecoration(labelText: 'Occupation')),
+              const SizedBox(height: 12),
+              TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+              const SizedBox(height: 12),
+              TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
               const SizedBox(height: 12),
               TextField(
                 controller: detailsController,
@@ -269,6 +342,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 customerId: DateTime.now().millisecondsSinceEpoch.toString(),
                 name: nameController.text.trim(),
                 email: emailController.text.trim(),
+                occupation: occupationController.text.trim(),
+                phoneNumber: phoneController.text.trim(),
+                address: addressController.text.trim(),
                 details: detailsController.text.trim(),
                 guidelines: guidelinesController.text.trim(),
                 engagementFrequencyDays: 30,

@@ -166,6 +166,31 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            children: [
+              Icon(Icons.contact_phone_outlined, size: 20, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 8),
+              const Text('Contact Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  _buildDetailRow(Icons.work_outline, 'Occupation', customer.occupation),
+                  const Divider(height: 24),
+                  _buildDetailRow(Icons.phone_outlined, 'Phone', customer.phoneNumber),
+                  const Divider(height: 24),
+                  _buildDetailRow(Icons.location_on, 'Address', customer.address),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
@@ -208,6 +233,22 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.grey),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(value.isEmpty ? 'Not provided' : value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ],
     );
   }
 

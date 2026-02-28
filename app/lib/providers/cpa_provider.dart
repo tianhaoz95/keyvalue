@@ -324,6 +324,14 @@ class CpaProvider with ChangeNotifier {
         : _engagementRepo.getEngagements(_currentCpa!.uid, customerId);
   }
 
+  Future<String> getOnboardingResponse(List<ChatMessage> history) async {
+    return _aiService.generateOnboardingResponse(history);
+  }
+
+  Future<Customer?> extractCustomerFromOnboarding(List<ChatMessage> history) async {
+    return _aiService.processOnboardingConversation(history);
+  }
+
   Future<void> addCustomer(Customer customer) async {
     if (_currentCpa == null) return;
     if (isGuestMode) {

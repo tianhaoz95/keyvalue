@@ -1,5 +1,13 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/customer.dart';
+import 'dart:convert';
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+
+  ChatMessage({required this.text, required this.isUser});
+}
 
 class AiService {
   final GenerativeModel? _model;
@@ -8,7 +16,79 @@ class AiService {
   AiService({GenerativeModel? model, this.isDemo = false})
       : _model = model;
 
-  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-1.5-flash');
+  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-2.0-flash');
+
+  Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
+    if (isDemo) {
+      if (history.length <= 1) return "Hello! I'm your AI onboarding assistant. To get started, what is the new client's full name?";
+      if (history.last.text.toLowerCase().contains('john')) return "Great, John Doe. What is his email address and occupation?";
+      return "I've got those details. Any specific engagement guidelines I should keep in mind for him?";
+    }
+
+    final prompt = '''
+You are an expert CPA assistant helping to onboard a new client.
+Your goal is to gather: Name, Email, Occupation, and Engagement Guidelines.
+Be professional, concise, and friendly.
+
+Conversation History:
+${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
+
+Assistant:''';
+
+    final content = [Content.text(prompt)];
+    final response = await _effectiveModel.generateContent(content);
+    return response.text ?? "I'm sorry, I'm having trouble responding right now.";
+  }
+
+  Future<Customer?> processOnboardingConversation(List<ChatMessage> history) async {
+    if (isDemo) {
+      return Customer(
+        customerId: 'temp_id',
+        name: 'John Doe (Demo)',
+        email: 'john@example.com',
+        occupation: 'Software Engineer',
+        details: 'Extracted via AI conversation.',
+        guidelines: 'Focus on R&D tax credits.',
+        engagementFrequencyDays: 30,
+        nextEngagementDate: DateTime.now(),
+        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+      );
+    }
+
+    final prompt = '''
+Based on the following conversation, extract the details for a new CPA client.
+Return a JSON object with these keys: name, email, occupation, details, guidelines.
+If a field is missing, use an empty string.
+
+Conversation:
+${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
+
+JSON Output:''';
+
+    final content = [Content.text(prompt)];
+    final response = await _effectiveModel.generateContent(content);
+    final text = response.text ?? "{}";
+    
+    // Clean up markdown if AI returns it
+    final cleanJson = text.replaceAll('```json', '').replaceAll('```', '').trim();
+    
+    try {
+      final data = jsonDecode(cleanJson);
+      return Customer(
+        customerId: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: data['name'] ?? '',
+        email: data['email'] ?? '',
+        occupation: data['occupation'] ?? '',
+        details: data['details'] ?? 'Extracted via AI onboarding.',
+        guidelines: data['guidelines'] ?? '',
+        engagementFrequencyDays: 30,
+        nextEngagementDate: DateTime.now(),
+        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
 
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) {
