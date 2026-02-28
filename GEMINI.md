@@ -48,8 +48,7 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 
 ## 🛠️ Key Commands & Quality Assurance
 
-All changes within the `./app` directory **must** pass the following validation steps before being considered complete:
-
+- **Image Manipulation:** Use the `magick` command-line tool for cropping, resizing, or modifying image assets (e.g., logos).
 - **Run App:** `flutter run`
 - **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
