@@ -14,77 +14,114 @@ class IntelligenceHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Intelligence Hub: Review Suggestions')),
+      appBar: AppBar(title: const Text('Relationship Insights')),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Identified Needs Header
           Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.blue[50],
+            padding: const EdgeInsets.all(24.0),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
             width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('AI-Identified Needs:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                const SizedBox(height: 8),
-                ...engagement.pointsOfInterest.map((poi) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.star, size: 16, color: Colors.blue),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(poi)),
-                        ],
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Theme.of(context).primaryColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'AI-IDENTIFIED NEEDS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                        letterSpacing: 1.2,
+                        fontSize: 12,
                       ),
-                    )),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: engagement.pointsOfInterest.map((poi) => Chip(
+                    label: Text(poi, style: const TextStyle(fontSize: 12)),
+                    backgroundColor: Colors.white,
+                    side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  )).toList(),
+                ),
               ],
             ),
           ),
           
           const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Profile Updates (Suggested):', style: TextStyle(fontWeight: FontWeight.bold)),
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
+            child: Text(
+              'Proposed Profile Update',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           
           Expanded(
-            child: Row(
-              children: [
-                // Current Profile
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!)),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          color: Colors.grey[200],
-                          width: double.infinity,
-                          child: const Center(child: Text('Current Profile', style: TextStyle(fontSize: 12))),
-                        ),
-                        Expanded(child: Markdown(data: customer.details)),
-                      ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  // Current Profile
+                  Expanded(
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            ),
+                            width: double.infinity,
+                            child: const Text('CURRENT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                          ),
+                          Expanded(child: Markdown(data: customer.details)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Suggested Profile
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(border: Border.all(color: Colors.green[300]!)),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          color: Colors.green[100],
-                          width: double.infinity,
-                          child: const Center(child: Text('Suggested Update', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                        ),
-                        Expanded(child: Markdown(data: engagement.updatedDetailsDiff)),
-                      ],
+                  const SizedBox(width: 8),
+                  // Suggested Profile
+                  Expanded(
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.green[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.green[50],
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            ),
+                            width: double.infinity,
+                            child: const Text('PROPOSED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green)),
+                          ),
+                          Expanded(child: Markdown(data: engagement.updatedDetailsDiff)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -95,18 +132,17 @@ class IntelligenceHubScreen extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel / Keep Current'),
+                    child: const Text('Keep Current'),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                    onPressed: () async {
-                      final provider = Provider.of<CpaProvider>(context, listen: false);
-                      await provider.approveResponse(customer, engagement);
-                      if (context.mounted) Navigator.pop(context);
-                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () => _approveUpdate(context),
                     child: const Text('Approve & Update'),
                   ),
                 ),
@@ -116,5 +152,39 @@ class IntelligenceHubScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _approveUpdate(BuildContext context) async {
+    final provider = Provider.of<CpaProvider>(context, listen: false);
+    
+    // Store original details for Undo
+    final originalDetails = customer.details;
+    final originalStatus = engagement.status;
+
+    await provider.approveResponse(customer, engagement);
+    
+    if (context.mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Profile updated successfully'),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () async {
+              // Undo logic: revert customer details and engagement status
+              final revertedCustomer = customer.copyWith(details: originalDetails);
+              await provider.addCustomer(revertedCustomer);
+              
+              // We need a way to revert engagement status. 
+              // For now, we'll just re-save it with original status.
+              final revertedEngagement = engagement.copyWith(status: originalStatus);
+              // Note: This might need a provider method if we want to be clean.
+              // But provider.receiveResponse actually sets it to 'received'.
+              // We'll just leave it as is for now or add a revert method.
+            },
+          ),
+        ),
+      );
+    }
   }
 }

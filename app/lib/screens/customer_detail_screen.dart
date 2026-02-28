@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
+import '../widgets/engagement_timeline.dart';
+import '../widgets/loading_overlay.dart';
 import 'engagement_review_screen.dart';
 import 'intelligence_hub_screen.dart';
 
@@ -61,8 +63,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       orElse: () => widget.customer,
     );
 
-    return Scaffold(
-      appBar: AppBar(
+    return LoadingOverlay(
+      isLoading: provider.isProcessingResponse,
+      message: 'AI Analyzing Response...',
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(currentCustomer.name),
       ),
       body: StreamBuilder<List<Engagement>>(
@@ -75,19 +80,48 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             length: 3,
             child: Column(
               children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  child: Row(
+                    children: [
+                      Hero(
+                        tag: 'avatar_${currentCustomer.customerId}',
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: Text(
+                            currentCustomer.name[0],
+                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(currentCustomer.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            Text(currentCustomer.email, style: const TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 TabBar(
                   labelColor: Theme.of(context).primaryColor,
                   unselectedLabelColor: Colors.grey,
+                  indicatorColor: Theme.of(context).primaryColor,
                   tabs: [
-                    const Tab(icon: Icon(Icons.person_outline), text: 'Profile'),
-                    const Tab(icon: Icon(Icons.rule), text: 'Guidelines'),
+                    const Tab(text: 'Profile'),
+                    const Tab(text: 'Guidelines'),
                     Tab(
-                      icon: Badge(
+                      child: Badge(
                         label: Text('$pendingCount'),
                         isLabelVisible: pendingCount > 0,
-                        child: const Icon(Icons.history),
+                        child: const Text('History'),
                       ),
-                      text: 'History',
                     ),
                   ],
                 ),
@@ -99,7 +133,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       // Guidelines Tab
                       _buildGuidelinesTab(context, provider, currentCustomer),
                       // History Tab
-                      _buildHistoryTab(context, provider, currentCustomer, engagements),
+                      EngagementTimeline(
+                        customer: currentCustomer,
+                        engagements: engagements,
+                        provider: provider,
+                        onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
+                      ),
                     ],
                   ),
                 ),
@@ -108,7 +147,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           );
         },
       ),
-    );
+    ));
   }
 
   Widget _buildProfileTab(BuildContext context, CpaProvider provider, Customer customer) {
@@ -120,15 +159,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.info_outline, size: 20, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Client Background', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Icon(Icons.info_outline, size: 20, color: Theme.of(context).primaryColor),
+                  const SizedBox(width: 8),
+                  const Text('Client Background', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
               IconButton(
                 icon: Icon(_isEditingProfile ? Icons.save : Icons.edit),
+                color: Theme.of(context).primaryColor,
                 onPressed: () {
                   if (_isEditingProfile) {
                     _saveProfile(provider);
@@ -145,7 +185,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           const SizedBox(height: 16),
           Card(
             elevation: 0,
-            color: Colors.grey[50],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -181,6 +220,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
               IconButton(
                 icon: Icon(_isEditingGuidelines ? Icons.save : Icons.edit),
+                color: Theme.of(context).primaryColor,
                 onPressed: () {
                   if (_isEditingGuidelines) {
                     _saveGuidelines(provider);
@@ -197,8 +237,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           const SizedBox(height: 16),
           Card(
             elevation: 0,
-            color: Colors.amber[50],
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.amber[100]!)),
+            color: Colors.amber.withValues(alpha: 0.05),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.amber, width: 0.2)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: _isEditingGuidelines
@@ -213,181 +253,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildHistoryTab(BuildContext context, CpaProvider provider, Customer customer, List<Engagement> engagements) {
-    return ListView.separated(
-      itemCount: engagements.length,
-      padding: const EdgeInsets.all(16),
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final engagement = engagements[index];
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: engagement.status == EngagementStatus.draft ? Colors.blue[200]! : Colors.grey[300]!,
-            ),
-          ),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Icon(
-              _getStatusIcon(engagement.status),
-              color: _getStatusColor(engagement.status),
-            ),
-            title: Text(
-              'Engagement: ${engagement.status.name.toUpperCase()}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: engagement.status == EngagementStatus.draft ? Colors.blue[700] : Colors.black87,
-              ),
-            ),
-            subtitle: Text('Date: ${engagement.createdAt.toLocal().toString().split('.')[0]}'),
-            trailing: _buildTrailing(context, provider, customer, engagement),
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (engagement.draftMessage.isNotEmpty && engagement.status == EngagementStatus.draft)
-                      _buildInfoSection('Suggested Draft:', engagement.draftMessage),
-                    if (engagement.sentMessage.isNotEmpty)
-                      _buildInfoSection('Message Sent:', engagement.sentMessage),
-                    if (engagement.customerResponse.isNotEmpty)
-                      _buildInfoSection('Customer Response:', engagement.customerResponse, isResponse: true),
-                    if (engagement.pointsOfInterest.isNotEmpty) ...[
-                      const Divider(),
-                      const Text('Identified Needs / Points of Interest:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                      const SizedBox(height: 8),
-                      ...engagement.pointsOfInterest.map((poi) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.star, size: 16, color: Colors.blue),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(poi)),
-                              ],
-                            ),
-                          )),
-                    ],
-                    if (engagement.updatedDetailsDiff.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      const Text('Profile Updates:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: MarkdownBody(data: engagement.updatedDetailsDiff),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoSection(String title, String content, {bool isResponse = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isResponse ? Colors.green[50] : Colors.blue[50],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(content),
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-
-  IconData _getStatusIcon(EngagementStatus status) {
-    switch (status) {
-      case EngagementStatus.draft:
-        return Icons.edit_note;
-      case EngagementStatus.sent:
-        return Icons.send;
-      case EngagementStatus.received:
-        return Icons.mark_chat_unread;
-      case EngagementStatus.completed:
-        return Icons.check_circle;
-      default:
-        return Icons.history;
-    }
-  }
-
-  Color _getStatusColor(EngagementStatus status) {
-    switch (status) {
-      case EngagementStatus.draft:
-        return Colors.blue;
-      case EngagementStatus.sent:
-        return Colors.orange;
-      case EngagementStatus.received:
-        return Colors.green;
-      case EngagementStatus.completed:
-        return Colors.grey;
-      default:
-        return Colors.black;
-    }
-  }
-
-  Widget? _buildTrailing(BuildContext context, CpaProvider provider, Customer customer, Engagement engagement) {
-    if (engagement.status == EngagementStatus.draft) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(visualDensity: VisualDensity.compact),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EngagementReviewScreen(
-                customer: customer,
-                engagement: engagement,
-              ),
-            ),
-          );
-        },
-        child: const Text('Review'),
-      );
-    } else if (engagement.status == EngagementStatus.received) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(visualDensity: VisualDensity.compact, backgroundColor: Colors.green, foregroundColor: Colors.white),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => IntelligenceHubScreen(
-                customer: customer,
-                engagement: engagement,
-              ),
-            ),
-          );
-        },
-        child: const Text('Review Update'),
-      );
-    } else if (engagement.status == EngagementStatus.sent) {
-      return TextButton.icon(
-        icon: const Icon(Icons.add_comment_outlined, size: 18),
-        onPressed: () => _showResponseDialog(context, provider, customer, engagement),
-        label: const Text('Respond'),
-      );
-    }
-    return null;
   }
 
   void _showResponseDialog(BuildContext context, CpaProvider provider, Customer customer, Engagement engagement) {
@@ -421,6 +286,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           actions: [
             TextButton(onPressed: provider.isProcessingResponse ? null : () => Navigator.pop(context), child: const Text('Cancel')),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
               onPressed: provider.isProcessingResponse ? null : () async {
                 setDialogState(() {}); // Trigger local rebuild to show progress if needed
                 await provider.receiveResponse(customer, engagement, controller.text);

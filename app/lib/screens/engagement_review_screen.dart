@@ -35,36 +35,72 @@ class _EngagementReviewScreenState extends State<EngagementReviewScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Review Engagement')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Customer Details:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(
-              height: 200,
-              child: Card(child: Padding(padding: const EdgeInsets.all(8.0), child: Markdown(data: widget.customer.details))),
+            Row(
+              children: [
+                Icon(Icons.person_outline, color: Theme.of(context).primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('CLIENT CONTEXT', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 12, color: Colors.grey)),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text('Draft Message:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 180,
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+                child: Padding(padding: const EdgeInsets.all(12.0), child: Markdown(data: widget.customer.details)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Icon(Icons.edit_note, color: Theme.of(context).primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('ENGAGEMENT DRAFT', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _messageController,
               maxLines: 10,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final provider = Provider.of<CpaProvider>(context, listen: false);
-                  await provider.sendEngagement(widget.customer, widget.engagement, _messageController.text);
-                  if (mounted) Navigator.pop(context);
-                },
-                child: const Text('Send Message'),
+              decoration: InputDecoration(
+                hintText: 'Refine your message...',
+                fillColor: Colors.blue.withValues(alpha: 0.02),
               ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => _sendMessage(context),
+              child: const Text('Send Message'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _sendMessage(BuildContext context) async {
+    final provider = Provider.of<CpaProvider>(context, listen: false);
+    final message = _messageController.text;
+    
+    // Store original states for Undo if needed
+    // (In a real app, Undo for 'sent' might mean 'unsend' or 'mark as draft again')
+    
+    await provider.sendEngagement(widget.customer, widget.engagement, message);
+    
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message sent to client'),
+          duration: Duration(seconds: 4),
+          // Action for Undo could be implemented if CpaProvider supported it
+        ),
+      );
+    }
   }
 }

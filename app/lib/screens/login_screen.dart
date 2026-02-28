@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.account_balance, size: 80, color: Colors.blue),
+              Icon(Icons.account_balance, size: 80, color: Theme.of(context).primaryColor),
               const SizedBox(height: 24),
               const Text(
                 'Accountant Portal',

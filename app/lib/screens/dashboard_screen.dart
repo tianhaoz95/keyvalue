@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
+import '../widgets/pending_review_list.dart';
+import '../widgets/search_field.dart';
+import '../widgets/loading_overlay.dart';
 import 'customer_detail_screen.dart';
 import 'login_screen.dart';
 
@@ -40,8 +43,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
              c.email.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
-    return Scaffold(
-      appBar: AppBar(
+    return LoadingOverlay(
+      isLoading: isDiscovering,
+      message: 'AI Thinking...',
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(cpa.firmName),
         actions: [
           if (isDiscovering)
@@ -84,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Welcome Header
           Container(
             padding: const EdgeInsets.all(24.0),
-            color: Colors.blue.withValues(alpha: 0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,9 +103,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     if (isDiscovering)
-                      const Text(
+                      Text(
                         'AI Thinking...',
-                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.blue),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).primaryColor,
+                        ),
                       ),
                   ],
                 ),
@@ -113,72 +123,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
 
           // Urgent Actions Section
-          if (pendingReviews.isNotEmpty) ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
-              child: Text(
-                'Pending Reviews',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.redAccent),
-              ),
-            ),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: pendingReviews.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) {
-                  final customer = pendingReviews[index];
-                  return Container(
-                    width: 200,
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Card(
-                      color: Colors.redAccent.withValues(alpha: 0.05),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: Colors.redAccent, width: 0.5),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          customer.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: const Text('New Draft Ready'),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CustomerDetailScreen(customer: customer),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          PendingReviewList(customers: pendingReviews),
 
           // Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search clients...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
+          SearchField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
           ),
 
           const Padding(
@@ -193,7 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ListView.separated(
               itemCount: filteredCustomers.length,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final customer = filteredCustomers[index];
                 return _buildCustomerTile(context, customer);
@@ -208,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
         child: const Icon(Icons.add),
       ),
-    );
+    ));
   }
 
   Widget _buildCustomerTile(BuildContext context, Customer customer) {
@@ -216,30 +170,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: ListTile(
-        leading: Stack(
-          children: [
-            CircleAvatar(child: Text(customer.name[0])),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: healthColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Hero(
+          tag: 'avatar_${customer.customerId}',
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                child: Text(
+                  customer.name[0],
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: healthColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(customer.email, style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 4),
+            Text(
+              'Next contact: ${customer.nextEngagementDate.toLocal().toString().split(' ')[0]}',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
         ),
-        title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('Next contact: ${customer.nextEngagementDate.toLocal().toString().split(' ')[0]}'),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: () {
           Navigator.push(
             context,
@@ -278,12 +260,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
+            const SizedBox(height: 16),
             TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
             onPressed: () async {
               final updatedCpa = cpa.copyWith(
                 name: nameController.text.trim(),
@@ -308,7 +292,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(100, 40),
+            ),
             onPressed: () async {
               await provider.deleteAccount();
               if (context.mounted) {
@@ -338,22 +326,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+              const SizedBox(height: 12),
               TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-              TextField(controller: detailsController, maxLines: 3, decoration: const InputDecoration(labelText: 'Details (Markdown)')),
-              TextField(controller: guidelinesController, maxLines: 2, decoration: const InputDecoration(labelText: 'Engagement Guidelines (Markdown)')),
+              const SizedBox(height: 12),
+              TextField(
+                controller: detailsController,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Details (Markdown)'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: guidelinesController,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Engagement Guidelines (Markdown)'),
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
             onPressed: () async {
+              if (nameController.text.isEmpty || emailController.text.isEmpty) return;
               final customer = Customer(
                 customerId: DateTime.now().millisecondsSinceEpoch.toString(),
-                name: nameController.text,
-                email: emailController.text,
-                details: detailsController.text,
-                guidelines: guidelinesController.text,
+                name: nameController.text.trim(),
+                email: emailController.text.trim(),
+                details: detailsController.text.trim(),
+                guidelines: guidelinesController.text.trim(),
                 engagementFrequencyDays: 30,
                 nextEngagementDate: DateTime.now(), // Trigger proactive discovery immediately
                 lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
