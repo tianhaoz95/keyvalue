@@ -64,11 +64,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
 
     return LoadingOverlay(
-      isLoading: provider.isProcessingResponse,
-      message: 'AI Analyzing Response...',
+      isLoading: provider.isProcessingResponse || provider.isGeneratingDraft,
+      message: provider.isProcessingResponse ? 'AI Analyzing Response...' : 'AI Generating Draft...',
       child: Scaffold(
         appBar: AppBar(
         title: Text(currentCustomer.name),
+        actions: [
+          if (!currentCustomer.hasActiveDraft)
+            TextButton.icon(
+              onPressed: () => provider.generateManualDraft(currentCustomer),
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: const Text('Draft Check-in'),
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
+            ),
+        ],
       ),
       body: StreamBuilder<List<Engagement>>(
         stream: provider.getCustomerEngagements(currentCustomer.customerId),

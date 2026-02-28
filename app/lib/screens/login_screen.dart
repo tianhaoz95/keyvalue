@@ -31,20 +31,28 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('CPA Engagement App')),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.account_balance, size: 80, color: Theme.of(context).primaryColor),
+              Image.asset('assets/images/logo_512.png', width: 120, height: 120),
               const SizedBox(height: 24),
               const Text(
-                'Accountant Portal',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                'KeyValue',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A237E),
+                  letterSpacing: 1.5,
+                ),
               ),
-              const SizedBox(height: 32),
+              const Text(
+                'Proactive CPA Engagement',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 48),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(

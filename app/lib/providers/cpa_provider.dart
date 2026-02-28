@@ -29,6 +29,9 @@ class CpaProvider with ChangeNotifier {
   bool _isProcessingResponse = false;
   bool get isProcessingResponse => _isProcessingResponse;
 
+  bool _isGeneratingDraft = false;
+  bool get isGeneratingDraft => _isGeneratingDraft;
+
   CpaProvider({
     CpaRepository? cpaRepo,
     CustomerRepository? customerRepo,
@@ -246,5 +249,33 @@ class CpaProvider with ChangeNotifier {
   Future<void> addCustomer(Customer customer) async {
     if (_currentCpa == null) return;
     await _customerRepo.saveCustomer(_currentCpa!.uid, customer);
+  }
+
+  Future<void> generateManualDraft(Customer customer) async {
+    if (_currentCpa == null || _isGeneratingDraft || customer.hasActiveDraft) return;
+    _isGeneratingDraft = true;
+    notifyListeners();
+    try {
+      final draft = await _aiService.generateDraftMessage(customer);
+      final engagement = Engagement(
+        engagementId: const Uuid().v4(),
+        status: EngagementStatus.draft,
+        draftMessage: draft,
+        sentMessage: '',
+        customerResponse: '',
+        pointsOfInterest: [],
+        updatedDetailsDiff: '',
+        createdAt: DateTime.now(),
+      );
+      await _engagementRepo.saveEngagement(_currentCpa!.uid, customer.customerId, engagement);
+      
+      final updatedCustomer = customer.copyWith(hasActiveDraft: true);
+      await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
+    } catch (e) {
+      debugPrint('Error generating manual draft: $e');
+    } finally {
+      _isGeneratingDraft = false;
+      notifyListeners();
+    }
   }
 }

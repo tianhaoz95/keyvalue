@@ -6,7 +6,7 @@ import '../widgets/pending_review_list.dart';
 import '../widgets/search_field.dart';
 import '../widgets/loading_overlay.dart';
 import 'customer_detail_screen.dart';
-import 'login_screen.dart';
+import 'settings_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -48,39 +48,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       message: 'AI Thinking...',
       child: Scaffold(
         appBar: AppBar(
-        title: Text(cpa.firmName),
+        title: Row(
+          children: [
+            Image.asset('assets/images/logo_120.png', height: 32),
+            const SizedBox(width: 8),
+            Text(cpa.firmName),
+          ],
+        ),
         actions: [
-          if (isDiscovering)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                ),
-              ),
-            ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'profile') {
-                _showEditProfileDialog(context, provider);
-              } else if (value == 'delete') {
-                _showDeleteAccountDialog(context, provider);
-              } else if (value == 'logout') {
-                provider.logout();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-              }
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'profile', child: Text('Modify Profile')),
-              const PopupMenuItem(value: 'logout', child: Text('Logout')),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Text('Delete Account', style: TextStyle(color: Colors.red)),
-              ),
-            ],
           ),
         ],
       ),
@@ -245,70 +225,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       return Colors.red;
     }
-  }
-
-  void _showEditProfileDialog(BuildContext context, CpaProvider provider) {
-    final cpa = provider.currentCpa!;
-    final nameController = TextEditingController(text: cpa.name);
-    final firmController = TextEditingController(text: cpa.firmName);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modify Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
-            const SizedBox(height: 16),
-            TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
-            onPressed: () async {
-              final updatedCpa = cpa.copyWith(
-                name: nameController.text.trim(),
-                firmName: firmController.text.trim(),
-              );
-              await provider.updateProfile(updatedCpa);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context, CpaProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account?'),
-        content: const Text('This action cannot be undone. All your data will be permanently removed.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(100, 40),
-            ),
-            onPressed: () async {
-              await provider.deleteAccount();
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-              }
-            },
-            child: const Text('Delete Permanently'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showAddCustomerDialog(BuildContext context, CpaProvider provider) {
