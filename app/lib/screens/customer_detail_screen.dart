@@ -683,7 +683,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFFF9F9F9),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFEEEEEE)),
             ),
