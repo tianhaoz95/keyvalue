@@ -236,22 +236,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             tooltip: 'Add Client',
             onPressed: _startManualAdd,
           ),
-          PopupMenuButton<CustomerSortOption>(
-            icon: const Icon(Icons.sort_outlined),
-            onSelected: _updateSortPreference,
-            itemBuilder: (context) => [
-              CheckedPopupMenuItem(
-                value: CustomerSortOption.name,
-                checked: _sortOption == CustomerSortOption.name,
-                child: const Text('Sort by Name'),
-              ),
-              CheckedPopupMenuItem(
-                value: CustomerSortOption.nextContact,
-                checked: _sortOption == CustomerSortOption.nextContact,
-                child: const Text('Sort by Next Contact'),
-              ),
-            ],
-          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: _toggleSettings,
@@ -309,10 +293,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
 
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                        child: Text(
-                          l10n.clients,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              l10n.clients,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                            ),
+                            const Spacer(),
+                            PopupMenuButton<CustomerSortOption>(
+                              icon: const Icon(Icons.sort_outlined, size: 20, color: Colors.black54),
+                              tooltip: 'Sort Clients',
+                              onSelected: _updateSortPreference,
+                              itemBuilder: (context) => [
+                                CheckedPopupMenuItem(
+                                  value: CustomerSortOption.name,
+                                  checked: _sortOption == CustomerSortOption.name,
+                                  child: const Text('Sort by Name'),
+                                ),
+                                CheckedPopupMenuItem(
+                                  value: CustomerSortOption.nextContact,
+                                  checked: _sortOption == CustomerSortOption.nextContact,
+                                  child: const Text('Sort by Next Contact'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                       
