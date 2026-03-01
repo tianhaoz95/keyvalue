@@ -339,10 +339,30 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                             : await provider.getGuidelinesRefinementResponse(customer, _aiConversation);
 
                           if (mounted) {
-                            setState(() {
-                              _aiConversation.add(ChatMessage(text: response, isUser: false));
-                              _isAiSidebarLoading = false;
-                            });
+                            if (response == 'CONFERENCE_READY') {
+                              setState(() => _isAiSidebarLoading = true);
+                              final updated = isProfile
+                                ? await provider.finalizeProfileRefinement(customer, _aiConversation)
+                                : await provider.finalizeGuidelinesRefinement(customer, _aiConversation);
+                              
+                              if (mounted) {
+                                setState(() {
+                                  _isAiSidebarLoading = false;
+                                  if (isProfile) {
+                                    _profileController.text = updated;
+                                    _aiConversation.add(ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", isUser: false));
+                                  } else {
+                                    _guidelinesController.text = updated;
+                                    _aiConversation.add(ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", isUser: false));
+                                  }
+                                });
+                              }
+                            } else {
+                              setState(() {
+                                _aiConversation.add(ChatMessage(text: response, isUser: false));
+                                _isAiSidebarLoading = false;
+                              });
+                            }
                           }
                         },
                       ),
