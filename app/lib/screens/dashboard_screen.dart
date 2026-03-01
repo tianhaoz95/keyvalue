@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.auto_awesome_outlined),
+            icon: const Icon(Icons.bolt_outlined),
             tooltip: 'AI Scan for Actions',
             onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
           ),
