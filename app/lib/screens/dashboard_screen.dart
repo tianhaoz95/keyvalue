@@ -254,7 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       // Welcome Header
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                        padding: const EdgeInsets.fromLTRB(24.0, 32.0, 24.0, 12.0),
                         color: Colors.white,
                         width: double.infinity,
                         child: Column(
