@@ -288,7 +288,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             child: TextField(
                                               controller: _searchController,
                                               autofocus: true,
-                                              textAlign: TextAlign.right,
+                                              textAlign: TextAlign.left,
                                               textAlignVertical: TextAlignVertical.center,
                                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                               decoration: InputDecoration(
