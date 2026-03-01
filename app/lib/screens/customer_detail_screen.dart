@@ -564,7 +564,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     onPressed: () => _openAiSidebar('profile', provider, customer),
                   ),
                   IconButton(
-                    icon: Icon(_isEditingProfile ? Icons.save : Icons.edit_outlined, size: 18),
+                    icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
                     onPressed: () {
                       if (_isEditingProfile) {
                         _saveProfile(provider);
@@ -655,7 +655,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     onPressed: () => _openAiSidebar('guidelines', provider, customer),
                   ),
                   IconButton(
-                    icon: Icon(_isEditingGuidelines ? Icons.save : Icons.edit_outlined, size: 18),
+                    icon: Icon(_isEditingGuidelines ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
                     onPressed: () {
                       if (_isEditingGuidelines) {
                         _saveGuidelines(provider);

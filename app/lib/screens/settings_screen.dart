@@ -22,11 +22,11 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         children: [
-          Text(l10n.profile, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          Text(l10n.profile.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
           const SizedBox(height: 24),
           _buildModernProfileCard(context, provider, cpa, l10n),
           const SizedBox(height: 56),
-          Text(l10n.account, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
           const SizedBox(height: 24),
           _buildModernLanguageSelector(context, provider),
           const SizedBox(height: 16),

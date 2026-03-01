@@ -190,7 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
         actions: [
           IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            icon: Icon(_isSearching ? Icons.close : Icons.search_outlined),
             onPressed: () {
               setState(() {
                 if (_isSearching) {
@@ -208,7 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
           ),
           PopupMenuButton<CustomerSortOption>(
-            icon: const Icon(Icons.sort),
+            icon: const Icon(Icons.sort_outlined),
             onSelected: _updateSortPreference,
             itemBuilder: (context) => [
               CheckedPopupMenuItem(
@@ -344,7 +344,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   side: const BorderSide(color: Colors.black12),
                 ),
-                child: const Icon(Icons.add),
+                child: const Icon(Icons.add_outlined),
               ),
           ],
         ),
@@ -452,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         }
                       }
                     },
-                    child: const Text('FINALIZE ONBOARDING'),
+                    child: Text(l10n.reviewNow.toUpperCase()),
                   ),
                 ],
               ),
