@@ -100,7 +100,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             )
           : Row(
               children: [
-                Image.asset('assets/images/logo_120.png', height: 28),
+                Image.asset(
+                  'assets/images/logo_120.png', 
+                  height: 28,
+                  color: Colors.black,
+                ),
                 const SizedBox(width: 12),
                 Text(cpa.firmName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
               ],
