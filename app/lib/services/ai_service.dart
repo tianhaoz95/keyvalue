@@ -16,7 +16,7 @@ class AiService {
   AiService({GenerativeModel? model, this.isDemo = false})
       : _model = model;
 
-  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash-lite');
+  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
   Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
     if (isDemo) {
