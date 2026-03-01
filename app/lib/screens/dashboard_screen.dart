@@ -320,8 +320,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: filteredCustomers.length,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                        separatorBuilder: (_, index) => const SizedBox(height: 12),
+                        padding: const EdgeInsets.only(bottom: 100),
+                        separatorBuilder: (_, index) => const Divider(height: 1, indent: 24, endIndent: 24),
                         itemBuilder: (context, index) {
                           final customer = filteredCustomers[index];
                           return _buildCustomerTile(context, customer);
@@ -937,57 +937,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildCustomerTile(BuildContext context, Customer customer) {
-    return Card(
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CustomerDetailScreen(customer: customer),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Hero(
-                tag: 'avatar_${customer.customerId}',
-                child: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.black12,
-                  child: Text(
-                    customer.name[0],
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CustomerDetailScreen(customer: customer),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Row(
+          children: [
+            Hero(
+              tag: 'avatar_${customer.customerId}',
+              child: CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.black12,
+                child: Text(
+                  customer.name[0],
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      customer.name, 
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)
-                    ),
-                    Text(
-                      customer.email, 
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    customer.name,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)
+                  ),
+                  Text(
+                    customer.email,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)
+                  ),
+                ],
               ),
-              const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
-            ],
-          ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
+          ],
         ),
       ),
     );
-  }
-}
+  }}
