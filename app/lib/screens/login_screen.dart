@@ -42,7 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/logo_cropped.png', height: 48),
+                  Image.asset(
+                    'assets/images/logo_cropped.png', 
+                    height: 48,
+                    color: Colors.black,
+                  ),
                   const SizedBox(width: 12),
                   const Text(
                     'KeyValue',
