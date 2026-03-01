@@ -268,28 +268,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               padding: const EdgeInsets.fromLTRB(24, 32, 12, 8),
                               child: Row(
                                 children: [
-                                  if (!_isSearching)
-                                    Text(
-                                      l10n.clients,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                                  Text(
+                                    l10n.clients,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                                  ),
+                                  if (_isSearching)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                        child: TextField(
+                                          controller: _searchController,
+                                          autofocus: true,
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                          decoration: const InputDecoration(
+                                            hintText: 'Search...',
+                                            hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                          onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                                        ),
+                                      ),
                                     )
                                   else
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _searchController,
-                                        autofocus: true,
-                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                        decoration: const InputDecoration(
-                                          hintText: 'Search clients...',
-                                          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                                          border: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
-                                      ),
-                                    ),
-                                  const Spacer(),
+                                    const Spacer(),
                                   IconButton(
                                     icon: Icon(_isSearching ? Icons.close : Icons.search_outlined, size: 20, color: Colors.black54),
                                     onPressed: () {
