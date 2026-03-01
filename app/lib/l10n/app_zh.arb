@@ -1,0 +1,22 @@
+{
+  "login": "登录",
+  "email": "电子邮件",
+  "password": "密码",
+  "rememberMe": "记住我",
+  "createAccount": "创建账户",
+  "continueAsGuest": "以访客身份继续",
+  "welcomeBack": "欢迎回来",
+  "portfolioStats": "您的投资组合包含 {count} 位客户",
+  "clients": "客户",
+  "pendingActions": "待处理事项",
+  "reviewNow": "立即查看",
+  "aiOnboarding": "AI 辅助开户",
+  "addClient": "添加客户",
+  "settings": "设置",
+  "profile": "个人资料",
+  "account": "账户",
+  "logout": "退出登录",
+  "deleteAccount": "删除账户",
+  "language": "语言",
+  "saveChanges": "保存更改"
+}

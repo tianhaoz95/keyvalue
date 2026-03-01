@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class EngagementTimeline extends StatelessWidget {
   final Customer customer;
@@ -21,6 +22,7 @@ class EngagementTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (engagements.isEmpty) {
       return const Center(
         child: Padding(
@@ -72,7 +74,7 @@ class EngagementTimeline extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _getStatusLabel(engagement.status),
+                            _getStatusLabel(engagement.status, l10n),
                             style: const TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 11,
@@ -96,7 +98,7 @@ class EngagementTimeline extends StatelessWidget {
                           style: TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
                         ),
                       const SizedBox(height: 20),
-                      _buildActions(context, engagement),
+                      _buildActions(context, engagement, l10n),
                     ],
                   ),
                 ),
@@ -140,7 +142,7 @@ class EngagementTimeline extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, Engagement engagement) {
+  Widget _buildActions(BuildContext context, Engagement engagement, AppLocalizations l10n) {
     if (engagement.status == EngagementStatus.draft) {
       return ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -154,7 +156,7 @@ class EngagementTimeline extends StatelessWidget {
           // However, simpler is to add a callback to EngagementTimeline.
           onReviewDraft?.call(engagement);
         },
-        child: const Text('REVIEW & SEND', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+        child: Text(l10n.reviewNow.toUpperCase(), style: const TextStyle(fontSize: 12, letterSpacing: 1)),
       );
     } else if (engagement.status == EngagementStatus.received) {
       return ElevatedButton(
@@ -193,9 +195,9 @@ class EngagementTimeline extends StatelessWidget {
     }
   }
 
-  String _getStatusLabel(EngagementStatus status) {
+  String _getStatusLabel(EngagementStatus status, AppLocalizations l10n) {
     switch (status) {
-      case EngagementStatus.draft: return 'PENDING REVIEW';
+      case EngagementStatus.draft: return l10n.pendingActions.toUpperCase();
       case EngagementStatus.sent: return 'OUTBOUND SENT';
       case EngagementStatus.received: return 'INBOUND RECEIVED';
       case EngagementStatus.completed: return 'COMPLETED';

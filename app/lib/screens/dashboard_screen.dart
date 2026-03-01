@@ -6,6 +6,7 @@ import '../models/customer.dart';
 import '../services/ai_service.dart';
 import '../widgets/pending_review_list.dart';
 import '../widgets/loading_overlay.dart';
+import '../l10n/app_localizations.dart';
 import 'customer_detail_screen.dart';
 import 'settings_screen.dart';
 
@@ -133,6 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CpaProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
     final allCustomers = provider.customers;
     final cpa = provider.currentCpa;
     final isDiscovering = provider.isDiscovering;
@@ -233,7 +235,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // Main Dashboard Content
           Expanded(
-            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -249,7 +250,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Welcome back, ${cpa.name.split(' ')[0]}',
+                            '${l10n.welcomeBack}, ${cpa.name.split(' ')[0]}',
                             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
                           ),
                           if (isDiscovering)
@@ -262,7 +263,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Your portfolio consists of ${allCustomers.length} clients',
+                        l10n.portfolioStats(allCustomers.length),
                         style: const TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
@@ -277,11 +278,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const Divider(height: 1, indent: 24, endIndent: 24),
                 ],
 
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
                   child: Text(
-                    'Clients',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                    l10n.clients,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
                   ),
                 ),
                 
@@ -300,19 +301,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           // Sidebar Container (Conditional)
-          if (isAnySidebarOpen)
+          if (isAnySidebarOpen) ...[
             const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-          if (isAnySidebarOpen)
-            Expanded(
-              flex: 3,
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.35,
               child: _isAiOnboardingOpen 
-                ? _buildAiOnboardingSidebar(context, provider)
-                : _buildManualAddSidebar(context, provider),
+                ? _buildAiOnboardingSidebar(context, provider, l10n)
+                : _buildManualAddSidebar(context, provider, l10n),
             ),
+          ],
         ],
       ),
       floatingActionButton: Padding(
-        padding: EdgeInsets.only(right: isAnySidebarOpen ? MediaQuery.of(context).size.width * 0.375 : 0),
+        padding: EdgeInsets.only(right: isAnySidebarOpen ? MediaQuery.of(context).size.width * 0.35 : 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -351,7 +352,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider) {
+  Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -363,10 +364,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   const Icon(Icons.auto_awesome_outlined, size: 24),
                   const SizedBox(width: 16),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'AI ONBOARDING',
-                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                      l10n.aiOnboarding.toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
                     ),
                   ),
                   IconButton(
@@ -462,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildManualAddSidebar(BuildContext context, CpaProvider provider) {
+  Widget _buildManualAddSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -474,10 +475,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   const Icon(Icons.person_add_outlined, size: 24),
                   const SizedBox(width: 16),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'ADD NEW CLIENT',
-                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                      l10n.addClient.toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
                     ),
                   ),
                   IconButton(
@@ -548,7 +549,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         }
                       }
                     },
-                    child: const Text('CREATE CLIENT'),
+                    child: Text(l10n.addClient.toUpperCase()),
                   ),
                 ],
               ),

@@ -9,6 +9,7 @@ import '../providers/cpa_provider.dart';
 import '../services/ai_service.dart';
 import '../widgets/engagement_timeline.dart';
 import '../widgets/loading_overlay.dart';
+import '../l10n/app_localizations.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   final Customer customer;
@@ -88,6 +89,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CpaProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
     final currentCustomer = provider.customers.firstWhere(
       (c) => c.customerId == widget.customer.customerId,
       orElse: () => widget.customer,
@@ -162,7 +164,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       const Divider(height: 1),
                       TabBar(
                         tabs: [
-                          const Tab(text: 'PROFILE'),
+                          Tab(text: l10n.profile.toUpperCase()),
                           const Tab(text: 'RULES'),
                           Tab(
                             child: Badge(
@@ -172,14 +174,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                               child: const Text('HISTORY'),
                             ),
                           ),
-                          const Tab(text: 'SETTINGS'),
+                          Tab(text: l10n.settings.toUpperCase()),
                         ],
                       ),
                       Expanded(
                         child: TabBarView(
                           children: [
-                            _buildProfileTab(context, provider, currentCustomer, engagements),
-                            _buildGuidelinesTab(context, provider, currentCustomer),
+                            _buildProfileTab(context, provider, currentCustomer, engagements, l10n),
+                            _buildGuidelinesTab(context, provider, currentCustomer, l10n),
                             EngagementTimeline(
                               customer: currentCustomer,
                               engagements: engagements,
@@ -187,7 +189,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                               onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
                               onReviewDraft: (engagement) => _openAiSidebar('review', provider, currentCustomer, engagement: engagement),
                             ),
-                            _buildSettingsTab(context, provider, currentCustomer),
+                            _buildSettingsTab(context, provider, currentCustomer, l10n),
                           ],
                         ),
                       ),
@@ -203,14 +205,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           if (_isAiSidebarOpen)
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.35,
-              child: _buildAiSidebarContent(context, provider, currentCustomer),
+              child: _buildAiSidebarContent(context, provider, currentCustomer, l10n),
             ),
         ],
       ),
     ));
   }
 
-  Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer) {
+  Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
     if (_aiSidebarMode == 'review') {
       return _buildDraftReviewSidebar(context, provider, customer);
     }
@@ -528,7 +530,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     });
   }
 
-  Widget _buildProfileTab(BuildContext context, CpaProvider provider, Customer customer, List<Engagement> engagements) {
+  Widget _buildProfileTab(BuildContext context, CpaProvider provider, Customer customer, List<Engagement> engagements, AppLocalizations l10n) {
     final pendingAiEngagement = engagements.cast<Engagement?>().firstWhere(
       (e) => e?.status == EngagementStatus.received,
       orElse: () => null,
@@ -553,7 +555,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('BACKGROUND', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              Text(l10n.profile.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
               Row(
                 children: [
                   IconButton(
@@ -635,7 +637,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildGuidelinesTab(BuildContext context, CpaProvider provider, Customer customer) {
+  Widget _buildGuidelinesTab(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -696,7 +698,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildSettingsTab(BuildContext context, CpaProvider provider, Customer customer) {
+  Widget _buildSettingsTab(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
     final nameController = TextEditingController(text: customer.name);
     final emailController = TextEditingController(text: customer.email);
     final occupationController = TextEditingController(text: customer.occupation);
@@ -708,7 +710,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('CLIENT SETTINGS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
           const SizedBox(height: 24),
           TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
           const SizedBox(height: 16),
@@ -734,7 +736,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully')));
               }
             },
-            child: const Text('SAVE CHANGES'),
+            child: Text(l10n.saveChanges.toUpperCase()),
           ),
           const SizedBox(height: 64),
           const Divider(),
@@ -747,7 +749,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               side: const BorderSide(color: Colors.redAccent),
             ),
             onPressed: () => _showDeleteConfirmation(context, provider, customer),
-            child: const Text('DELETE CLIENT'),
+            child: Text(l10n.deleteAccount.toUpperCase()),
           ),
         ],
       ),

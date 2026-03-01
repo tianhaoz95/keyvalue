@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/cpa_provider.dart';
 import 'login_screen.dart';
@@ -9,27 +10,30 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CpaProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
     final cpa = provider.currentCpa;
 
     if (cpa == null) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.black)));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SETTINGS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
+        title: Text(l10n.settings, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         children: [
-          const Text('PROFILE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          Text(l10n.profile, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
           const SizedBox(height: 24),
-          _buildModernProfileCard(context, provider, cpa),
+          _buildModernProfileCard(context, provider, cpa, l10n),
           const SizedBox(height: 56),
-          const Text('ACCOUNT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          Text(l10n.account, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
           const SizedBox(height: 24),
+          _buildModernLanguageSelector(context, provider),
+          const SizedBox(height: 16),
           _buildModernActionItem(
             context,
             icon: Icons.logout_outlined,
-            title: 'LOGOUT',
+            title: l10n.logout,
             onTap: () async {
               await provider.logout();
               if (context.mounted) {
@@ -44,16 +48,43 @@ class SettingsScreen extends StatelessWidget {
           _buildModernActionItem(
             context,
             icon: Icons.delete_outline,
-            title: 'DELETE ACCOUNT',
+            title: l10n.deleteAccount,
             isDestructive: true,
-            onTap: () => _showDeleteAccountDialog(context, provider),
+            onTap: () => _showDeleteAccountDialog(context, provider, l10n),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildModernProfileCard(BuildContext context, CpaProvider provider, dynamic cpa) {
+  Widget _buildModernLanguageSelector(BuildContext context, CpaProvider provider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: provider.locale.languageCode,
+          isExpanded: true,
+          icon: const Icon(Icons.language_outlined, size: 20),
+          onChanged: (String? code) {
+            if (code != null) {
+              provider.setLocale(Locale(code));
+            }
+          },
+          items: const [
+            DropdownMenuItem(value: 'en', child: Text('ENGLISH', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
+            DropdownMenuItem(value: 'zh', child: Text('中文 (CHINESE)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernProfileCard(BuildContext context, CpaProvider provider, dynamic cpa, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -70,8 +101,8 @@ class SettingsScreen extends StatelessWidget {
           _buildModernInfoRow('EMAIL', cpa.email),
           const SizedBox(height: 32),
           ElevatedButton(
-            onPressed: () => _showEditProfileDialog(context, provider),
-            child: const Text('EDIT PROFILE'),
+            onPressed: () => _showEditProfileDialog(context, provider, l10n),
+            child: Text(l10n.saveChanges.toUpperCase()),
           ),
         ],
       ),
@@ -105,7 +136,7 @@ class SettingsScreen extends StatelessWidget {
       child: ListTile(
         leading: Icon(icon, color: color, size: 20),
         title: Text(
-          title,
+          title.toUpperCase(),
           style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1),
         ),
         trailing: Icon(Icons.chevron_right, color: color, size: 18),
@@ -115,7 +146,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, CpaProvider provider) {
+  void _showEditProfileDialog(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     final cpa = provider.currentCpa!;
     final nameController = TextEditingController(text: cpa.name);
     final firmController = TextEditingController(text: cpa.firmName);
@@ -123,7 +154,7 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(l10n.profile, style: const TextStyle(fontWeight: FontWeight.w900)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -143,18 +174,18 @@ class SettingsScreen extends StatelessWidget {
               await provider.updateProfile(updatedCpa);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('UPDATE'),
+            child: Text(l10n.saveChanges.toUpperCase()),
           ),
         ],
       ),
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context, CpaProvider provider) {
+  void _showDeleteAccountDialog(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: Text(l10n.deleteAccount, style: const TextStyle(fontWeight: FontWeight.w900)),
         content: const Text('This will permanently delete all your data and access. Are you sure?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
@@ -172,7 +203,7 @@ class SettingsScreen extends StatelessWidget {
                 );
               }
             },
-            child: const Text('DELETE PERMANENTLY'),
+            child: Text(l10n.deleteAccount.toUpperCase()),
           ),
         ],
       ),

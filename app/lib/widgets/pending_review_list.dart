@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/customer.dart';
 import '../screens/customer_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class PendingReviewList extends StatelessWidget {
   final List<Customer> customers;
@@ -10,15 +11,16 @@ class PendingReviewList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (customers.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
           child: Text(
-            'PENDING ACTIONS',
-            style: TextStyle(
+            l10n.pendingActions.toUpperCase(),
+            style: const TextStyle(
               fontSize: 12, 
               fontWeight: FontWeight.w900, 
               letterSpacing: 1.5, 
@@ -86,19 +88,19 @@ class PendingReviewList extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Row(
+                          Row(
                             children: [
                               Text(
-                                'REVIEW NOW',
-                                style: TextStyle(
+                                l10n.reviewNow.toUpperCase(),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward, color: Colors.white, size: 12),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_forward, color: Colors.white, size: 12),
                             ],
                           ),
                         ],

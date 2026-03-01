@@ -28,6 +28,9 @@ class CpaProvider with ChangeNotifier {
   Cpa? _currentCpa;
   Cpa? get currentCpa => _currentCpa;
 
+  Locale _locale = const Locale('en');
+  Locale get locale => _locale;
+
   List<Customer> _customers = [];
   List<Customer> get customers => _customers;
 
@@ -54,6 +57,21 @@ class CpaProvider with ChangeNotifier {
         _aiService = aiService ?? AiService(),
         _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance {
     _checkRememberedUser();
+    _loadLocale();
+  }
+
+  Future<void> _loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('languageCode') ?? 'en';
+    _locale = Locale(languageCode);
+    notifyListeners();
+  }
+
+  Future<void> setLocale(Locale locale) async {
+    _locale = locale;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('languageCode', locale.languageCode);
+    notifyListeners();
   }
 
   Future<void> _checkRememberedUser() async {

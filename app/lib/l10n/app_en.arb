@@ -1,0 +1,29 @@
+{
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "rememberMe": "Remember me",
+  "createAccount": "CREATE AN ACCOUNT",
+  "continueAsGuest": "CONTINUE AS GUEST",
+  "welcomeBack": "Welcome back",
+  "portfolioStats": "Your portfolio consists of {count} clients",
+  "@portfolioStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clients": "Clients",
+  "pendingActions": "PENDING ACTIONS",
+  "reviewNow": "REVIEW NOW",
+  "aiOnboarding": "AI ONBOARDING",
+  "addClient": "Add Client",
+  "settings": "SETTINGS",
+  "profile": "PROFILE",
+  "account": "ACCOUNT",
+  "logout": "LOGOUT",
+  "deleteAccount": "DELETE ACCOUNT",
+  "language": "Language",
+  "saveChanges": "SAVE CHANGES"
+}

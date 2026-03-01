@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/cpa_provider.dart';
 import '../models/cpa.dart';
@@ -21,13 +22,17 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CpaProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
+
     // Auto-navigate if already logged in via remember me
     if (provider.currentCpa != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          );
+        }
       });
     }
 
@@ -71,10 +76,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'EMAIL',
-                        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                        prefixIcon: Icon(Icons.email_outlined, size: 20),
+                      decoration: InputDecoration(
+                        labelText: l10n.email.toUpperCase(),
+                        labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                        prefixIcon: const Icon(Icons.email_outlined, size: 20),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
@@ -82,10 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     TextField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'PASSWORD',
-                        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                        prefixIcon: Icon(Icons.lock_outline, size: 20),
+                      decoration: InputDecoration(
+                        labelText: l10n.password.toUpperCase(),
+                        labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
                       ),
                       obscureText: true,
                       autofillHints: const [AutofillHints.password],
@@ -109,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Remember me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  Text(l10n.rememberMe, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 40),
@@ -118,15 +123,15 @@ class _LoginScreenState extends State<LoginScreen> {
               else ...[
                 ElevatedButton(
                   onPressed: _login,
-                  child: const Text('LOGIN'),
+                  child: Text(l10n.login.toUpperCase()),
                 ),
                 const SizedBox(height: 24),
                 Center(
                   child: TextButton(
                     onPressed: _showRegisterDialog,
-                    child: const Text(
-                      'CREATE AN ACCOUNT',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.createAccount,
+                      style: const TextStyle(
                         fontSize: 12, 
                         fontWeight: FontWeight.w900, 
                         letterSpacing: 1,
@@ -151,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: OutlinedButton(
                     onPressed: _enterGuestMode,
-                    child: const Text('CONTINUE AS GUEST'),
+                    child: Text(l10n.continueAsGuest.toUpperCase()),
                   ),
                 ),
               ],
