@@ -55,7 +55,7 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 
 ## 🌐 Web Deployment
 
-The application can be deployed to Firebase Hosting for web access.
+The application can be deployed to Firebase Hosting for web access. **Do not deploy the application unless the user explicitly requests it.**
 
 ### 1. Build for Web
 From the `app/` directory, run:
