@@ -22,12 +22,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   CustomerSortOption _sortOption = CustomerSortOption.nextContact;
   bool _isSearching = false;
 
-  // AI Onboarding Sidebar State
+  // Sidebar States
   bool _isAiOnboardingOpen = false;
+  bool _isManualAddOpen = false;
   final List<ChatMessage> _onboardingConversation = [];
   final TextEditingController _onboardingInputController = TextEditingController();
   final ScrollController _onboardingScrollController = ScrollController();
   bool _isAiOnboardingLoading = false;
+
+  // Manual Add Controllers
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _occupationController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _detailsController = TextEditingController();
+  final _guidelinesController = TextEditingController();
 
   @override
   void initState() {
@@ -59,6 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _startAiOnboarding(CpaProvider provider) async {
     setState(() {
       _isAiOnboardingOpen = true;
+      _isManualAddOpen = false;
       _onboardingConversation.clear();
       _isAiOnboardingLoading = true;
     });
@@ -70,6 +81,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isAiOnboardingLoading = false;
       });
     }
+  }
+
+  void _startManualAdd() {
+    setState(() {
+      _isManualAddOpen = true;
+      _isAiOnboardingOpen = false;
+      _nameController.clear();
+      _emailController.clear();
+      _occupationController.clear();
+      _phoneController.clear();
+      _addressController.clear();
+      _detailsController.clear();
+      _guidelinesController.clear();
+    });
   }
 
   void _onboardingScrollToBottom() {
@@ -89,6 +114,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _searchController.dispose();
     _onboardingInputController.dispose();
     _onboardingScrollController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _occupationController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _detailsController.dispose();
+    _guidelinesController.dispose();
     super.dispose();
   }
 
@@ -117,6 +149,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return a.nextEngagementDate.compareTo(b.nextEngagementDate);
       }
     });
+
+    final isAnySidebarOpen = _isAiOnboardingOpen || _isManualAddOpen;
 
     return LoadingOverlay(
       isLoading: isDiscovering,
@@ -193,7 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // Main Dashboard Content
           Expanded(
-            flex: 3,
+            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -259,18 +293,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          // AI Onboarding Sidebar
-          if (_isAiOnboardingOpen)
-            const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
-          if (_isAiOnboardingOpen)
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: _buildAiOnboardingSidebar(context, provider),
+          // Sidebar Container (Conditional)
+          if (isAnySidebarOpen)
+            const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+          if (isAnySidebarOpen)
+            Expanded(
+              flex: 3,
+              child: _isAiOnboardingOpen 
+                ? _buildAiOnboardingSidebar(context, provider)
+                : _buildManualAddSidebar(context, provider),
             ),
         ],
       ),
       floatingActionButton: Padding(
-        padding: EdgeInsets.only(right: _isAiOnboardingOpen ? MediaQuery.of(context).size.width * 0.35 : 0),
+        padding: EdgeInsets.only(right: isAnySidebarOpen ? MediaQuery.of(context).size.width * 0.375 : 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -286,20 +322,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: const Icon(Icons.auto_awesome_outlined),
               ),
             const SizedBox(height: 12),
-            FloatingActionButton(
-              heroTag: 'add_customer',
-              elevation: 0,
-              onPressed: () {
-                _showAddCustomerDialog(context, provider);
-              },
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Colors.black12),
+            if (!_isManualAddOpen)
+              FloatingActionButton(
+                heroTag: 'add_customer',
+                elevation: 0,
+                onPressed: _startManualAdd,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Colors.black12),
+                ),
+                child: const Icon(Icons.add),
               ),
-              child: const Icon(Icons.add),
-            ),
           ],
         ),
       ),
@@ -407,6 +442,103 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
                     },
                     child: const Text('FINALIZE ONBOARDING'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManualAddSidebar(BuildContext context, CpaProvider provider) {
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.person_add_outlined, size: 24),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'ADD NEW CLIENT',
+                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _isManualAddOpen = false),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'NAME')),
+                  const SizedBox(height: 16),
+                  TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'EMAIL')),
+                  const SizedBox(height: 16),
+                  TextField(controller: _occupationController, decoration: const InputDecoration(labelText: 'OCCUPATION')),
+                  const SizedBox(height: 16),
+                  TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'PHONE')),
+                  const SizedBox(height: 16),
+                  TextField(controller: _addressController, decoration: const InputDecoration(labelText: 'ADDRESS')),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _detailsController,
+                    maxLines: 4,
+                    decoration: const InputDecoration(labelText: 'CLIENT DETAILS (MARKDOWN)'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _guidelinesController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'ENGAGEMENT RULES (MARKDOWN)'),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Name and Email are required')),
+                        );
+                        return;
+                      }
+                      
+                      final customer = Customer(
+                        customerId: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: _nameController.text.trim(),
+                        email: _emailController.text.trim(),
+                        occupation: _occupationController.text.trim(),
+                        phoneNumber: _phoneController.text.trim(),
+                        address: _addressController.text.trim(),
+                        details: _detailsController.text.trim(),
+                        guidelines: _guidelinesController.text.trim(),
+                        engagementFrequencyDays: 30,
+                        nextEngagementDate: DateTime.now(),
+                        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+                        hasActiveDraft: false,
+                      );
+                      
+                      await provider.addCustomer(customer);
+                      if (mounted) {
+                        setState(() => _isManualAddOpen = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${customer.name} added')),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('CREATE CLIENT'),
                   ),
                 ],
               ),
@@ -544,77 +676,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showAddCustomerDialog(BuildContext context, CpaProvider provider) {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    final occupationController = TextEditingController();
-    final phoneController = TextEditingController();
-    final addressController = TextEditingController();
-    final detailsController = TextEditingController();
-    final guidelinesController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Customer'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-              const SizedBox(height: 12),
-              TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-              const SizedBox(height: 12),
-              TextField(controller: occupationController, decoration: const InputDecoration(labelText: 'Occupation')),
-              const SizedBox(height: 12),
-              TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-              const SizedBox(height: 12),
-              TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
-              const SizedBox(height: 12),
-              TextField(
-                controller: detailsController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Details (Markdown)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: guidelinesController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Engagement Guidelines (Markdown)'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
-            onPressed: () async {
-              if (nameController.text.isEmpty || emailController.text.isEmpty) return;
-              final customer = Customer(
-                customerId: DateTime.now().millisecondsSinceEpoch.toString(),
-                name: nameController.text.trim(),
-                email: emailController.text.trim(),
-                occupation: occupationController.text.trim(),
-                phoneNumber: phoneController.text.trim(),
-                address: addressController.text.trim(),
-                details: detailsController.text.trim(),
-                guidelines: guidelinesController.text.trim(),
-                engagementFrequencyDays: 30,
-                nextEngagementDate: DateTime.now(), // Trigger proactive discovery immediately
-                lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
-                hasActiveDraft: false,
-              );
-              await provider.addCustomer(customer);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
