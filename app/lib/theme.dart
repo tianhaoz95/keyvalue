@@ -1,82 +1,101 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryIndigo = Color(0xFF1A237E);
-  static const Color secondaryAmber = Color(0xFFFFA000);
-  static const Color backgroundSlate = Color(0xFFF5F7F9);
-  static const Color accentCharcoal = Color(0xFF37474F);
+  static const Color primaryBlack = Color(0xFF000000);
+  static const Color accentGrey = Color(0xFF757575);
+  static const Color lightGrey = Color(0xFFEEEEEE);
+  static const Color backgroundWhite = Color(0xFFFFFFFF);
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryIndigo,
-        primary: primaryIndigo,
-        secondary: secondaryAmber,
-        surface: Colors.white,
+        seedColor: primaryBlack,
+        primary: primaryBlack,
+        secondary: accentGrey,
+        surface: backgroundWhite,
         error: Colors.redAccent,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
       ),
-      scaffoldBackgroundColor: backgroundSlate,
+      scaffoldBackgroundColor: backgroundWhite,
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryIndigo,
-        foregroundColor: Colors.white,
+        backgroundColor: backgroundWhite,
+        foregroundColor: primaryBlack,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: primaryBlack,
+          letterSpacing: -0.5,
         ),
+        iconTheme: IconThemeData(color: primaryBlack),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
-        shadowColor: Colors.black12,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: lightGrey, width: 1),
+        ),
+        color: backgroundWhite,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryIndigo,
+          backgroundColor: primaryBlack,
           foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
+          elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: primaryIndigo,
-          side: const BorderSide(color: primaryIndigo),
-          minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          foregroundColor: primaryBlack,
+          side: const BorderSide(color: primaryBlack, width: 1.5),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: lightGrey),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: lightGrey),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryIndigo, width: 2),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: primaryBlack, width: 1.5),
         ),
-        labelStyle: const TextStyle(color: accentCharcoal),
+        labelStyle: const TextStyle(color: accentGrey),
       ),
       textTheme: const TextTheme(
-        headlineLarge: TextStyle(fontWeight: FontWeight.bold, color: primaryIndigo),
-        headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: primaryIndigo),
-        titleLarge: TextStyle(fontWeight: FontWeight.w600, color: accentCharcoal),
-        bodyLarge: TextStyle(color: accentCharcoal),
-        bodyMedium: TextStyle(color: accentCharcoal),
+        headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: primaryBlack, letterSpacing: -1),
+        headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: primaryBlack, letterSpacing: -0.5),
+        titleLarge: TextStyle(fontWeight: FontWeight.w700, color: primaryBlack),
+        bodyLarge: TextStyle(color: primaryBlack, fontSize: 16),
+        bodyMedium: TextStyle(color: accentGrey, fontSize: 14),
+      ),
+      iconTheme: const IconThemeData(color: primaryBlack),
+      dividerTheme: const DividerThemeData(
+        color: lightGrey,
+        thickness: 1,
+        space: 24,
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: primaryBlack,
+        unselectedLabelColor: accentGrey,
+        indicatorColor: primaryBlack,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     );
   }

@@ -91,21 +91,21 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Review Client Profile'),
+        title: const Text('Review Profile', style: TextStyle(fontWeight: FontWeight.w900)),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildReviewField('Name', customer.name),
-              _buildReviewField('Email', customer.email),
-              _buildReviewField('Occupation', customer.occupation),
-              _buildReviewField('Guidelines', customer.guidelines),
+              _buildReviewField('NAME', customer.name),
+              _buildReviewField('EMAIL', customer.email),
+              _buildReviewField('OCCUPATION', customer.occupation),
+              _buildReviewField('RULES', customer.guidelines),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
               final provider = Provider.of<CpaProvider>(context, listen: false);
@@ -115,7 +115,7 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
                 Navigator.pop(context); // Close screen
               }
             },
-            child: const Text('Create Client'),
+            child: const Text('CREATE CLIENT'),
           ),
         ],
       ),
@@ -124,12 +124,13 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
 
   Widget _buildReviewField(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-          Text(value.isEmpty ? 'Not found' : value, style: const TextStyle(fontSize: 16)),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.grey, letterSpacing: 1.2)),
+          const SizedBox(height: 4),
+          Text(value.isEmpty ? 'Not found' : value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -138,13 +139,14 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('AI Onboarding'),
+        title: const Text('ONBOARDING', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
         actions: [
           if (_messages.length > 2)
             TextButton(
               onPressed: _isTyping ? null : _finalizeOnboarding,
-              child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('DONE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 14)),
             ),
         ],
       ),
@@ -153,7 +155,7 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _messages.length) {
@@ -174,19 +176,23 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: message.isUser ? Theme.of(context).primaryColor : Colors.white,
-          borderRadius: BorderRadius.circular(20).copyWith(
-            bottomRight: message.isUser ? const Radius.circular(0) : const Radius.circular(20),
-            bottomLeft: message.isUser ? const Radius.circular(20) : const Radius.circular(0),
+          color: message.isUser ? Colors.black : const Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.circular(12).copyWith(
+            bottomRight: message.isUser ? const Radius.circular(0) : const Radius.circular(12),
+            bottomLeft: message.isUser ? const Radius.circular(12) : const Radius.circular(0),
           ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 2, offset: const Offset(0, 1))],
+          border: message.isUser ? null : Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Text(
           message.text,
-          style: TextStyle(color: message.isUser ? Colors.white : Colors.black87),
+          style: TextStyle(
+            color: message.isUser ? Colors.white : Colors.black,
+            fontSize: 14,
+            height: 1.5
+          ),
         ),
       ),
     );
@@ -196,16 +202,17 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20).copyWith(bottomLeft: const Radius.circular(0)),
+          color: const Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.circular(12).copyWith(bottomLeft: const Radius.circular(0)),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: const SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black12),
         ),
       ),
     );
@@ -213,10 +220,10 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, -2))],
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
       ),
       child: SafeArea(
         child: Row(
@@ -226,19 +233,24 @@ class _AiOnboardingScreenState extends State<AiOnboardingScreen> {
                 controller: _controller,
                 decoration: InputDecoration(
                   hintText: 'Type your message...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEEEEEE))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEEEEEE))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black, width: 2)),
                   filled: true,
-                  fillColor: Colors.grey[100],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  fillColor: const Color(0xFFF9F9F9),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
-            const SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
+            const SizedBox(width: 12),
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle,
+              ),
               child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white),
+                icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
                 onPressed: _sendMessage,
               ),
             ),

@@ -15,18 +15,19 @@ class PendingReviewList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
+          padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
           child: Text(
-            'Pending Reviews',
+            'PENDING ACTIONS',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.redAccent,
+              fontSize: 12, 
+              fontWeight: FontWeight.w900, 
+              letterSpacing: 1.5, 
+              color: Colors.grey
             ),
           ),
         ),
         SizedBox(
-          height: 110,
+          height: 140,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: customers.length,
@@ -34,24 +35,13 @@ class PendingReviewList extends StatelessWidget {
             itemBuilder: (context, index) {
               final customer = customers[index];
               return Container(
-                width: 200,
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 280,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
                 child: Card(
-                  color: Colors.redAccent.withValues(alpha: 0.05),
+                  color: Colors.black,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Colors.redAccent, width: 0.5),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    title: Text(
-                      customer.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text('New Draft Ready', style: TextStyle(fontSize: 12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: InkWell(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -60,6 +50,60 @@ class PendingReviewList extends StatelessWidget {
                         ),
                       );
                     },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.auto_awesome_outlined, color: Colors.white, size: 18),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  customer.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 16,
+                                    letterSpacing: -0.2
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'PROACTIVE DRAFT READY',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Row(
+                            children: [
+                              Text(
+                                'REVIEW NOW',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.arrow_forward, color: Colors.white, size: 12),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               );

@@ -11,6 +11,11 @@ class EngagementRepository {
     return _firestore.collection('cpas').doc(cpaUid).collection('customers').doc(customerId).collection('engagements');
   }
 
+  Future<void> saveEngagement(String cpaUid, String customerId, Engagement engagement) async {
+    if (cpaUid == 'demo_user') return;
+    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).set(engagement.toMap());
+  }
+
   Future<void> updateEngagement(String cpaUid, String customerId, Engagement engagement) async {
     if (cpaUid == 'demo_user') return;
     await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
@@ -50,10 +55,5 @@ class EngagementRepository {
         .where('status', isEqualTo: EngagementStatus.draft.name)
         .get();
     return snapshot.docs.isNotEmpty;
-  }
-
-  Future<void> updateEngagement(String cpaUid, String customerId, Engagement engagement) async {
-    if (cpaUid == 'demo_user') return;
-    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
   }
 }

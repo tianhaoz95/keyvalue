@@ -76,6 +76,8 @@ flutter:
     - assets/images/logo_512.png
     - assets/images/logo_120.png
     - assets/images/logo_120_white.png
+    - assets/images/logo_icon.png
+    - assets/images/logo_cropped.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

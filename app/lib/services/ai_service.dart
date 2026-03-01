@@ -96,11 +96,11 @@ JSON Output:''';
 
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) {
-      return "Hi ${customer.name}, I've been reviewing your latest details. It looks like you've had some significant growth recently! I'd love to check in and see how we can optimize your tax strategy for the upcoming quarter.";
+      return "Hi ${customer.name}, hope your quarter is going well! I've been reviewing your latest details regarding ${customer.occupation} and wanted to see if we should schedule a quick touchpoint to discuss your tax strategy.";
     }
     try {
       final prompt = '''
-Draft a warm, professional check-in message for a CPA to send to their client.
+Draft a warm, professional check-in message for a CPA to send to their client, ${customer.name}.
 Context:
 Customer Details (Markdown):
 ${customer.details}

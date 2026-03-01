@@ -31,7 +31,7 @@ class EngagementTimeline extends StatelessWidget {
 
     return ListView.builder(
       itemCount: engagements.length,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       itemBuilder: (context, index) {
         final engagement = engagements[index];
         final isLast = index == engagements.length - 1;
@@ -40,84 +40,63 @@ class EngagementTimeline extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Timeline line and icon
+              // Modern minimalist timeline
               Column(
                 children: [
                   Container(
-                    width: 2,
-                    height: 16,
-                    color: index == 0 ? Colors.transparent : Colors.grey[300],
-                  ),
-                  Container(
-                    width: 32,
-                    height: 32,
+                    width: 12,
+                    height: 12,
                     decoration: BoxDecoration(
-                      color: _getStatusColor(engagement.status).withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _getStatusColor(engagement.status), width: 2),
-                    ),
-                    child: Icon(
-                      _getStatusIcon(engagement.status),
-                      size: 16,
                       color: _getStatusColor(engagement.status),
+                      shape: BoxShape.circle,
                     ),
                   ),
                   Expanded(
                     child: Container(
-                      width: 2,
-                      color: isLast ? Colors.transparent : Colors.grey[300],
+                      width: 1,
+                      color: isLast ? Colors.transparent : Colors.black12,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 16),
-              // Content Card
+              const SizedBox(width: 24),
+              // Content
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: Card(
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey[200]!),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.only(bottom: 40.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _getStatusLabel(engagement.status),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStatusColor(engagement.status),
-                                ),
-                              ),
-                              Text(
-                                engagement.createdAt.toLocal().toString().split(' ')[0],
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          if (engagement.sentMessage.isNotEmpty)
-                            _buildTimelineSnippet('Message Sent:', engagement.sentMessage),
-                          if (engagement.customerResponse.isNotEmpty)
-                            _buildTimelineSnippet('Response:', engagement.customerResponse, isAlt: true),
-                          if (engagement.status == EngagementStatus.draft)
-                            const Text(
-                              'A new proactive message is ready for your review.',
-                              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                          Text(
+                            _getStatusLabel(engagement.status),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 11,
+                              letterSpacing: 1.5,
                             ),
-                          const SizedBox(height: 12),
-                          _buildActions(context, engagement),
+                          ),
+                          Text(
+                            engagement.createdAt.toLocal().toString().split(' ')[0],
+                            style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+                          ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      if (engagement.sentMessage.isNotEmpty)
+                        _buildModernSnippet('OUTBOUND', engagement.sentMessage),
+                      if (engagement.customerResponse.isNotEmpty)
+                        _buildModernSnippet('INBOUND', engagement.customerResponse, isDark: true),
+                      if (engagement.status == EngagementStatus.draft)
+                        const Text(
+                          'A proactive outreach draft is prepared and waiting for your final approval.',
+                          style: TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+                        ),
+                      const SizedBox(height: 20),
+                      _buildActions(context, engagement),
+                    ],
                   ),
                 ),
               ),
@@ -128,25 +107,31 @@ class EngagementTimeline extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineSnippet(String label, String text, {bool isAlt = false}) {
+  Widget _buildModernSnippet(String label, String text, {bool isDark = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
+          const SizedBox(height: 6),
           Container(
-            padding: const EdgeInsets.all(8),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isAlt ? Colors.green[50] : Colors.blue[50],
+              color: isDark ? Colors.black : const Color(0xFFF9F9F9),
               borderRadius: BorderRadius.circular(8),
+              border: isDark ? null : Border.all(color: const Color(0xFFEEEEEE)),
             ),
             child: Text(
               text,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(
+                fontSize: 13, 
+                height: 1.5, 
+                color: isDark ? Colors.white : Colors.black87
+              ),
             ),
           ),
         ],
@@ -158,8 +143,8 @@ class EngagementTimeline extends StatelessWidget {
     if (engagement.status == EngagementStatus.draft) {
       return ElevatedButton(
         style: ElevatedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          minimumSize: const Size(120, 36),
+          minimumSize: const Size(140, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         onPressed: () {
           Navigator.push(
@@ -169,51 +154,41 @@ class EngagementTimeline extends StatelessWidget {
             ),
           );
         },
-        child: const Text('Review & Send'),
+        child: const Text('REVIEW & SEND', style: TextStyle(fontSize: 12, letterSpacing: 1)),
       );
     } else if (engagement.status == EngagementStatus.received) {
       return ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.black,
           foregroundColor: Colors.white,
-          visualDensity: VisualDensity.compact,
-          minimumSize: const Size(120, 36),
+          minimumSize: const Size(140, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         onPressed: () {
           DefaultTabController.of(context).animateTo(0);
         },
-        child: const Text('Review AI Insights'),
+        child: const Text('VIEW AI INSIGHTS', style: TextStyle(fontSize: 12, letterSpacing: 1)),
       );
     } else if (engagement.status == EngagementStatus.sent) {
-      return OutlinedButton.icon(
-        icon: const Icon(Icons.reply, size: 16),
-        label: const Text('Add Response'),
+      return OutlinedButton(
         style: OutlinedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          minimumSize: const Size(120, 36),
+          minimumSize: const Size(140, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          side: const BorderSide(color: Colors.black, width: 1.5),
         ),
         onPressed: () => onRespond(engagement),
+        child: const Text('ADD RESPONSE', style: TextStyle(fontSize: 12, letterSpacing: 1)),
       );
     }
     return const SizedBox.shrink();
   }
 
-  IconData _getStatusIcon(EngagementStatus status) {
-    switch (status) {
-      case EngagementStatus.draft: return Icons.edit_note;
-      case EngagementStatus.sent: return Icons.send;
-      case EngagementStatus.received: return Icons.mark_chat_unread;
-      case EngagementStatus.completed: return Icons.check_circle;
-      default: return Icons.history;
-    }
-  }
-
   Color _getStatusColor(EngagementStatus status) {
     switch (status) {
-      case EngagementStatus.draft: return Colors.blue;
-      case EngagementStatus.sent: return Colors.orange;
-      case EngagementStatus.received: return Colors.green;
-      case EngagementStatus.completed: return Colors.grey;
+      case EngagementStatus.draft: return Colors.black26;
+      case EngagementStatus.sent: return Colors.black45;
+      case EngagementStatus.received: return Colors.black;
+      case EngagementStatus.completed: return Colors.black12;
       default: return Colors.black;
     }
   }
@@ -222,8 +197,8 @@ class EngagementTimeline extends StatelessWidget {
     switch (status) {
       case EngagementStatus.draft: return 'PENDING REVIEW';
       case EngagementStatus.sent: return 'OUTBOUND SENT';
-      case EngagementStatus.received: return 'INBOUND RESPONSE';
-      case EngagementStatus.completed: return 'ARCHIVED';
+      case EngagementStatus.received: return 'INBOUND RECEIVED';
+      case EngagementStatus.completed: return 'COMPLETED';
       default: return 'ENGAGEMENT';
     }
   }

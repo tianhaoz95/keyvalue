@@ -64,10 +64,12 @@ class CpaProvider with ChangeNotifier {
     if (rememberMe) {
       if (lastLoginMethod == 'guest') {
         _currentCpa = await _localCpaRepo.getCpa('local_user');
+        _aiService = AiService(isDemo: true);
       } else {
         final user = _firebaseAuth.currentUser;
         if (user != null) {
           _currentCpa = await _cpaRepo.getCpa(user.uid);
+          _aiService = AiService(isDemo: false);
         }
       }
 
@@ -87,6 +89,7 @@ class CpaProvider with ChangeNotifier {
       if (credential.user != null) {
         _currentCpa = await _cpaRepo.getCpa(credential.user!.uid);
         if (_currentCpa != null) {
+          _aiService = AiService(isDemo: false);
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('rememberMe', rememberMe);
           await prefs.setString('lastLoginMethod', 'firebase');
@@ -115,6 +118,8 @@ class CpaProvider with ChangeNotifier {
     } else {
       _currentCpa = existing;
     }
+    
+    _aiService = AiService(isDemo: true);
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberMe', rememberMe);
@@ -199,9 +204,20 @@ class CpaProvider with ChangeNotifier {
     _isDiscovering = true;
     notifyListeners();
     try {
-      final dueCustomers = isGuestMode 
+      if (_customers.isEmpty) {
+        // Force a brief delay to show "Thinking"
+        await Future.delayed(const Duration(seconds: 1));
+        return;
+      }
+
+      var dueCustomers = isGuestMode 
           ? await _localCustomerRepo.getCustomersDue(_currentCpa!.uid)
           : await _customerRepo.getCustomersDue(_currentCpa!.uid);
+
+      // If no one is strictly "due" by date, scan everyone who doesn't have a draft
+      if (dueCustomers.isEmpty) {
+        dueCustomers = _customers.where((c) => !c.hasActiveDraft).toList();
+      }
 
       for (var customer in dueCustomers) {
         final hasDraft = isGuestMode
@@ -230,6 +246,8 @@ class CpaProvider with ChangeNotifier {
             final updatedCustomer = customer.copyWith(hasActiveDraft: true);
             await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
           }
+          // Notify after each to show progress
+          notifyListeners();
         } else if (!customer.hasActiveDraft) {
           final updatedCustomer = customer.copyWith(hasActiveDraft: true);
           if (isGuestMode) {
@@ -237,6 +255,7 @@ class CpaProvider with ChangeNotifier {
           } else {
             await _customerRepo.updateCustomer(_currentCpa!.uid, updatedCustomer);
           }
+          notifyListeners();
         }
       }
     } catch (e) {

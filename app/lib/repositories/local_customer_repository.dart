@@ -28,6 +28,11 @@ class LocalCustomerRepository {
     await box.put(customer.customerId, customer);
   }
 
+  Future<void> deleteCustomer(String cpaUid, String customerId) async {
+    final box = await _box;
+    await box.delete(customerId);
+  }
+
   Future<void> clearAll() async {
     final box = await _box;
     await box.clear();

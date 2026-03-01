@@ -31,81 +31,114 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset('assets/images/logo_512.png', width: 120, height: 120),
-              const SizedBox(height: 24),
-              const Text(
-                'KeyValue',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E),
-                  letterSpacing: 1.5,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image.asset('assets/images/logo_cropped.png', height: 48),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'KeyValue',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                      letterSpacing: -2.0,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
               const Text(
-                'Proactive CPA Engagement',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                'Proactive intelligence for modern accountants.',
+                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 56),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  labelText: 'EMAIL',
+                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  prefixIcon: Icon(Icons.email_outlined, size: 20),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  labelText: 'PASSWORD',
+                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  prefixIcon: Icon(Icons.lock_outline, size: 20),
                 ),
                 obscureText: true,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(() => _rememberMe = value ?? false);
-                    },
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: _rememberMe,
+                      activeColor: Colors.black,
+                      onChanged: (value) {
+                        setState(() => _rememberMe = value ?? false);
+                      },
+                    ),
                   ),
-                  const Text('Remember Me'),
+                  const SizedBox(width: 12),
+                  const Text('Remember me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 40),
               if (_isLoading)
-                const CircularProgressIndicator()
+                const Center(child: CircularProgressIndicator(color: Colors.black))
               else ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    child: const Text('Login'),
+                ElevatedButton(
+                  onPressed: _login,
+                  child: const Text('LOGIN'),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: TextButton(
+                    onPressed: _showRegisterDialog,
+                    child: const Text(
+                      'CREATE AN ACCOUNT',
+                      style: TextStyle(
+                        fontSize: 12, 
+                        fontWeight: FontWeight.w900, 
+                        letterSpacing: 1,
+                        decoration: TextDecoration.underline,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _showRegisterDialog,
-                  child: const Text('New here? Register a Profile'),
+                const SizedBox(height: 48),
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text('OR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
                 ),
-                const Divider(),
-                TextButton.icon(
-                  onPressed: _enterGuestMode,
-                  icon: const Icon(Icons.person_outline),
-                  label: const Text('Continue as Guest (Local Only)'),
+                const SizedBox(height: 32),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: _enterGuestMode,
+                    child: const Text('CONTINUE AS GUEST'),
+                  ),
                 ),
               ],
             ],
@@ -121,16 +154,20 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await provider.loginGuest(rememberMe: _rememberMe);
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Guest mode failed: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Guest mode failed: $e')),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -148,16 +185,20 @@ class _LoginScreenState extends State<LoginScreen> {
         rememberMe: _rememberMe,
       );
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: $e')),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -176,19 +217,22 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Register CPA Profile'),
+          title: const Text('Register Account', style: TextStyle(fontWeight: FontWeight.w900)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email (required)')),
+                const SizedBox(height: 12),
                 TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password (required)'), obscureText: true),
+                const SizedBox(height: 12),
                 TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
+                const SizedBox(height: 12),
                 TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
                 if (isRegistering)
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator(color: Colors.black),
                   ),
               ],
             ),
@@ -196,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
           actions: [
             TextButton(
               onPressed: isRegistering ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: const Text('CANCEL'),
             ),
             ElevatedButton(
               onPressed: isRegistering ? null : () async {
@@ -221,21 +265,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   await provider.register(cpa, passwordController.text.trim());
 
                   if (mounted) {
-                    Navigator.of(dialogContext).pop(); // Close dialog
-                    Navigator.of(this.context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const DashboardScreen()),
-                    );
+                    if (context.mounted) {
+                      Navigator.of(dialogContext).pop(); // Close dialog
+                      Navigator.of(this.context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                      );
+                    }
                   }
                 } catch (e) {
                   setDialogState(() => isRegistering = false);
                   if (mounted) {
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      SnackBar(content: Text('Registration failed: $e')),
-                    );
+                    if (this.context.mounted) {
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        SnackBar(content: Text('Registration failed: $e')),
+                      );
+                    }
                   }
                 }
               },
-              child: const Text('Register & Enter'),
+              child: const Text('REGISTER'),
             ),
           ],
         ),

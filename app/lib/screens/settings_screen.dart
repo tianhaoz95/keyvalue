@@ -11,25 +11,25 @@ class SettingsScreen extends StatelessWidget {
     final provider = Provider.of<CpaProvider>(context);
     final cpa = provider.currentCpa;
 
-    if (cpa == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (cpa == null) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.black)));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text('SETTINGS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         children: [
-          _buildSectionHeader('Profile Information'),
-          const SizedBox(height: 16),
-          _buildProfileCard(context, provider),
-          const SizedBox(height: 32),
-          _buildSectionHeader('Account Actions'),
-          const SizedBox(height: 16),
-          _buildActionItem(
+          const Text('PROFILE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          const SizedBox(height: 24),
+          _buildModernProfileCard(context, provider, cpa),
+          const SizedBox(height: 56),
+          const Text('ACCOUNT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          const SizedBox(height: 24),
+          _buildModernActionItem(
             context,
-            icon: Icons.logout,
-            title: 'Logout',
+            icon: Icons.logout_outlined,
+            title: 'LOGOUT',
             onTap: () async {
               await provider.logout();
               if (context.mounted) {
@@ -40,11 +40,11 @@ class SettingsScreen extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(height: 8),
-          _buildActionItem(
+          const SizedBox(height: 16),
+          _buildModernActionItem(
             context,
-            icon: Icons.delete_forever,
-            title: 'Delete Account',
+            icon: Icons.delete_outline,
+            title: 'DELETE ACCOUNT',
             isDestructive: true,
             onTap: () => _showDeleteAccountDialog(context, provider),
           ),
@@ -53,78 +53,64 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey,
-        letterSpacing: 1.2,
+  Widget _buildModernProfileCard(BuildContext context, CpaProvider provider, dynamic cpa) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Column(
+        children: [
+          _buildModernInfoRow('NAME', cpa.name),
+          const Divider(height: 32),
+          _buildModernInfoRow('FIRM', cpa.firmName),
+          const Divider(height: 32),
+          _buildModernInfoRow('EMAIL', cpa.email),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () => _showEditProfileDialog(context, provider),
+            child: const Text('EDIT PROFILE'),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, CpaProvider provider) {
-    final cpa = provider.currentCpa!;
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildInfoRow('Name', cpa.name),
-            const Divider(height: 24),
-            _buildInfoRow('Firm', cpa.firmName),
-            const Divider(height: 24),
-            _buildInfoRow('Email', cpa.email),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _showEditProfileDialog(context, provider),
-              child: const Text('Edit Profile'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildModernInfoRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
       ],
     );
   }
 
-  Widget _buildActionItem(
+  Widget _buildModernActionItem(
     BuildContext context, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : Theme.of(context).primaryColor;
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final color = isDestructive ? Colors.redAccent : Colors.black;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDestructive ? Colors.redAccent.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isDestructive ? Colors.red[100]! : Colors.grey[200]!),
+        border: Border.all(color: isDestructive ? Colors.redAccent.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
       ),
       child: ListTile(
-        leading: Icon(icon, color: color),
+        leading: Icon(icon, color: color, size: 20),
         title: Text(
           title,
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1),
         ),
-        trailing: Icon(Icons.chevron_right, color: color),
+        trailing: Icon(Icons.chevron_right, color: color, size: 18),
         onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -137,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Modify Profile'),
+        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w900)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -147,9 +133,8 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
             onPressed: () async {
               final updatedCpa = cpa.copyWith(
                 name: nameController.text.trim(),
@@ -158,7 +143,7 @@ class SettingsScreen extends StatelessWidget {
               await provider.updateProfile(updatedCpa);
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Update'),
+            child: const Text('UPDATE'),
           ),
         ],
       ),
@@ -169,15 +154,14 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account?'),
-        content: const Text('This action cannot be undone. All your data will be permanently removed.'),
+        title: const Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const Text('This will permanently delete all your data and access. Are you sure?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.black,
               foregroundColor: Colors.white,
-              minimumSize: const Size(100, 40),
             ),
             onPressed: () async {
               await provider.deleteAccount();
@@ -188,7 +172,7 @@ class SettingsScreen extends StatelessWidget {
                 );
               }
             },
-            child: const Text('Delete Permanently'),
+            child: const Text('DELETE PERMANENTLY'),
           ),
         ],
       ),

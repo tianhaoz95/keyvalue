@@ -90,18 +90,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black),
               decoration: const InputDecoration(
                 hintText: 'Search clients...',
-                hintStyle: TextStyle(color: Colors.white70),
+                hintStyle: TextStyle(color: Colors.grey),
                 border: InputBorder.none,
+                filled: false,
               ),
             )
           : Row(
               children: [
-                Image.asset('assets/images/logo_120_white.png', height: 32),
-                const SizedBox(width: 8),
-                Text(cpa.firmName),
+                Image.asset('assets/images/logo_120.png', height: 28),
+                const SizedBox(width: 12),
+                Text(cpa.firmName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
               ],
             ),
         actions: [
@@ -119,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.auto_awesome),
+            icon: const Icon(Icons.auto_awesome_outlined),
             tooltip: 'AI Scan for Actions',
             onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
           ),
@@ -152,8 +153,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // Welcome Header
           Container(
-            padding: const EdgeInsets.all(24.0),
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            color: Colors.white,
             width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,45 +163,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Welcome, ${cpa.name}',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      'Welcome back, ${cpa.name.split(' ')[0]}',
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
                     ),
                     if (isDiscovering)
-                      Text(
-                        'AI Thinking...',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: Theme.of(context).primaryColor,
-                        ),
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
-                  'Managing ${allCustomers.length} clients',
-                  style: const TextStyle(color: Colors.grey),
+                  'Your portfolio consists of ${allCustomers.length} clients',
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),
           ),
 
+          const Divider(height: 1, indent: 24, endIndent: 24),
+
           // Urgent Actions Section
-          PendingReviewList(customers: pendingReviews),
+          if (pendingReviews.isNotEmpty) ...[
+            PendingReviewList(customers: pendingReviews),
+            const Divider(height: 1, indent: 24, endIndent: 24),
+          ],
 
           const Padding(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
+            padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
             child: Text(
-              'Your Clients',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Clients',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
             ),
           ),
           
           Expanded(
             child: ListView.separated(
               itemCount: filteredCustomers.length,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+              separatorBuilder: (_, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final customer = filteredCustomers[index];
                 return _buildCustomerTile(context, customer);
@@ -214,20 +217,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           FloatingActionButton.extended(
             heroTag: 'ai_onboarding',
+            elevation: 0,
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AiOnboardingScreen()));
             },
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Discover via AI'),
-            backgroundColor: Theme.of(context).secondaryHeaderColor,
-            foregroundColor: Theme.of(context).primaryColor,
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('AI ONBOARDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: 'add_customer',
+            elevation: 0,
             onPressed: () {
               _showAddCustomerDialog(context, provider);
             },
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.black12),
+            ),
             child: const Icon(Icons.add),
           ),
         ],
@@ -236,62 +248,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildCustomerTile(BuildContext context, Customer customer) {
-    final healthColor = _getClientHealthColor(customer);
-
     return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Hero(
-          tag: 'avatar_${customer.customerId}',
-          child: Stack(
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                child: Text(
-                  customer.name[0],
-                  style: TextStyle(
-                    color: Theme.of(context).primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: healthColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(customer.email, style: const TextStyle(fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              'Next contact: ${customer.nextEngagementDate.toLocal().toString().split(' ')[0]}',
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      child: InkWell(
         onTap: () {
           Navigator.push(
             context,
@@ -300,21 +258,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Hero(
+                tag: 'avatar_${customer.customerId}',
+                child: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Colors.black12,
+                  child: Text(
+                    customer.name[0],
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customer.name, 
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)
+                    ),
+                    Text(
+                      customer.email, 
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
+            ],
+          ),
+        ),
       ),
     );
-  }
-
-  Color _getClientHealthColor(Customer customer) {
-    final now = DateTime.now();
-    final daysSinceLast = now.difference(customer.lastEngagementDate).inDays;
-    
-    if (daysSinceLast < customer.engagementFrequencyDays) {
-      return Colors.green;
-    } else if (daysSinceLast < customer.engagementFrequencyDays + 7) {
-      return Colors.orange;
-    } else {
-      return Colors.red;
-    }
   }
 
   void _showAddCustomerDialog(BuildContext context, CpaProvider provider) {
