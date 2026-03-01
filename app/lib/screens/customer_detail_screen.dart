@@ -29,6 +29,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   final List<ChatMessage> _aiConversation = [];
   final TextEditingController _aiInputController = TextEditingController();
   bool _isAiSidebarLoading = false;
+  bool _isAiSidebarOpen = false;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       _aiSidebarMode = mode;
       _aiConversation.clear();
       _isAiSidebarLoading = true;
+      _isAiSidebarOpen = true;
     });
     
     final future = mode == 'profile' 
@@ -64,16 +66,137 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         });
       }
     });
-
-    _scaffoldKey.currentState?.openEndDrawer();
   }
 
-  Widget _buildAiSidebar(BuildContext context, CpaProvider provider, Customer customer) {
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<CpaProvider>(context);
+    final currentCustomer = provider.customers.firstWhere(
+      (c) => c.customerId == widget.customer.customerId,
+      orElse: () => widget.customer,
+    );
+
+    return LoadingOverlay(
+      isLoading: provider.isProcessingResponse || provider.isGeneratingDraft,
+      message: provider.isProcessingResponse ? 'AI Analyzing Response...' : 'AI Generating Draft...',
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+        title: Text(currentCustomer.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+        actions: [
+          if (!currentCustomer.hasActiveDraft)
+            IconButton(
+              onPressed: () => provider.generateManualDraft(currentCustomer),
+              icon: const Icon(Icons.auto_awesome_outlined),
+              tooltip: 'Generate Draft',
+            ),
+        ],
+      ),
+      body: Row(
+        children: [
+          // Main Content
+          Expanded(
+            flex: 3,
+            child: StreamBuilder<List<Engagement>>(
+              stream: provider.getCustomerEngagements(currentCustomer.customerId),
+              builder: (context, snapshot) {
+                final engagements = snapshot.data ?? [];
+                final pendingCount = engagements.where((e) => e.status == EngagementStatus.draft).length;
+
+                return DefaultTabController(
+                  length: 4,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                        color: Colors.white,
+                        child: Row(
+                          children: [
+                            Hero(
+                              tag: 'avatar_${currentCustomer.customerId}',
+                              child: CircleAvatar(
+                                radius: 32,
+                                backgroundColor: Colors.black,
+                                child: Text(
+                                  currentCustomer.name[0],
+                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    currentCustomer.name, 
+                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)
+                                  ),
+                                  Text(
+                                    currentCustomer.email, 
+                                    style: const TextStyle(color: Colors.grey, fontSize: 14)
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      TabBar(
+                        tabs: [
+                          const Tab(text: 'PROFILE'),
+                          const Tab(text: 'RULES'),
+                          Tab(
+                            child: Badge(
+                              backgroundColor: Colors.black,
+                              label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
+                              isLabelVisible: pendingCount > 0,
+                              child: const Text('HISTORY'),
+                            ),
+                          ),
+                          const Tab(text: 'SETTINGS'),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _buildProfileTab(context, provider, currentCustomer, engagements),
+                            _buildGuidelinesTab(context, provider, currentCustomer),
+                            EngagementTimeline(
+                              customer: currentCustomer,
+                              engagements: engagements,
+                              provider: provider,
+                              onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
+                            ),
+                            _buildSettingsTab(context, provider, currentCustomer),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          // AI Sidebar (Conditional)
+          if (_isAiSidebarOpen)
+            const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
+          if (_isAiSidebarOpen)
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.35,
+              child: _buildAiSidebarContent(context, provider, currentCustomer),
+            ),
+        ],
+      ),
+    ));
+  }
+
+  Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer) {
     final isProfile = _aiSidebarMode == 'profile';
     
-    return Drawer(
-      width: MediaQuery.of(context).size.width * 0.85,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+    return Container(
+      color: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
@@ -90,7 +213,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => setState(() => _isAiSidebarOpen = false),
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -173,8 +296,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                           } else {
                             _guidelinesController.text = updated;
                           }
+                          _isAiSidebarOpen = false;
                         });
-                        Navigator.pop(context); // Close sidebar
                       }
                     },
                     child: Text(isProfile ? 'SAVE PROFILE' : 'SAVE RULES'),
@@ -228,115 +351,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     setState(() {
       _isEditingGuidelines = false;
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<CpaProvider>(context);
-    final currentCustomer = provider.customers.firstWhere(
-      (c) => c.customerId == widget.customer.customerId,
-      orElse: () => widget.customer,
-    );
-
-    return LoadingOverlay(
-      isLoading: provider.isProcessingResponse || provider.isGeneratingDraft,
-      message: provider.isProcessingResponse ? 'AI Analyzing Response...' : 'AI Generating Draft...',
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-        title: Text(currentCustomer.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-        actions: [
-          if (!currentCustomer.hasActiveDraft)
-            IconButton(
-              onPressed: () => provider.generateManualDraft(currentCustomer),
-              icon: const Icon(Icons.auto_awesome_outlined),
-              tooltip: 'Generate Draft',
-            ),
-        ],
-      ),
-      endDrawer: _buildAiSidebar(context, provider, currentCustomer),
-      body: StreamBuilder<List<Engagement>>(
-        stream: provider.getCustomerEngagements(currentCustomer.customerId),
-        builder: (context, snapshot) {
-          final engagements = snapshot.data ?? [];
-          final pendingCount = engagements.where((e) => e.status == EngagementStatus.draft).length;
-
-          return DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      Hero(
-                        tag: 'avatar_${currentCustomer.customerId}',
-                        child: CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Colors.black,
-                          child: Text(
-                            currentCustomer.name[0],
-                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              currentCustomer.name, 
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)
-                            ),
-                            Text(
-                              currentCustomer.email, 
-                              style: const TextStyle(color: Colors.grey, fontSize: 14)
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                TabBar(
-                  tabs: [
-                    const Tab(text: 'PROFILE'),
-                    const Tab(text: 'RULES'),
-                    Tab(
-                      child: Badge(
-                        backgroundColor: Colors.black,
-                        label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
-                        isLabelVisible: pendingCount > 0,
-                        child: const Text('HISTORY'),
-                      ),
-                    ),
-                    const Tab(text: 'SETTINGS'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildProfileTab(context, provider, currentCustomer, engagements),
-                      _buildGuidelinesTab(context, provider, currentCustomer),
-                      EngagementTimeline(
-                        customer: currentCustomer,
-                        engagements: engagements,
-                        provider: provider,
-                        onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
-                      ),
-                      _buildSettingsTab(context, provider, currentCustomer),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ));
   }
 
   Widget _buildProfileTab(BuildContext context, CpaProvider provider, Customer customer, List<Engagement> engagements) {
