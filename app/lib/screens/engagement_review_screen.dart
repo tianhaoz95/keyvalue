@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import '../models/customer.dart';
@@ -35,6 +36,7 @@ class _EngagementReviewScreenState extends State<EngagementReviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('REVIEW DRAFT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -75,9 +77,33 @@ class _EngagementReviewScreenState extends State<EngagementReviewScreen> {
               style: const TextStyle(fontSize: 15, height: 1.6),
             ),
             const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () => _sendMessage(context),
-              child: const Text('SEND TO CLIENT'),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton(
+                    onPressed: () => _sendMessage(context),
+                    child: const Text('SEND TO CLIENT'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: _messageController.text));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Draft copied'), duration: Duration(seconds: 2)),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 52),
+                    ),
+                    child: const Icon(Icons.copy_outlined, size: 20),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
