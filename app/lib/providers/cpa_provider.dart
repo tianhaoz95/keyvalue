@@ -320,9 +320,10 @@ class CpaProvider with ChangeNotifier {
       await _engagementRepo.updateEngagement(_currentCpa!.uid, customer.customerId, updatedEngagement);
     }
 
-    final nextDate = DateTime.now().add(Duration(days: customer.engagementFrequencyDays));
+    final now = DateTime.now();
+    final nextDate = customer.calculateNextEngagementDate(now);
     final updatedCustomer = customer.copyWith(
-      lastEngagementDate: DateTime.now(),
+      lastEngagementDate: now,
       nextEngagementDate: nextDate,
       hasActiveDraft: false,
     );

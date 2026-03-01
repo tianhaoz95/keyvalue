@@ -18,7 +18,7 @@ class Customer {
   @HiveField(4)
   final String guidelines; // Markdown
   @HiveField(5)
-  final int engagementFrequencyDays;
+  final int engagementFrequencyDays; // Deprecated in favor of cadenceValue/Period
   @HiveField(6)
   final DateTime nextEngagementDate;
   @HiveField(7)
@@ -33,6 +33,10 @@ class Customer {
   final String address;
   @HiveField(12)
   final List<String> tags;
+  @HiveField(13)
+  final int cadenceValue;
+  @HiveField(14)
+  final String cadencePeriod; // 'days', 'weeks', 'months'
 
   Customer({
     required this.customerId,
@@ -48,6 +52,8 @@ class Customer {
     this.phoneNumber = '',
     this.address = '',
     this.tags = const [],
+    this.cadenceValue = 30,
+    this.cadencePeriod = 'days',
   });
 
   factory Customer.fromMap(Map<String, dynamic> map) {
@@ -57,7 +63,7 @@ class Customer {
       email: map['email'] as String,
       details: map['details'] as String,
       guidelines: map['guidelines'] as String,
-      engagementFrequencyDays: map['engagementFrequencyDays'] as int,
+      engagementFrequencyDays: map['engagementFrequencyDays'] as int? ?? 30,
       nextEngagementDate: (map['nextEngagementDate'] as Timestamp).toDate(),
       lastEngagementDate: (map['lastEngagementDate'] as Timestamp).toDate(),
       hasActiveDraft: map['hasActiveDraft'] as bool? ?? false,
@@ -65,6 +71,8 @@ class Customer {
       phoneNumber: map['phoneNumber'] as String? ?? '',
       address: map['address'] as String? ?? '',
       tags: (map['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      cadenceValue: map['cadenceValue'] as int? ?? map['engagementFrequencyDays'] as int? ?? 30,
+      cadencePeriod: map['cadencePeriod'] as String? ?? 'days',
     );
   }
 
@@ -83,6 +91,8 @@ class Customer {
       'phoneNumber': phoneNumber,
       'address': address,
       'tags': tags,
+      'cadenceValue': cadenceValue,
+      'cadencePeriod': cadencePeriod,
     };
   }
 
@@ -99,6 +109,8 @@ class Customer {
     String? phoneNumber,
     String? address,
     List<String>? tags,
+    int? cadenceValue,
+    String? cadencePeriod,
   }) {
     return Customer(
       customerId: customerId,
@@ -114,6 +126,21 @@ class Customer {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
       tags: tags ?? this.tags,
+      cadenceValue: cadenceValue ?? this.cadenceValue,
+      cadencePeriod: cadencePeriod ?? this.cadencePeriod,
     );
+  }
+
+  DateTime calculateNextEngagementDate(DateTime fromDate) {
+    switch (cadencePeriod) {
+      case 'weeks':
+        return fromDate.add(Duration(days: cadenceValue * 7));
+      case 'months':
+        // Dart's DateTime constructor handles month overflow gracefully
+        return DateTime(fromDate.year, fromDate.month + cadenceValue, fromDate.day);
+      case 'days':
+      default:
+        return fromDate.add(Duration(days: cadenceValue));
+    }
   }
 }

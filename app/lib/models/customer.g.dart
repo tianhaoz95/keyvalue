@@ -30,13 +30,15 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       phoneNumber: fields[10] as String,
       address: fields[11] as String,
       tags: (fields[12] as List).cast<String>(),
+      cadenceValue: fields[13] as int,
+      cadencePeriod: fields[14] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Customer obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.customerId)
       ..writeByte(1)
@@ -62,7 +64,11 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       ..writeByte(11)
       ..write(obj.address)
       ..writeByte(12)
-      ..write(obj.tags);
+      ..write(obj.tags)
+      ..writeByte(13)
+      ..write(obj.cadenceValue)
+      ..writeByte(14)
+      ..write(obj.cadencePeriod);
   }
 
   @override

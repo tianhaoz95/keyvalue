@@ -23,9 +23,12 @@ class CustomerDetailScreen extends StatefulWidget {
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isEditingProfile = false;
-  bool _isEditingGuidelines = false;
+  bool _isEditingRules = false;
+  bool _isEditingSchedule = false;
   late TextEditingController _profileController;
   late TextEditingController _guidelinesController;
+  late TextEditingController _cadenceController;
+  String _selectedCadencePeriod = 'days';
 
   // AI Side-bar State
   String _aiSidebarMode = 'profile'; // 'profile', 'guidelines', or 'review'
@@ -43,12 +46,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.initState();
     _profileController = TextEditingController(text: widget.customer.details);
     _guidelinesController = TextEditingController(text: widget.customer.guidelines);
+    _cadenceController = TextEditingController(text: widget.customer.cadenceValue.toString());
+    _selectedCadencePeriod = widget.customer.cadencePeriod;
   }
 
   @override
   void dispose() {
     _profileController.dispose();
     _guidelinesController.dispose();
+    _cadenceController.dispose();
     _aiInputController.dispose();
     _reviewDraftController.dispose();
     super.dispose();
@@ -532,18 +538,44 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Future<void> _saveProfile(CpaProvider provider) async {
-    final updatedCustomer = widget.customer.copyWith(details: _profileController.text);
+    final currentCustomer = provider.customers.firstWhere(
+      (c) => c.customerId == widget.customer.customerId,
+      orElse: () => widget.customer,
+    );
+    final updatedCustomer = currentCustomer.copyWith(details: _profileController.text);
     await provider.addCustomer(updatedCustomer);
     setState(() {
       _isEditingProfile = false;
     });
   }
 
-  Future<void> _saveGuidelines(CpaProvider provider) async {
-    final updatedCustomer = widget.customer.copyWith(guidelines: _guidelinesController.text);
+  Future<void> _saveRules(CpaProvider provider) async {
+    final currentCustomer = provider.customers.firstWhere(
+      (c) => c.customerId == widget.customer.customerId,
+      orElse: () => widget.customer,
+    );
+    final updatedCustomer = currentCustomer.copyWith(
+      guidelines: _guidelinesController.text,
+    );
     await provider.addCustomer(updatedCustomer);
     setState(() {
-      _isEditingGuidelines = false;
+      _isEditingRules = false;
+    });
+  }
+
+  Future<void> _saveSchedule(CpaProvider provider) async {
+    final currentCustomer = provider.customers.firstWhere(
+      (c) => c.customerId == widget.customer.customerId,
+      orElse: () => widget.customer,
+    );
+    final cadenceValue = int.tryParse(_cadenceController.text) ?? currentCustomer.cadenceValue;
+    final updatedCustomer = currentCustomer.copyWith(
+      cadenceValue: cadenceValue,
+      cadencePeriod: _selectedCadencePeriod,
+    );
+    await provider.addCustomer(updatedCustomer);
+    setState(() {
+      _isEditingSchedule = false;
     });
   }
 
@@ -666,6 +698,68 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              const Text('SCHEDULE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              IconButton(
+                icon: Icon(_isEditingSchedule ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
+                onPressed: () {
+                  if (_isEditingSchedule) {
+                    _saveSchedule(provider);
+                  } else {
+                    setState(() {
+                      _isEditingSchedule = true;
+                      _cadenceController.text = customer.cadenceValue.toString();
+                      _selectedCadencePeriod = customer.cadencePeriod;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _isEditingSchedule
+              ? Row(
+                  children: [
+                    const Text('Every ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 60,
+                      child: TextField(
+                        controller: _cadenceController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    DropdownButton<String>(
+                      value: _selectedCadencePeriod,
+                      underline: const SizedBox(),
+                      items: ['days', 'weeks', 'months'].map((p) => DropdownMenuItem(
+                        value: p,
+                        child: Text(p, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedCadencePeriod = val);
+                      },
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    const Icon(Icons.event_repeat_outlined, size: 18, color: Colors.black54),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Every ${customer.cadenceValue} ${customer.cadencePeriod}',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               const Text('ENGAGEMENT RULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
               Row(
                 children: [
@@ -675,13 +769,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     onPressed: () => _openAiSidebar('guidelines', provider, customer),
                   ),
                   IconButton(
-                    icon: Icon(_isEditingGuidelines ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
+                    icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
                     onPressed: () {
-                      if (_isEditingGuidelines) {
-                        _saveGuidelines(provider);
+                      if (_isEditingRules) {
+                        _saveRules(provider);
                       } else {
                         setState(() {
-                          _isEditingGuidelines = true;
+                          _isEditingRules = true;
                           _guidelinesController.text = customer.guidelines;
                         });
                       }
@@ -692,7 +786,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _isEditingGuidelines
+          _isEditingRules
               ? TextField(
                   controller: _guidelinesController,
                   maxLines: null,
