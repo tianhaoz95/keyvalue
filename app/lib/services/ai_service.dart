@@ -11,12 +11,13 @@ class ChatMessage {
 
 class AiService {
   final GenerativeModel? _model;
+  final String modelName;
   final bool isDemo;
 
-  AiService({GenerativeModel? model, this.isDemo = false})
+  AiService({GenerativeModel? model, this.modelName = 'gemini-2.5-flash', this.isDemo = false})
       : _model = model;
 
-  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
+  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: modelName);
 
   Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
     if (isDemo) {

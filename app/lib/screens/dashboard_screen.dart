@@ -608,6 +608,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 24),
                   _buildSidebarProfileCard(context, provider, cpa, l10n),
                   const SizedBox(height: 56),
+                  Text('AI CAPABILITY', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 24),
+                  _buildSidebarAiCapabilitySelector(context, provider),
+                  const SizedBox(height: 16),
                   Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 24),
                   _buildSidebarLanguageSelector(context, provider),
@@ -664,6 +668,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
           items: const [
             DropdownMenuItem(value: 'en', child: Text('ENGLISH', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
             DropdownMenuItem(value: 'zh', child: Text('中文 (CHINESE)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSidebarAiCapabilitySelector(BuildContext context, CpaProvider provider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: provider.aiCapability,
+          isExpanded: true,
+          icon: const Icon(Icons.bolt_outlined, size: 20),
+          onChanged: (String? value) {
+            if (value != null) {
+              provider.setAiCapability(value);
+            }
+          },
+          items: const [
+            DropdownMenuItem(value: 'fast', child: Text('FAST (FLASH LITE)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
+            DropdownMenuItem(value: 'pro', child: Text('PRO (FLASH)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1))),
           ],
         ),
       ),

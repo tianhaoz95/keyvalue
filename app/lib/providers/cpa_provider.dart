@@ -28,6 +28,9 @@ class CpaProvider with ChangeNotifier {
   Cpa? _currentCpa;
   Cpa? get currentCpa => _currentCpa;
 
+  String _aiCapability = 'pro'; // 'pro' or 'fast'
+  String get aiCapability => _aiCapability;
+
   Locale _locale = const Locale('en');
   Locale get locale => _locale;
 
@@ -58,6 +61,27 @@ class CpaProvider with ChangeNotifier {
         _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance {
     _checkRememberedUser();
     _loadLocale();
+    _loadAiCapability();
+  }
+
+  Future<void> _loadAiCapability() async {
+    final prefs = await SharedPreferences.getInstance();
+    _aiCapability = prefs.getString('aiCapability') ?? 'pro';
+    _updateAiService();
+    notifyListeners();
+  }
+
+  void _updateAiService() {
+    final modelName = _aiCapability == 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+    _aiService = AiService(modelName: modelName, isDemo: isGuestMode);
+  }
+
+  Future<void> setAiCapability(String capability) async {
+    _aiCapability = capability;
+    _updateAiService();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('aiCapability', capability);
+    notifyListeners();
   }
 
   Future<void> _loadLocale() async {
@@ -82,16 +106,15 @@ class CpaProvider with ChangeNotifier {
     if (rememberMe) {
       if (lastLoginMethod == 'guest') {
         _currentCpa = await _localCpaRepo.getCpa('local_user');
-        _aiService = AiService(isDemo: true);
       } else {
         final user = _firebaseAuth.currentUser;
         if (user != null) {
           _currentCpa = await _cpaRepo.getCpa(user.uid);
-          _aiService = AiService(isDemo: false);
         }
       }
 
       if (_currentCpa != null) {
+        _updateAiService();
         notifyListeners();
         _setupCustomerListener();
       }
@@ -107,7 +130,7 @@ class CpaProvider with ChangeNotifier {
       if (credential.user != null) {
         _currentCpa = await _cpaRepo.getCpa(credential.user!.uid);
         if (_currentCpa != null) {
-          _aiService = AiService(isDemo: false);
+          _updateAiService();
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('rememberMe', rememberMe);
           await prefs.setString('lastLoginMethod', 'firebase');
@@ -137,7 +160,7 @@ class CpaProvider with ChangeNotifier {
       _currentCpa = existing;
     }
     
-    _aiService = AiService(isDemo: true);
+    _updateAiService();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberMe', rememberMe);
