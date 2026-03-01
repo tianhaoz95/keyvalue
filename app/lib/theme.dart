@@ -99,6 +99,10 @@ class AppTheme {
         indicatorSize: TabBarIndicatorSize.label,
         labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: backgroundWhite,
+        surfaceTintColor: Colors.transparent,
+      ),
     );
   }
 }

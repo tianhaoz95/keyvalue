@@ -588,27 +588,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFEEEEEE)),
-            ),
-            child: _isEditingProfile
-                ? TextField(
-                    controller: _profileController,
-                    maxLines: null,
-                    decoration: const InputDecoration(border: InputBorder.none, filled: false),
-                  )
-                : MarkdownBody(
-                    data: customer.details,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 15, height: 1.6),
-                    ),
+          _isEditingProfile
+              ? TextField(
+                  controller: _profileController,
+                  maxLines: null,
+                  decoration: const InputDecoration(border: InputBorder.none, filled: false),
+                )
+              : MarkdownBody(
+                  data: customer.details,
+                  styleSheet: MarkdownStyleSheet(
+                    p: const TextStyle(fontSize: 15, height: 1.6),
                   ),
-          ),
+                ),
         ],
       ),
     );
@@ -679,27 +670,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFEEEEEE)),
-            ),
-            child: _isEditingGuidelines
-                ? TextField(
-                    controller: _guidelinesController,
-                    maxLines: null,
-                    decoration: const InputDecoration(border: InputBorder.none, filled: false),
-                  )
-                : MarkdownBody(
-                    data: customer.guidelines,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 15, height: 1.6, fontStyle: FontStyle.italic),
-                    ),
+          _isEditingGuidelines
+              ? TextField(
+                  controller: _guidelinesController,
+                  maxLines: null,
+                  decoration: const InputDecoration(border: InputBorder.none, filled: false),
+                )
+              : MarkdownBody(
+                  data: customer.guidelines,
+                  styleSheet: MarkdownStyleSheet(
+                    p: const TextStyle(fontSize: 15, height: 1.6, fontStyle: FontStyle.italic),
                   ),
-          ),
+                ),
         ],
       ),
     );
