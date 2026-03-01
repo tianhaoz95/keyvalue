@@ -269,35 +269,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!_isAiOnboardingOpen)
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(right: _isAiOnboardingOpen ? MediaQuery.of(context).size.width * 0.35 : 0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!_isAiOnboardingOpen)
+              FloatingActionButton(
+                heroTag: 'ai_onboarding',
+                elevation: 0,
+                onPressed: () => _startAiOnboarding(provider),
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.auto_awesome_outlined),
+              ),
+            const SizedBox(height: 12),
             FloatingActionButton(
-              heroTag: 'ai_onboarding',
+              heroTag: 'add_customer',
               elevation: 0,
-              onPressed: () => _startAiOnboarding(provider),
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.auto_awesome_outlined),
+              onPressed: () {
+                _showAddCustomerDialog(context, provider);
+              },
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.black12),
+              ),
+              child: const Icon(Icons.add),
             ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: 'add_customer',
-            elevation: 0,
-            onPressed: () {
-              _showAddCustomerDialog(context, provider);
-            },
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Colors.black12),
-            ),
-            child: const Icon(Icons.add),
-          ),
-        ],
+          ],
+        ),
       ),
     ));
   }
