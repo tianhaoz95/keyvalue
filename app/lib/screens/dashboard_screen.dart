@@ -235,8 +235,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // Main Dashboard Content
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
                 // Welcome Header
                 Container(
@@ -286,16 +286,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: filteredCustomers.length,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                    separatorBuilder: (_, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final customer = filteredCustomers[index];
-                      return _buildCustomerTile(context, customer);
-                    },
-                  ),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredCustomers.length,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                  separatorBuilder: (_, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final customer = filteredCustomers[index];
+                    return _buildCustomerTile(context, customer);
+                  },
                 ),
               ],
             ),
