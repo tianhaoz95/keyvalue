@@ -277,23 +277,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              l10n.portfolioStats(allCustomers.length),
-                              style: const TextStyle(color: Colors.grey, fontSize: 14),
+                               l10n.portfolioStats(allCustomers.length),
+                               style: const TextStyle(color: Colors.grey, fontSize: 14),
+                             ),
+                            ],
                             ),
-                          ],
-                        ),
-                      ),
+                            ),
 
-                      const Divider(height: 1, indent: 24, endIndent: 24),
+                            // Urgent Actions Section
+                            if (pendingReviews.isNotEmpty) ...[
+                            PendingReviewList(customers: pendingReviews),
+                            ],
 
-                      // Urgent Actions Section
-                      if (pendingReviews.isNotEmpty) ...[
-                        PendingReviewList(customers: pendingReviews),
-                        const Divider(height: 1, indent: 24, endIndent: 24),
-                      ],
-
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
+                            Padding(                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
                         child: Row(
                           children: [
                             Text(
