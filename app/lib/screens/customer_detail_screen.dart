@@ -101,16 +101,47 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-        title: Text(currentCustomer.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-        actions: [
-          if (!currentCustomer.hasActiveDraft)
-            IconButton(
-              onPressed: () => provider.generateManualDraft(currentCustomer),
-              icon: const Icon(Icons.auto_awesome_outlined),
-              tooltip: 'Generate Draft',
-            ),
-        ],
-      ),
+          title: Row(
+            children: [
+              Hero(
+                tag: 'avatar_${currentCustomer.customerId}',
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.black,
+                  child: Text(
+                    currentCustomer.name[0],
+                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      currentCustomer.name, 
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.5)
+                    ),
+                    Text(
+                      currentCustomer.email, 
+                      style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.normal)
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (!currentCustomer.hasActiveDraft)
+              IconButton(
+                onPressed: () => provider.generateManualDraft(currentCustomer),
+                icon: const Icon(Icons.auto_awesome_outlined),
+                tooltip: 'Generate Draft',
+              ),
+          ],
+        ),
       body: Row(
         children: [
           // Main Content
@@ -126,42 +157,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   length: 4,
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                        color: Colors.white,
-                        child: Row(
-                          children: [
-                            Hero(
-                              tag: 'avatar_${currentCustomer.customerId}',
-                              child: CircleAvatar(
-                                radius: 32,
-                                backgroundColor: Colors.black,
-                                child: Text(
-                                  currentCustomer.name[0],
-                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    currentCustomer.name, 
-                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)
-                                  ),
-                                  Text(
-                                    currentCustomer.email, 
-                                    style: const TextStyle(color: Colors.grey, fontSize: 14)
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
                       TabBar(
                         tabs: [
                           Tab(text: l10n.profile.toUpperCase()),
