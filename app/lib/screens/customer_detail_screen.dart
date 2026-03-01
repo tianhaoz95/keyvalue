@@ -540,13 +540,25 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             _buildAiInsightsSection(context, provider, customer, pendingAiEngagement),
             const SizedBox(height: 40),
           ],
-          const Text('CONTACT DETAILS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-          const SizedBox(height: 24),
-          _buildModernDetailRow(Icons.work_outline, 'Occupation', customer.occupation),
-          _buildModernDetailRow(Icons.phone_outlined, 'Phone', customer.phoneNumber),
-          _buildModernDetailRow(Icons.location_on_outlined, 'Address', customer.address),
           
-          const SizedBox(height: 40),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              title: const Text('CONTACT DETAILS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              iconColor: Colors.grey,
+              collapsedIconColor: Colors.grey,
+              children: [
+                const SizedBox(height: 16),
+                _buildModernDetailRow(Icons.work_outline, 'Occupation', customer.occupation),
+                _buildModernDetailRow(Icons.phone_outlined, 'Phone', customer.phoneNumber),
+                _buildModernDetailRow(Icons.location_on_outlined, 'Address', customer.address),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
