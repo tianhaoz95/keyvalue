@@ -332,9 +332,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               FloatingActionButton(
                 heroTag: 'add_customer',
                 elevation: 0,
+                highlightElevation: 0,
                 onPressed: _startManualAdd,
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
+                splashColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                enableFeedback: false,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: const BorderSide(color: Colors.black12),
