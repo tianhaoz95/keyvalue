@@ -69,4 +69,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveChanges => 'SAVE CHANGES';
+
+  @override
+  String get engagement => 'ENGAGEMENT';
 }

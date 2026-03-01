@@ -69,4 +69,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get saveChanges => '保存更改';
+
+  @override
+  String get engagement => '互动';
 }

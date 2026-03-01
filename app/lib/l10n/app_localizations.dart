@@ -217,6 +217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SAVE CHANGES'**
   String get saveChanges;
+
+  /// No description provided for @engagement.
+  ///
+  /// In en, this message translates to:
+  /// **'ENGAGEMENT'**
+  String get engagement;
 }
 
 class _AppLocalizationsDelegate

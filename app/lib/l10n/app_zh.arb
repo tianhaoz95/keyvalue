@@ -18,5 +18,6 @@
   "logout": "退出登录",
   "deleteAccount": "删除账户",
   "language": "语言",
-  "saveChanges": "保存更改"
+  "saveChanges": "保存更改",
+  "engagement": "互动"
 }

@@ -172,7 +172,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                                     backgroundColor: Colors.black,
                                     label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
                                     isLabelVisible: pendingCount > 0,
-                                    child: const Text('HISTORY'),
+                                    child: Text(l10n.engagement.toUpperCase()),
                                   ),
                                 ),
                                 Tab(text: l10n.settings.toUpperCase()),
