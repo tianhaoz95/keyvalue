@@ -264,30 +264,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             PendingReviewList(customers: pendingReviews),
                             ],
 
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 32, 12, 8),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    l10n.clients,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
-                                  ),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              height: 48,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 12, 0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      l10n.clients,
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                                    ),
                                   if (_isSearching)
                                     Expanded(
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                         child: Align(
                                           alignment: Alignment.centerRight,
-                                          child: ConstrainedBox(
-                                            constraints: const BoxConstraints(maxWidth: 200, maxHeight: 36),
+                                          child: SizedBox(
+                                            width: 200,
+                                            height: 36,
                                             child: TextField(
                                               controller: _searchController,
                                               autofocus: true,
                                               textAlign: TextAlign.right,
-                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                              textAlignVertical: TextAlignVertical.center,
+                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                               decoration: InputDecoration(
                                                 hintText: 'Search...',
-                                                hintStyle: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.normal),
+                                                hintStyle: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.normal),
                                                 filled: true,
                                                 fillColor: Colors.black.withValues(alpha: 0.04),
                                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -303,7 +309,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                   borderRadius: BorderRadius.circular(18),
                                                   borderSide: BorderSide.none,
                                                 ),
-                                                isDense: true,
                                               ),
                                               onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
                                             ),
@@ -328,25 +333,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     },
                                   ),
                                   PopupMenuButton<CustomerSortOption>(
-                              icon: const Icon(Icons.sort_outlined, size: 20, color: Colors.black54),
-                              tooltip: 'Sort Clients',
-                              onSelected: _updateSortPreference,
-                              itemBuilder: (context) => [
-                                CheckedPopupMenuItem(
-                                  value: CustomerSortOption.name,
-                                  checked: _sortOption == CustomerSortOption.name,
-                                  child: const Text('Sort by Name'),
+                                    icon: const Icon(Icons.sort_outlined, size: 20, color: Colors.black54),
+                                    tooltip: 'Sort Clients',
+                                    onSelected: _updateSortPreference,
+                                    itemBuilder: (context) => [
+                                      CheckedPopupMenuItem(
+                                        value: CustomerSortOption.name,
+                                        checked: _sortOption == CustomerSortOption.name,
+                                        child: const Text('Sort by Name'),
+                                      ),
+                                      CheckedPopupMenuItem(
+                                        value: CustomerSortOption.nextContact,
+                                        checked: _sortOption == CustomerSortOption.nextContact,
+                                        child: const Text('Sort by Next Contact'),
+                                      ),
+                                    ],
+                                  ),
+                                  ],
                                 ),
-                                CheckedPopupMenuItem(
-                                  value: CustomerSortOption.nextContact,
-                                  checked: _sortOption == CustomerSortOption.nextContact,
-                                  child: const Text('Sort by Next Contact'),
-                                ),
-                              ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
                       
                       ListView.separated(
                         shrinkWrap: true,
