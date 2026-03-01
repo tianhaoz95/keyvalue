@@ -175,6 +175,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     final isAnySidebarOpen = _isAiOnboardingOpen || _isManualAddOpen || _isSettingsOpen;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isPhone = screenWidth < 600;
+    final sidebarWidth = isPhone ? screenWidth : screenWidth * 0.35;
 
     return LoadingOverlay(
       isLoading: isDiscovering,
@@ -255,87 +258,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: Row(
+      body: Stack(
         children: [
           // Main Dashboard Content
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
+          Positioned.fill(
+            child: Row(
               children: [
-                // Welcome Header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                  color: Colors.white,
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${l10n.welcomeBack}, ${cpa.name.split(' ')[0]}',
-                            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
-                          ),
-                          if (isDiscovering)
-                            const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      // Welcome Header
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                        color: Colors.white,
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${l10n.welcomeBack}, ${cpa.name.split(' ')[0]}',
+                                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
+                                ),
+                                if (isDiscovering)
+                                  const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                  ),
+                              ],
                             ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.portfolioStats(allCustomers.length),
+                              style: const TextStyle(color: Colors.grey, fontSize: 14),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.portfolioStats(allCustomers.length),
-                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+
+                      const Divider(height: 1, indent: 24, endIndent: 24),
+
+                      // Urgent Actions Section
+                      if (pendingReviews.isNotEmpty) ...[
+                        PendingReviewList(customers: pendingReviews),
+                        const Divider(height: 1, indent: 24, endIndent: 24),
+                      ],
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+                        child: Text(
+                          l10n.clients,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                        ),
+                      ),
+                      
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredCustomers.length,
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                        separatorBuilder: (_, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final customer = filteredCustomers[index];
+                          return _buildCustomerTile(context, customer);
+                        },
                       ),
                     ],
                   ),
                 ),
-
-                const Divider(height: 1, indent: 24, endIndent: 24),
-
-                // Urgent Actions Section
-                if (pendingReviews.isNotEmpty) ...[
-                  PendingReviewList(customers: pendingReviews),
-                  const Divider(height: 1, indent: 24, endIndent: 24),
-                ],
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                  child: Text(
-                    l10n.clients,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
-                  ),
-                ),
-                
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredCustomers.length,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                  separatorBuilder: (_, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final customer = filteredCustomers[index];
-                    return _buildCustomerTile(context, customer);
-                  },
-                ),
+                // Persistent Sidebar Placeholder (Desktop only)
+                if (!isPhone && isAnySidebarOpen)
+                  SizedBox(width: sidebarWidth),
               ],
             ),
           ),
-          // Sidebar Container (Conditional)
-          if (isAnySidebarOpen) ...[
-            const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: _isAiOnboardingOpen 
-                ? _buildAiOnboardingSidebar(context, provider, l10n)
-                : _isManualAddOpen
-                  ? _buildManualAddSidebar(context, provider, l10n)
-                  : _buildSettingsSidebar(context, provider, l10n),
+          
+          // Sidebar Container (Conditional Overlay)
+          if (isAnySidebarOpen) 
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: sidebarWidth,
+              child: Row(
+                children: [
+                  if (!isPhone)
+                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+                  Expanded(
+                    child: _isAiOnboardingOpen 
+                      ? _buildAiOnboardingSidebar(context, provider, l10n)
+                      : _isManualAddOpen
+                        ? _buildManualAddSidebar(context, provider, l10n)
+                        : _buildSettingsSidebar(context, provider, l10n),
+                  ),
+                ],
+              ),
             ),
-          ],
         ],
       ),
     ));

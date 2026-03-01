@@ -95,6 +95,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       orElse: () => widget.customer,
     );
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isPhone = screenWidth < 600;
+    final sidebarWidth = isPhone ? screenWidth : screenWidth * 0.35;
+
     return LoadingOverlay(
       isLoading: provider.isProcessingResponse || provider.isGeneratingDraft,
       message: provider.isProcessingResponse ? 'AI Analyzing Response...' : 'AI Generating Draft...',
@@ -142,65 +146,83 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
           ],
         ),
-      body: Row(
+      body: Stack(
         children: [
           // Main Content
-          Expanded(
-            flex: 3,
-            child: StreamBuilder<List<Engagement>>(
-              stream: provider.getCustomerEngagements(currentCustomer.customerId),
-              builder: (context, snapshot) {
-                final engagements = snapshot.data ?? [];
-                final pendingCount = engagements.where((e) => e.status == EngagementStatus.draft).length;
+          Positioned.fill(
+            child: Row(
+              children: [
+                Expanded(
+                  child: StreamBuilder<List<Engagement>>(
+                    stream: provider.getCustomerEngagements(currentCustomer.customerId),
+                    builder: (context, snapshot) {
+                      final engagements = snapshot.data ?? [];
+                      final pendingCount = engagements.where((e) => e.status == EngagementStatus.draft).length;
 
-                return DefaultTabController(
-                  length: 4,
-                  child: Column(
-                    children: [
-                      TabBar(
-                        tabs: [
-                          Tab(text: l10n.profile.toUpperCase()),
-                          const Tab(text: 'RULES'),
-                          Tab(
-                            child: Badge(
-                              backgroundColor: Colors.black,
-                              label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
-                              isLabelVisible: pendingCount > 0,
-                              child: const Text('HISTORY'),
-                            ),
-                          ),
-                          Tab(text: l10n.settings.toUpperCase()),
-                        ],
-                      ),
-                      Expanded(
-                        child: TabBarView(
+                      return DefaultTabController(
+                        length: 4,
+                        child: Column(
                           children: [
-                            _buildProfileTab(context, provider, currentCustomer, engagements, l10n),
-                            _buildGuidelinesTab(context, provider, currentCustomer, l10n),
-                            EngagementTimeline(
-                              customer: currentCustomer,
-                              engagements: engagements,
-                              provider: provider,
-                              onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
-                              onReviewDraft: (engagement) => _openAiSidebar('review', provider, currentCustomer, engagement: engagement),
+                            TabBar(
+                              tabs: [
+                                Tab(text: l10n.profile.toUpperCase()),
+                                const Tab(text: 'RULES'),
+                                Tab(
+                                  child: Badge(
+                                    backgroundColor: Colors.black,
+                                    label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
+                                    isLabelVisible: pendingCount > 0,
+                                    child: const Text('HISTORY'),
+                                  ),
+                                ),
+                                Tab(text: l10n.settings.toUpperCase()),
+                              ],
                             ),
-                            _buildSettingsTab(context, provider, currentCustomer, l10n),
+                            Expanded(
+                              child: TabBarView(
+                                children: [
+                                  _buildProfileTab(context, provider, currentCustomer, engagements, l10n),
+                                  _buildGuidelinesTab(context, provider, currentCustomer, l10n),
+                                  EngagementTimeline(
+                                    customer: currentCustomer,
+                                    engagements: engagements,
+                                    provider: provider,
+                                    onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
+                                    onReviewDraft: (engagement) => _openAiSidebar('review', provider, currentCustomer, engagement: engagement),
+                                  ),
+                                  _buildSettingsTab(context, provider, currentCustomer, l10n),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+                // Persistent Sidebar Placeholder (Desktop only)
+                if (!isPhone && _isAiSidebarOpen)
+                  SizedBox(width: sidebarWidth),
+              ],
             ),
           ),
-          // AI Sidebar (Conditional)
+          
+          // AI Sidebar (Conditional Overlay)
           if (_isAiSidebarOpen)
-            const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
-          if (_isAiSidebarOpen)
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.35,
-              child: _buildAiSidebarContent(context, provider, currentCustomer, l10n),
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: sidebarWidth,
+              child: Row(
+                children: [
+                  if (!isPhone)
+                    const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
+                  Expanded(
+                    child: _buildAiSidebarContent(context, provider, currentCustomer, l10n),
+                  ),
+                ],
+              ),
             ),
         ],
       ),

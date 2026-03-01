@@ -53,6 +53,24 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 - **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
 
+## 🌐 Web Deployment
+
+The application can be deployed to Firebase Hosting for web access.
+
+### 1. Build for Web
+From the `app/` directory, run:
+```bash
+flutter build web --release
+```
+
+### 2. Deploy to Firebase Hosting
+Ensure you have the [Firebase CLI](https://firebase.google.com/docs/cli) installed and are logged in (`firebase login`). From the `app/` directory, run:
+```bash
+firebase deploy --only hosting
+```
+
+The configuration is managed in `app/firebase.json` and `app/.firebaserc`.
+
 ## 📝 Design Principles
 
 - **Signal-to-Noise:** Prioritize urgent reviews and recent AI insights over historical data.
