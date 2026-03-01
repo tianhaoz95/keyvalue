@@ -184,19 +184,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       message: 'AI Thinking...',
       child: Scaffold(
         appBar: AppBar(
-        title: _isSearching 
-          ? TextField(
-              controller: _searchController,
-              autofocus: true,
-              style: const TextStyle(color: Colors.black),
-              decoration: const InputDecoration(
-                hintText: 'Search clients...',
-                hintStyle: TextStyle(color: Colors.grey),
-                border: InputBorder.none,
-                filled: false,
-              ),
-            )
-          : Row(
+        title: Row(
               children: [
                 Image.asset(
                   'assets/images/logo_120.png', 
@@ -208,19 +196,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
         actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search_outlined),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchController.clear();
-                } else {
-                  _isSearching = true;
-                }
-              });
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.bolt_outlined),
             tooltip: 'AI Scan for Actions',
@@ -289,15 +264,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             PendingReviewList(customers: pendingReviews),
                             ],
 
-                            Padding(                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
-                        child: Row(
-                          children: [
-                            Text(
-                              l10n.clients,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
-                            ),
-                            const Spacer(),
-                            PopupMenuButton<CustomerSortOption>(
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 32, 12, 8),
+                              child: Row(
+                                children: [
+                                  if (!_isSearching)
+                                    Text(
+                                      l10n.clients,
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                                    )
+                                  else
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _searchController,
+                                        autofocus: true,
+                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                        decoration: const InputDecoration(
+                                          hintText: 'Search clients...',
+                                          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                        onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                                      ),
+                                    ),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: Icon(_isSearching ? Icons.close : Icons.search_outlined, size: 20, color: Colors.black54),
+                                    onPressed: () {
+                                      setState(() {
+                                        if (_isSearching) {
+                                          _isSearching = false;
+                                          _searchController.clear();
+                                          _searchQuery = '';
+                                        } else {
+                                          _isSearching = true;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  PopupMenuButton<CustomerSortOption>(
                               icon: const Icon(Icons.sort_outlined, size: 20, color: Colors.black54),
                               tooltip: 'Sort Clients',
                               onSelected: _updateSortPreference,
