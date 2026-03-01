@@ -275,22 +275,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   if (_isSearching)
                                     Expanded(
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                         child: Align(
                                           alignment: Alignment.centerRight,
                                           child: ConstrainedBox(
-                                            constraints: const BoxConstraints(maxWidth: 200),
+                                            constraints: const BoxConstraints(maxWidth: 200, maxHeight: 36),
                                             child: TextField(
                                               controller: _searchController,
                                               autofocus: true,
                                               textAlign: TextAlign.right,
-                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                              decoration: const InputDecoration(
+                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                              decoration: InputDecoration(
                                                 hintText: 'Search...',
-                                                hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                                                border: InputBorder.none,
+                                                hintStyle: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.normal),
+                                                filled: true,
+                                                fillColor: Colors.black.withValues(alpha: 0.04),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(18),
+                                                  borderSide: BorderSide.none,
+                                                ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(18),
+                                                  borderSide: BorderSide.none,
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(18),
+                                                  borderSide: BorderSide.none,
+                                                ),
                                                 isDense: true,
-                                                contentPadding: EdgeInsets.zero,
                                               ),
                                               onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
                                             ),
