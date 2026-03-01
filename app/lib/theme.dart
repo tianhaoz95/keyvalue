@@ -21,6 +21,8 @@ class AppTheme {
       scaffoldBackgroundColor: backgroundWhite,
       appBarTheme: const AppBarTheme(
         backgroundColor: backgroundWhite,
+        scrolledUnderElevation: 1,
+        surfaceTintColor: lightGrey,
         foregroundColor: primaryBlack,
         elevation: 0,
         centerTitle: false,
