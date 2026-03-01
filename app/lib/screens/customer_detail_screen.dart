@@ -189,16 +189,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                             TabBar(
                               tabs: [
                                 Tab(
-                                  child: Badge(
+                                  icon: Badge(
                                     backgroundColor: Colors.black,
                                     label: Text('$pendingCount', style: const TextStyle(color: Colors.white)),
                                     isLabelVisible: pendingCount > 0,
-                                    child: Text(l10n.engagement.toUpperCase()),
+                                    child: const Icon(Icons.history),
                                   ),
+                                  text: isPhone ? null : l10n.engagement.toUpperCase(),
                                 ),
-                                Tab(text: l10n.profile.toUpperCase()),
-                                const Tab(text: 'RULES'),
-                                Tab(text: l10n.settings.toUpperCase()),
+                                Tab(
+                                  icon: const Icon(Icons.person_outline),
+                                  text: isPhone ? null : l10n.profile.toUpperCase(),
+                                ),
+                                Tab(
+                                  icon: const Icon(Icons.rule_outlined),
+                                  text: isPhone ? null : 'RULES',
+                                ),
+                                Tab(
+                                  icon: const Icon(Icons.settings_outlined),
+                                  text: isPhone ? null : l10n.settings.toUpperCase(),
+                                ),
                               ],
                             ),
                             Expanded(
