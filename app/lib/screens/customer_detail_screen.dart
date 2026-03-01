@@ -365,36 +365,57 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  const Text('CLIENT CONTEXT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9F9F9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      title: const Text('CLIENT CONTEXT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEEEEEE)),
+                          ),
+                          child: MarkdownBody(
+                            data: customer.details,
+                            styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
-                    child: MarkdownBody(
-                      data: customer.details,
-                      styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
+                  ),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      title: const Text('ENGAGEMENT RULES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9F9F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFEEEEEE)),
+                          ),
+                          child: MarkdownBody(
+                            data: customer.guidelines,
+                            styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5, fontStyle: FontStyle.italic)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text('ENGAGEMENT RULES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9F9F9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                    ),
-                    child: MarkdownBody(
-                      data: customer.guidelines,
-                      styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5, fontStyle: FontStyle.italic)),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
                   const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 12),
                   TextField(
