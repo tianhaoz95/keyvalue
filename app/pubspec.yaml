@@ -121,8 +121,8 @@ flutter_launcher_icons:
   web:
     generate: true
     image_path: "assets/images/logo_icon.png"
-    background_color: "#1A237E"
-    theme_color: "#1A237E"
+    background_color: "#FFFFFF"
+    theme_color: "#000000"
   image_path: "assets/images/logo_icon.png"
-  adaptive_icon_background: "#1A237E"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/logo_icon.png"
