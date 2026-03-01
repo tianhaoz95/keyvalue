@@ -223,6 +223,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             tooltip: 'AI Scan for Actions',
             onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
           ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: 'AI Onboarding',
+            onPressed: () => _startAiOnboarding(provider),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_add_outlined),
+            tooltip: 'Add Client',
+            onPressed: _startManualAdd,
+          ),
           PopupMenuButton<CustomerSortOption>(
             icon: const Icon(Icons.sort_outlined),
             onSelected: _updateSortPreference,
@@ -304,7 +314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: filteredCustomers.length,
-                  padding: EdgeInsets.fromLTRB(16, 0, isAnySidebarOpen ? 16 : 80, 100),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                   separatorBuilder: (_, index) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final customer = filteredCustomers[index];
@@ -327,43 +337,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ],
-      ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(right: isAnySidebarOpen ? MediaQuery.of(context).size.width * 0.35 : 0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!_isAiOnboardingOpen)
-              FloatingActionButton(
-                heroTag: 'ai_onboarding',
-                elevation: 0,
-                onPressed: () => _startAiOnboarding(provider),
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.auto_awesome_outlined),
-              ),
-            const SizedBox(height: 12),
-            if (!_isManualAddOpen)
-              FloatingActionButton(
-                heroTag: 'add_customer',
-                elevation: 0,
-                highlightElevation: 0,
-                onPressed: _startManualAdd,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                splashColor: Colors.transparent,
-                hoverColor: Colors.transparent,
-                enableFeedback: false,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Colors.black12),
-                ),
-                child: const Icon(Icons.add_outlined),
-              ),
-          ],
-        ),
       ),
     ));
   }
