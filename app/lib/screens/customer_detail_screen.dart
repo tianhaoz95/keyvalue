@@ -46,7 +46,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.dispose();
   }
 
-  void _openAiSidebar(String mode, CpaProvider provider, Customer customer) {
+  void _openAiSidebar(String mode, CpaProvider provider, Customer customer) async {
+    // 1. Immediately open sidebar in loading state
     setState(() {
       _aiSidebarMode = mode;
       _aiConversation.clear();
@@ -54,6 +55,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       _isAiSidebarOpen = true;
     });
     
+    // 2. Yield to event loop
+    await Future.delayed(Duration.zero);
+
     final future = mode == 'profile' 
       ? provider.getProfileRefinementResponse(customer, [])
       : provider.getGuidelinesRefinementResponse(customer, []);

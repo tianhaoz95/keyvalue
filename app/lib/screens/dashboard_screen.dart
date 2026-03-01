@@ -67,6 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _startAiOnboarding(CpaProvider provider) async {
+    // 1. Immediately open sidebar in loading state
     setState(() {
       _isAiOnboardingOpen = true;
       _isManualAddOpen = false;
@@ -74,6 +75,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _isAiOnboardingLoading = true;
     });
 
+    // 2. Yield to the event loop so the UI can render the sidebar frame
+    await Future.delayed(Duration.zero);
+
+    // 3. Fetch initial greeting
     final response = await provider.getOnboardingResponse([]);
     if (mounted) {
       setState(() {
@@ -83,7 +88,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _startManualAdd() {
+  void _startManualAdd() async {
+    // Immediately open sidebar
     setState(() {
       _isManualAddOpen = true;
       _isAiOnboardingOpen = false;
