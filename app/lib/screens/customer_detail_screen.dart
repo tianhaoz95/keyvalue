@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
@@ -25,11 +27,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late TextEditingController _guidelinesController;
 
   // AI Side-bar State
-  String _aiSidebarMode = 'profile'; // 'profile' or 'guidelines'
+  String _aiSidebarMode = 'profile'; // 'profile', 'guidelines', or 'review'
   final List<ChatMessage> _aiConversation = [];
   final TextEditingController _aiInputController = TextEditingController();
   bool _isAiSidebarLoading = false;
   bool _isAiSidebarOpen = false;
+
+  // Review Draft State
+  Engagement? _activeReviewEngagement;
+  final TextEditingController _reviewDraftController = TextEditingController();
 
   @override
   void initState() {
@@ -43,20 +49,27 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     _profileController.dispose();
     _guidelinesController.dispose();
     _aiInputController.dispose();
+    _reviewDraftController.dispose();
     super.dispose();
   }
 
-  void _openAiSidebar(String mode, CpaProvider provider, Customer customer) async {
+  void _openAiSidebar(String mode, CpaProvider provider, Customer customer, {Engagement? engagement}) async {
     // 1. Immediately open sidebar in loading state
     setState(() {
       _aiSidebarMode = mode;
       _aiConversation.clear();
-      _isAiSidebarLoading = true;
+      _activeReviewEngagement = engagement;
+      if (mode == 'review' && engagement != null) {
+        _reviewDraftController.text = engagement.draftMessage;
+      }
+      _isAiSidebarLoading = (mode != 'review'); // Don't show typing indicator for review
       _isAiSidebarOpen = true;
     });
     
     // 2. Yield to event loop
     await Future.delayed(Duration.zero);
+
+    if (mode == 'review') return; // No AI response needed for review mode initialization
 
     final future = mode == 'profile' 
       ? provider.getProfileRefinementResponse(customer, [])
@@ -172,6 +185,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                               engagements: engagements,
                               provider: provider,
                               onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
+                              onReviewDraft: (engagement) => _openAiSidebar('review', provider, currentCustomer, engagement: engagement),
                             ),
                             _buildSettingsTab(context, provider, currentCustomer),
                           ],
@@ -197,6 +211,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer) {
+    if (_aiSidebarMode == 'review') {
+      return _buildDraftReviewSidebar(context, provider, customer);
+    }
+
     final isProfile = _aiSidebarMode == 'profile';
     
     return Container(
@@ -305,6 +323,123 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       }
                     },
                     child: Text(isProfile ? 'SAVE PROFILE' : 'SAVE RULES'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDraftReviewSidebar(BuildContext context, CpaProvider provider, Customer customer) {
+    if (_activeReviewEngagement == null) return const SizedBox.shrink();
+
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.edit_note_outlined, size: 24),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'REVIEW DRAFT',
+                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _isAiSidebarOpen = false),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const Text('CLIENT CONTEXT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    child: MarkdownBody(
+                      data: customer.details,
+                      styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _reviewDraftController,
+                    maxLines: 15,
+                    decoration: InputDecoration(
+                      hintText: 'Refine your message...',
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.black, width: 2),
+                      ),
+                    ),
+                    style: const TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
+                      if (mounted) {
+                        setState(() => _isAiSidebarOpen = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Message sent successfully'), backgroundColor: Colors.black),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('SEND TO CLIENT'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: _reviewDraftController.text));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
+                          },
+                          icon: const Icon(Icons.copy_outlined, size: 16),
+                          label: const Text('COPY', style: TextStyle(fontSize: 11)),
+                          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Share.share(_reviewDraftController.text);
+                          },
+                          icon: const Icon(Icons.share_outlined, size: 16),
+                          label: const Text('SHARE', style: TextStyle(fontSize: 11)),
+                          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

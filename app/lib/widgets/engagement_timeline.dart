@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
-import '../screens/engagement_review_screen.dart';
 
 class EngagementTimeline extends StatelessWidget {
   final Customer customer;
   final List<Engagement> engagements;
   final CpaProvider provider;
   final Function(Engagement) onRespond;
+  final Function(Engagement)? onReviewDraft;
 
   const EngagementTimeline({
     super.key,
@@ -16,6 +16,7 @@ class EngagementTimeline extends StatelessWidget {
     required this.engagements,
     required this.provider,
     required this.onRespond,
+    this.onReviewDraft,
   });
 
   @override
@@ -147,12 +148,11 @@ class EngagementTimeline extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EngagementReviewScreen(customer: customer, engagement: engagement),
-            ),
-          );
+          // The CustomerDetailScreen handles the sidebar logic.
+          // Since this widget is inside that screen, we can use a callback 
+          // or just trigger the parent state if possible. 
+          // However, simpler is to add a callback to EngagementTimeline.
+          onReviewDraft?.call(engagement);
         },
         child: const Text('REVIEW & SEND', style: TextStyle(fontSize: 12, letterSpacing: 1)),
       );
