@@ -368,6 +368,17 @@ class CpaProvider with ChangeNotifier {
     }
   }
 
+  Future<void> deleteCustomer(String customerId) async {
+    if (_currentCpa == null) return;
+    if (isGuestMode) {
+      await _localCustomerRepo.deleteCustomer(_currentCpa!.uid, customerId);
+      await _localEngagementRepo.clearCustomerEngagements(_currentCpa!.uid, customerId);
+    } else {
+      await _customerRepo.deleteCustomer(_currentCpa!.uid, customerId);
+      await _engagementRepo.deleteCustomerEngagements(_currentCpa!.uid, customerId);
+    }
+  }
+
   Future<void> generateManualDraft(Customer customer) async {
     if (_currentCpa == null || _isGeneratingDraft || customer.hasActiveDraft) return;
     _isGeneratingDraft = true;

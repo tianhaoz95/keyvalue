@@ -85,7 +85,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           final pendingCount = engagements.where((e) => e.status == EngagementStatus.draft).length;
 
           return DefaultTabController(
-            length: 3,
+            length: 4,
             child: Column(
               children: [
                 Container(
@@ -131,6 +131,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         child: const Text('History'),
                       ),
                     ),
+                    const Tab(text: 'Settings'),
                   ],
                 ),
                 Expanded(
@@ -147,6 +148,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         provider: provider,
                         onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
                       ),
+                      // Settings Tab
+                      _buildSettingsTab(context, provider, currentCustomer),
                     ],
                   ),
                 ),
@@ -248,6 +251,100 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     )
                   : MarkdownBody(data: customer.details),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+    );
+  }
+
+  Widget _buildSettingsTab(BuildContext context, CpaProvider provider, Customer customer) {
+    final nameController = TextEditingController(text: customer.name);
+    final emailController = TextEditingController(text: customer.email);
+    final occupationController = TextEditingController(text: customer.occupation);
+    final phoneController = TextEditingController(text: customer.phoneNumber);
+    final addressController = TextEditingController(text: customer.address);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Edit Client Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+          const SizedBox(height: 12),
+          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+          const SizedBox(height: 12),
+          TextField(controller: occupationController, decoration: const InputDecoration(labelText: 'Occupation')),
+          const SizedBox(height: 12),
+          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+          const SizedBox(height: 12),
+          TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                final updated = customer.copyWith(
+                  name: nameController.text.trim(),
+                  email: emailController.text.trim(),
+                  occupation: occupationController.text.trim(),
+                  phoneNumber: phoneController.text.trim(),
+                  address: addressController.text.trim(),
+                );
+                await provider.addCustomer(updated);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client information updated')));
+                }
+              },
+              child: const Text('Save Changes'),
+            ),
+          ),
+          const SizedBox(height: 48),
+          const Divider(),
+          const SizedBox(height: 24),
+          const Text('Danger Zone', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+          const SizedBox(height: 8),
+          const Text('Once you delete a client, there is no going back. Please be certain.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+              ),
+              onPressed: () => _showDeleteConfirmation(context, provider, customer),
+              child: const Text('Delete Client'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, CpaProvider provider, Customer customer) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Client?'),
+        content: Text('Are you sure you want to delete ${customer.name}? This will also remove all engagement history.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              await provider.deleteCustomer(customer.customerId);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to dashboard
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${customer.name} deleted')));
+              }
+            },
+            child: const Text('Delete'),
           ),
         ],
       ),

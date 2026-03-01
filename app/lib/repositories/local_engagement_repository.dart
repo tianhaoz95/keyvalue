@@ -35,6 +35,11 @@ class LocalEngagementRepository {
     }
   }
 
+  Future<void> clearCustomerEngagements(String cpaUid, String customerId) async {
+    final box = await _box;
+    await box.delete(customerId);
+  }
+
   Future<void> clearAll() async {
     final box = await _box;
     await box.clear();

@@ -72,4 +72,9 @@ class CustomerRepository {
     if (cpaUid == 'demo_user') return;
     await _customersRef(cpaUid).doc(customer.customerId).update(customer.toMap());
   }
+
+  Future<void> deleteCustomer(String cpaUid, String customerId) async {
+    if (cpaUid == 'demo_user') return;
+    await _customersRef(cpaUid).doc(customerId).delete();
+  }
 }

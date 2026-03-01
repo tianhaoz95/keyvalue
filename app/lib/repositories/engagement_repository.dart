@@ -11,9 +11,17 @@ class EngagementRepository {
     return _firestore.collection('cpas').doc(cpaUid).collection('customers').doc(customerId).collection('engagements');
   }
 
-  Future<void> saveEngagement(String cpaUid, String customerId, Engagement engagement) async {
+  Future<void> updateEngagement(String cpaUid, String customerId, Engagement engagement) async {
     if (cpaUid == 'demo_user') return;
-    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).set(engagement.toMap());
+    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
+  }
+
+  Future<void> deleteCustomerEngagements(String cpaUid, String customerId) async {
+    if (cpaUid == 'demo_user') return;
+    final snapshots = await _engagementsRef(cpaUid, customerId).get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
   }
 
   Stream<List<Engagement>> getEngagements(String cpaUid, String customerId) {
