@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
+import '../services/ai_service.dart';
 import '../widgets/pending_review_list.dart';
 import '../widgets/loading_overlay.dart';
 import 'customer_detail_screen.dart';
 import 'settings_screen.dart';
-import 'ai_onboarding_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +21,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _searchQuery = '';
   CustomerSortOption _sortOption = CustomerSortOption.nextContact;
   bool _isSearching = false;
+
+  // AI Onboarding Sidebar State
+  bool _isAiOnboardingOpen = false;
+  final List<ChatMessage> _onboardingConversation = [];
+  final TextEditingController _onboardingInputController = TextEditingController();
+  final ScrollController _onboardingScrollController = ScrollController();
+  bool _isAiOnboardingLoading = false;
 
   @override
   void initState() {
@@ -49,9 +56,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _startAiOnboarding(CpaProvider provider) async {
+    setState(() {
+      _isAiOnboardingOpen = true;
+      _onboardingConversation.clear();
+      _isAiOnboardingLoading = true;
+    });
+
+    final response = await provider.getOnboardingResponse([]);
+    if (mounted) {
+      setState(() {
+        _onboardingConversation.add(ChatMessage(text: response, isUser: false));
+        _isAiOnboardingLoading = false;
+      });
+    }
+  }
+
+  void _onboardingScrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_onboardingScrollController.hasClients) {
+        _onboardingScrollController.animateTo(
+          _onboardingScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _onboardingInputController.dispose();
+    _onboardingScrollController.dispose();
     super.dispose();
   }
 
@@ -152,85 +189,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Row(
         children: [
-          // Welcome Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-            color: Colors.white,
-            width: double.infinity,
+          // Main Dashboard Content
+          Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Welcome back, ${cpa.name.split(' ')[0]}',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
-                    ),
-                    if (isDiscovering)
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                // Welcome Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                  color: Colors.white,
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Welcome back, ${cpa.name.split(' ')[0]}',
+                            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
+                          ),
+                          if (isDiscovering)
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                            ),
+                        ],
                       ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your portfolio consists of ${allCustomers.length} clients',
+                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your portfolio consists of ${allCustomers.length} clients',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+
+                const Divider(height: 1, indent: 24, endIndent: 24),
+
+                // Urgent Actions Section
+                if (pendingReviews.isNotEmpty) ...[
+                  PendingReviewList(customers: pendingReviews),
+                  const Divider(height: 1, indent: 24, endIndent: 24),
+                ],
+
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
+                  child: Text(
+                    'Clients',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+                  ),
+                ),
+                
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: filteredCustomers.length,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    separatorBuilder: (_, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final customer = filteredCustomers[index];
+                      return _buildCustomerTile(context, customer);
+                    },
+                  ),
                 ),
               ],
             ),
           ),
-
-          const Divider(height: 1, indent: 24, endIndent: 24),
-
-          // Urgent Actions Section
-          if (pendingReviews.isNotEmpty) ...[
-            PendingReviewList(customers: pendingReviews),
-            const Divider(height: 1, indent: 24, endIndent: 24),
-          ],
-
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
-            child: Text(
-              'Clients',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
+          // AI Onboarding Sidebar
+          if (_isAiOnboardingOpen)
+            const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
+          if (_isAiOnboardingOpen)
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.35,
+              child: _buildAiOnboardingSidebar(context, provider),
             ),
-          ),
-          
-          Expanded(
-            child: ListView.separated(
-              itemCount: filteredCustomers.length,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-              separatorBuilder: (_, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final customer = filteredCustomers[index];
-                return _buildCustomerTile(context, customer);
-              },
-            ),
-          ),
         ],
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FloatingActionButton.extended(
-            heroTag: 'ai_onboarding',
-            elevation: 0,
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AiOnboardingScreen()));
-            },
-            icon: const Icon(Icons.auto_awesome_outlined),
-            label: const Text('AI ONBOARDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+          if (!_isAiOnboardingOpen)
+            FloatingActionButton.extended(
+              heroTag: 'ai_onboarding',
+              elevation: 0,
+              onPressed: () => _startAiOnboarding(provider),
+              icon: const Icon(Icons.auto_awesome_outlined),
+              label: const Text('AI ONBOARDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: 'add_customer',
@@ -249,6 +301,193 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     ));
+  }
+
+  Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider) {
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.auto_awesome_outlined, size: 24),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'AI ONBOARDING',
+                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _isAiOnboardingOpen = false),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.builder(
+                controller: _onboardingScrollController,
+                padding: const EdgeInsets.all(24),
+                itemCount: _onboardingConversation.length + (_isAiOnboardingLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _onboardingConversation.length) {
+                    return const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black12),
+                      ),
+                    );
+                  }
+                  final msg = _onboardingConversation[index];
+                  return _buildChatBubble(msg);
+                },
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _onboardingInputController,
+                    decoration: InputDecoration(
+                      hintText: 'Type message...',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.send_rounded),
+                        onPressed: _isAiOnboardingLoading ? null : () async {
+                          final text = _onboardingInputController.text.trim();
+                          if (text.isEmpty) return;
+                          _onboardingInputController.clear();
+                          
+                          setState(() {
+                            _onboardingConversation.add(ChatMessage(text: text, isUser: true));
+                            _isAiOnboardingLoading = true;
+                          });
+                          _onboardingScrollToBottom();
+
+                          final response = await provider.getOnboardingResponse(_onboardingConversation);
+
+                          if (mounted) {
+                            setState(() {
+                              _onboardingConversation.add(ChatMessage(text: response, isUser: false));
+                              _isAiOnboardingLoading = false;
+                            });
+                            _onboardingScrollToBottom();
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _onboardingConversation.length < 3 || _isAiOnboardingLoading ? null : () async {
+                      setState(() => _isAiOnboardingLoading = true);
+                      final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
+                      
+                      if (mounted) {
+                        setState(() => _isAiOnboardingLoading = false);
+                        if (customer != null) {
+                          _showOnboardingReviewDialog(customer, provider);
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    child: const Text('FINALIZE ONBOARDING'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatBubble(ChatMessage message) {
+    return Align(
+      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: message.isUser ? Colors.black : const Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.circular(12).copyWith(
+            bottomRight: message.isUser ? const Radius.circular(0) : const Radius.circular(12),
+            bottomLeft: message.isUser ? const Radius.circular(12) : const Radius.circular(0),
+          ),
+          border: message.isUser ? null : Border.all(color: const Color(0xFFEEEEEE)),
+        ),
+        child: Text(
+          message.text,
+          style: TextStyle(
+            color: message.isUser ? Colors.white : Colors.black,
+            fontSize: 13,
+            height: 1.5
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showOnboardingReviewDialog(Customer customer, CpaProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Review New Profile', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildReviewField('NAME', customer.name),
+              _buildReviewField('EMAIL', customer.email),
+              _buildReviewField('OCCUPATION', customer.occupation),
+              _buildReviewField('RULES', customer.guidelines),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          ElevatedButton(
+            onPressed: () async {
+              await provider.addCustomer(customer);
+              if (mounted) {
+                if (context.mounted) {
+                  Navigator.pop(context); // Close dialog
+                  setState(() => _isAiOnboardingOpen = false); // Close sidebar
+                }
+              }
+            },
+            child: const Text('CREATE CLIENT'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.grey, letterSpacing: 1.2)),
+          const SizedBox(height: 4),
+          Text(value.isEmpty ? 'Not found' : value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
   }
 
   Widget _buildCustomerTile(BuildContext context, Customer customer) {
