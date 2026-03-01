@@ -113,6 +113,23 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         appBar: AppBar(
           title: Row(
             children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Image.asset(
+                    'assets/images/logo_120.png', 
+                    height: 24,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const SizedBox(
+                height: 20,
+                child: VerticalDivider(width: 1, thickness: 1, color: Colors.black12),
+              ),
+              const SizedBox(width: 16),
               Hero(
                 tag: 'avatar_${currentCustomer.customerId}',
                 child: CircleAvatar(

@@ -184,7 +184,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       message: 'AI Thinking...',
       child: Scaffold(
         appBar: AppBar(
-        title: Row(
+        title: GestureDetector(
+          onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: Row(
               children: [
                 Image.asset(
                   'assets/images/logo_120.png', 
@@ -195,6 +199,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(cpa.firmName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
               ],
             ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.bolt_outlined),
