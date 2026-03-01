@@ -273,15 +273,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!_isAiOnboardingOpen)
-            FloatingActionButton.extended(
+            FloatingActionButton(
               heroTag: 'ai_onboarding',
               elevation: 0,
               onPressed: () => _startAiOnboarding(provider),
-              icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('AI ONBOARDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.auto_awesome_outlined),
             ),
           const SizedBox(height: 12),
           FloatingActionButton(
