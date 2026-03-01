@@ -27,6 +27,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isAiOnboardingOpen = false;
   bool _isManualAddOpen = false;
   bool _isSettingsOpen = false;
+  String? _editingField;
+  final _editingController = TextEditingController();
   final List<ChatMessage> _onboardingConversation = [];
   final TextEditingController _onboardingInputController = TextEditingController();
   final ScrollController _onboardingScrollController = ScrollController();
@@ -132,6 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _editingController.dispose();
     _onboardingInputController.dispose();
     _onboardingScrollController.dispose();
     _nameController.dispose();
@@ -711,27 +714,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Column(
         children: [
-          _buildSidebarInfoRow('NAME', cpa.name),
+          _buildSidebarInfoRow(
+            context,
+            provider,
+            'NAME',
+            'NAME', 
+            cpa.name, 
+            (val) => cpa.copyWith(name: val),
+          ),
           const Divider(height: 32),
-          _buildSidebarInfoRow('FIRM', cpa.firmName),
+          _buildSidebarInfoRow(
+            context,
+            provider,
+            'FIRM',
+            'FIRM', 
+            cpa.firmName, 
+            (val) => cpa.copyWith(firmName: val),
+          ),
           const Divider(height: 32),
-          _buildSidebarInfoRow('EMAIL', cpa.email),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () => _showSidebarEditProfileDialog(context, provider, l10n),
-            child: Text(l10n.saveChanges.toUpperCase()),
+          _buildSidebarInfoRow(
+            context,
+            provider,
+            'EMAIL',
+            'EMAIL', 
+            cpa.email, 
+            (val) => cpa.copyWith(email: val),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSidebarInfoRow(String label, String value) {
+  Widget _buildSidebarInfoRow(
+    BuildContext context,
+    CpaProvider provider,
+    String fieldKey,
+    String label, 
+    String value, 
+    dynamic Function(String) copyWith,
+  ) {
+    final isEditing = _editingField == fieldKey;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+              const SizedBox(height: 4),
+              if (isEditing)
+                TextField(
+                  controller: _editingController,
+                  autofocus: true,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.5)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2.0)),
+                    filled: false,
+                  ),
+                  onSubmitted: (val) async {
+                    final updatedCpa = copyWith(val.trim());
+                    await provider.updateProfile(updatedCpa);
+                    setState(() => _editingField = null);
+                  },
+                )
+              else
+                Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: Icon(isEditing ? Icons.check_circle_outline : Icons.edit_outlined, 
+                     size: 16, 
+                     color: isEditing ? Colors.black : Colors.black54),
+          onPressed: () async {
+            if (isEditing) {
+              final updatedCpa = copyWith(_editingController.text.trim());
+              await provider.updateProfile(updatedCpa);
+              setState(() => _editingField = null);
+            } else {
+              setState(() {
+                _editingField = fieldKey;
+                _editingController.text = value;
+              });
+            }
+          },
+          visualDensity: VisualDensity.compact,
+        ),
       ],
     );
   }
@@ -759,41 +832,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         trailing: const Icon(Icons.chevron_right_outlined, color: Colors.black12, size: 18),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  void _showSidebarEditProfileDialog(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
-    final cpa = provider.currentCpa!;
-    final nameController = TextEditingController(text: cpa.name);
-    final firmController = TextEditingController(text: cpa.firmName);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile, style: const TextStyle(fontWeight: FontWeight.w900)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
-            const SizedBox(height: 16),
-            TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              final updatedCpa = cpa.copyWith(
-                name: nameController.text.trim(),
-                firmName: firmController.text.trim(),
-              );
-              await provider.updateProfile(updatedCpa);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: Text(l10n.saveChanges.toUpperCase()),
-          ),
-        ],
       ),
     );
   }
