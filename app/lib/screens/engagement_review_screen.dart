@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
@@ -80,13 +81,13 @@ class _EngagementReviewScreenState extends State<EngagementReviewScreen> {
             Row(
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: ElevatedButton(
                     onPressed: () => _sendMessage(context),
                     child: const Text('SEND TO CLIENT'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   flex: 1,
                   child: OutlinedButton(
@@ -100,7 +101,21 @@ class _EngagementReviewScreenState extends State<EngagementReviewScreen> {
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 52),
                     ),
-                    child: const Icon(Icons.copy_outlined, size: 20),
+                    child: const Icon(Icons.copy_outlined, size: 18),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Share.share(_messageController.text, subject: 'Client Outreach Draft');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 52),
+                    ),
+                    child: const Icon(Icons.share_outlined, size: 18),
                   ),
                 ),
               ],
