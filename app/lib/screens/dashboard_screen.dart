@@ -276,19 +276,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Expanded(
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                        child: TextField(
-                                          controller: _searchController,
-                                          autofocus: true,
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                          decoration: const InputDecoration(
-                                            hintText: 'Search...',
-                                            hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                                            border: InputBorder.none,
-                                            isDense: true,
-                                            contentPadding: EdgeInsets.zero,
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: ConstrainedBox(
+                                            constraints: const BoxConstraints(maxWidth: 200),
+                                            child: TextField(
+                                              controller: _searchController,
+                                              autofocus: true,
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                              decoration: const InputDecoration(
+                                                hintText: 'Search...',
+                                                hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                                                border: InputBorder.none,
+                                                isDense: true,
+                                                contentPadding: EdgeInsets.zero,
+                                              ),
+                                              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                                            ),
                                           ),
-                                          onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
                                         ),
                                       ),
                                     )
