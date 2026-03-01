@@ -165,8 +165,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                           children: [
                             TabBar(
                               tabs: [
-                                Tab(text: l10n.profile.toUpperCase()),
-                                const Tab(text: 'RULES'),
                                 Tab(
                                   child: Badge(
                                     backgroundColor: Colors.black,
@@ -175,14 +173,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                                     child: Text(l10n.engagement.toUpperCase()),
                                   ),
                                 ),
+                                Tab(text: l10n.profile.toUpperCase()),
+                                const Tab(text: 'RULES'),
                                 Tab(text: l10n.settings.toUpperCase()),
                               ],
                             ),
                             Expanded(
                               child: TabBarView(
                                 children: [
-                                  _buildProfileTab(context, provider, currentCustomer, engagements, l10n),
-                                  _buildGuidelinesTab(context, provider, currentCustomer, l10n),
                                   EngagementTimeline(
                                     customer: currentCustomer,
                                     engagements: engagements,
@@ -190,6 +188,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                                     onRespond: (engagement) => _showResponseDialog(context, provider, currentCustomer, engagement),
                                     onReviewDraft: (engagement) => _openAiSidebar('review', provider, currentCustomer, engagement: engagement),
                                   ),
+                                  _buildProfileTab(context, provider, currentCustomer, engagements, l10n),
+                                  _buildGuidelinesTab(context, provider, currentCustomer, l10n),
                                   _buildSettingsTab(context, provider, currentCustomer, l10n),
                                 ],
                               ),
