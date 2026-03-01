@@ -1,6 +1,5 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/customer.dart';
-import 'dart:convert';
 
 class ChatMessage {
   final String text;
@@ -17,20 +16,37 @@ class AiService {
   AiService({GenerativeModel? model, this.modelName = 'gemini-2.5-flash', this.isDemo = false})
       : _model = model;
 
-  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(model: modelName);
+  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(
+    model: modelName,
+    tools: [
+      Tool.functionDeclarations([
+        FunctionDeclaration(
+          'create_client',
+          'Call this once you have gathered all required client information: Name, Email, Occupation, Details (Background), and Engagement Guidelines.',
+          parameters: {
+            'name': Schema.string(description: 'Full name of the client'),
+            'email': Schema.string(description: 'Email address'),
+            'occupation': Schema.string(description: 'Client occupation'),
+            'details': Schema.string(description: 'Detailed background/profile (Markdown)'),
+            'guidelines': Schema.string(description: 'Engagement rules/guidelines (Markdown)'),
+          },
+        )
+      ])
+    ],
+  );
 
-  Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
-    if (isDemo) {
-      if (history.length <= 1) return "Hello! I'm your AI onboarding assistant. To get started, what is the new client's full name?";
-      if (history.last.text.toLowerCase().contains('john')) return "Great, John Doe. What is his email address and occupation?";
-      return "I've got those details. Any specific engagement guidelines I should keep in mind for him?";
-    }
+  Future<GenerateContentResponse?> getOnboardingResponseRaw(List<ChatMessage> history) async {
+    if (isDemo) return null;
 
     try {
       final prompt = '''
-You are an expert CPA assistant helping to onboard a new client.
-Your goal is to gather: Name, Email, Occupation, and Engagement Guidelines.
-Be professional, concise, and friendly.
+You are an expert CPA onboarding assistant. Your goal is to help the user create a new client by gathering their Name, Email, Occupation, Detailed Profile (Background), and Engagement Guidelines.
+
+### Process:
+1. **Introduction**: Inform the user that you are here to help them create a new client through an interactive conversation.
+2. **Data Gathering**: Ask for the missing information one or two pieces at a time. Be professional and friendly.
+3. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
+4. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
 
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
@@ -38,62 +54,52 @@ ${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')
 Assistant:''';
 
       final content = [Content.text(prompt)];
-      final response = await _effectiveModel.generateContent(content);
-      return response.text ?? "I'm sorry, I'm having trouble responding right now.";
-    } catch (e) {
-      return "Error: ${e.toString()}";
-    }
-  }
-
-  Future<Customer?> processOnboardingConversation(List<ChatMessage> history) async {
-    if (isDemo) {
-      return Customer(
-        customerId: 'temp_id',
-        name: 'John Doe (Demo)',
-        email: 'john@example.com',
-        occupation: 'Software Engineer',
-        details: 'Extracted via AI conversation.',
-        guidelines: 'Focus on R&D tax credits.',
-        engagementFrequencyDays: 30,
-        nextEngagementDate: DateTime.now(),
-        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
-      );
-    }
-
-    try {
-      final prompt = '''
-Based on the following conversation, extract the details for a new CPA client.
-Return a JSON object with these keys: name, email, occupation, details, guidelines.
-If a field is missing, use an empty string.
-
-Conversation:
-${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
-
-JSON Output:''';
-
-      final content = [Content.text(prompt)];
-      final response = await _effectiveModel.generateContent(content);
-      final text = response.text ?? "{}";
-      
-      // Clean up markdown if AI returns it
-      final cleanJson = text.replaceAll('```json', '').replaceAll('```', '').trim();
-      
-      final data = jsonDecode(cleanJson);
-      return Customer(
-        customerId: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: data['name'] ?? '',
-        email: data['email'] ?? '',
-        occupation: data['occupation'] ?? '',
-        details: data['details'] ?? 'Extracted via AI onboarding.',
-        guidelines: data['guidelines'] ?? '',
-        engagementFrequencyDays: 30,
-        nextEngagementDate: DateTime.now(),
-        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
-      );
+      return await _effectiveModel.generateContent(content);
     } catch (e) {
       return null;
     }
   }
+
+  Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
+    if (isDemo) {
+      if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. I'll help you create a new client by gathering their details through a quick conversation. To start, what is the client's full name?";
+      if (history.last.text.toLowerCase().contains('john')) return "Great, John Doe. What is his email address and occupation?";
+      if (history.any((m) => m.text.contains('@'))) return "I've got those details. Now, could you provide some background details for his profile and any specific engagement guidelines I should follow?";
+      return "I'm ready to create the client profile for John Doe once you provide the background and guidelines.";
+    }
+
+    final response = await getOnboardingResponseRaw(history);
+    if (response == null) return "I'm having trouble connecting to the AI service.";
+    
+    final text = response.text;
+    if (text != null && text.isNotEmpty) return text;
+    
+    final functionCalls = response.functionCalls;
+    if (functionCalls.isNotEmpty) {
+      return "CONFERENCE_READY"; // Special token to signal UI to show review
+    }
+    
+    return "I'm processing your request...";
+  }
+
+  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<ChatMessage> history) async {
+    if (isDemo) {
+      return {
+        'name': 'John Doe (Demo)',
+        'email': 'john@example.com',
+        'occupation': 'Software Engineer',
+        'details': 'Extracted via demo conversation.',
+        'guidelines': 'Focus on R&D tax credits.',
+      };
+    }
+
+    final response = await getOnboardingResponseRaw(history);
+    if (response != null && response.functionCalls.isNotEmpty) {
+      return response.functionCalls.first.args;
+    }
+    return null;
+  }
+
 
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) {

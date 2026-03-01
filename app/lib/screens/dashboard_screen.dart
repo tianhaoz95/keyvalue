@@ -478,36 +478,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           final response = await provider.getOnboardingResponse(_onboardingConversation);
 
                           if (mounted) {
-                            setState(() {
-                              _onboardingConversation.add(ChatMessage(text: response, isUser: false));
-                              _isAiOnboardingLoading = false;
-                            });
-                            _onboardingScrollToBottom();
+                            if (response == 'CONFERENCE_READY') {
+                              setState(() => _isAiOnboardingLoading = true);
+                              final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
+                              setState(() => _isAiOnboardingLoading = false);
+                              if (customer != null) {
+                                _showOnboardingReviewDialog(customer, provider);
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
+                                  );
+                                }
+                              }
+                            } else {
+                              setState(() {
+                                _onboardingConversation.add(ChatMessage(text: response, isUser: false));
+                                _isAiOnboardingLoading = false;
+                              });
+                              _onboardingScrollToBottom();
+                            }
                           }
                         },
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _onboardingConversation.length < 3 || _isAiOnboardingLoading ? null : () async {
-                      setState(() => _isAiOnboardingLoading = true);
-                      final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
-                      
-                      if (mounted) {
-                        setState(() => _isAiOnboardingLoading = false);
-                        if (customer != null) {
-                          _showOnboardingReviewDialog(customer, provider);
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
-                            );
-                          }
-                        }
-                      }
-                    },
-                    child: Text(l10n.reviewNow.toUpperCase()),
                   ),
                 ],
               ),

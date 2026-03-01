@@ -401,7 +401,20 @@ class CpaProvider with ChangeNotifier {
   }
 
   Future<Customer?> extractCustomerFromOnboarding(List<ChatMessage> history) async {
-    return _aiService.processOnboardingConversation(history);
+    final data = await _aiService.extractClientFromFunctionCall(history);
+    if (data == null) return null;
+
+    return Customer(
+      customerId: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      occupation: data['occupation'] ?? '',
+      details: data['details'] ?? '',
+      guidelines: data['guidelines'] ?? '',
+      engagementFrequencyDays: 30,
+      nextEngagementDate: DateTime.now(),
+      lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+    );
   }
 
   Future<String> getProfileRefinementResponse(Customer customer, List<ChatMessage> history) async {
