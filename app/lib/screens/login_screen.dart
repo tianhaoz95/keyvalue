@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/cpa_provider.dart';
 import '../models/cpa.dart';
@@ -65,24 +66,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
               ),
               const SizedBox(height: 56),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'EMAIL',
-                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                  prefixIcon: Icon(Icons.email_outlined, size: 20),
+              AutofillGroup(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'EMAIL',
+                        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                        prefixIcon: Icon(Icons.email_outlined, size: 20),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'PASSWORD',
+                        labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                        prefixIcon: Icon(Icons.lock_outline, size: 20),
+                      ),
+                      obscureText: true,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) => _login(),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'PASSWORD',
-                  labelStyle: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                  prefixIcon: Icon(Icons.lock_outline, size: 20),
-                ),
-                obscureText: true,
               ),
               const SizedBox(height: 16),
               Row(
@@ -188,6 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
         rememberMe: _rememberMe,
       );
+      
+      // Signal to OS that autofill is successful
+      TextInput.finishAutofillContext();
+
       if (mounted) {
         if (context.mounted) {
           Navigator.pushReplacement(
