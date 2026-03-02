@@ -1,0 +1,1 @@
+- [ ] the line for the tabs in client page is pink color, make it light grey
