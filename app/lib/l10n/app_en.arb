@@ -26,5 +26,18 @@
   "deleteAccount": "DELETE ACCOUNT",
   "language": "Language",
   "saveChanges": "SAVE CHANGES",
-  "engagement": "ENGAGEMENT"
+  "engagement": "ENGAGEMENT",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "sendResetLink": "SEND RESET LINK",
+  "enterEmailToReset": "Enter your email to receive a password reset link.",
+  "resetLinkSent": "Password reset link sent to your email.",
+  "errorSendingReset": "Failed to send reset link: {error}",
+  "@errorSendingReset": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

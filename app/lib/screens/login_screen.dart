@@ -39,129 +39,212 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/logo_cropped.png', 
-                    height: 48,
-                    color: Colors.black,
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'KeyValue',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 450),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo_cropped.png', 
+                      height: 48,
                       color: Colors.black,
-                      letterSpacing: -2.0,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Proactive intelligence for modern accountants.',
-                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
-              ),
-              const SizedBox(height: 56),
-              AutofillGroup(
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: l10n.email.toUpperCase(),
-                        labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                        prefixIcon: const Icon(Icons.email_outlined, size: 20),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: l10n.password.toUpperCase(),
-                        labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                      ),
-                      obscureText: true,
-                      autofillHints: const [AutofillHints.password],
-                      onSubmitted: (_) => _login(),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: Checkbox(
-                      value: _rememberMe,
-                      activeColor: Colors.black,
-                      onChanged: (value) {
-                        setState(() => _rememberMe = value ?? false);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(l10n.rememberMe, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                ],
-              ),
-              const SizedBox(height: 40),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator(color: Colors.black))
-              else ...[
-                ElevatedButton(
-                  onPressed: _login,
-                  child: Text(l10n.login.toUpperCase()),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: TextButton(
-                    onPressed: _showRegisterDialog,
-                    child: Text(
-                      l10n.createAccount,
-                      style: const TextStyle(
-                        fontSize: 12, 
-                        fontWeight: FontWeight.w900, 
-                        letterSpacing: 1,
-                        decoration: TextDecoration.underline,
+                    const SizedBox(width: 12),
+                    const Text(
+                      'KeyValue',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
                         color: Colors.black,
+                        letterSpacing: -2.0,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Proactive intelligence for modern accountants.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
+                ),
+                const SizedBox(height: 56),
+                AutofillGroup(
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: l10n.email.toUpperCase(),
+                          labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                          prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: l10n.password.toUpperCase(),
+                          labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                          prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                        ),
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _login(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            activeColor: Colors.black,
+                            onChanged: (value) {
+                              setState(() => _rememberMe = value ?? false);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(l10n.rememberMe, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: Text(
+                        l10n.forgotPassword,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator(color: Colors.black))
+                else ...[
+                  ElevatedButton(
+                    onPressed: _login,
+                    child: Text(l10n.login.toUpperCase()),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: TextButton(
+                      onPressed: _showRegisterDialog,
+                      child: Text(
+                        l10n.createAccount,
+                        style: const TextStyle(
+                          fontSize: 12, 
+                          fontWeight: FontWeight.w900, 
+                          letterSpacing: 1,
+                          decoration: TextDecoration.underline,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 48),
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('OR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Center(
-                  child: OutlinedButton(
-                    onPressed: _enterGuestMode,
-                    child: Text(l10n.continueAsGuest.toUpperCase()),
+                  const SizedBox(height: 48),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text('OR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 32),
+                  Center(
+                    child: OutlinedButton(
+                      onPressed: _enterGuestMode,
+                      child: Text(l10n.continueAsGuest.toUpperCase()),
+                    ),
+                  ),
+                ],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController(text: _emailController.text);
+    final l10n = AppLocalizations.of(context)!;
+    bool isSending = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.resetPassword, style: const TextStyle(fontWeight: FontWeight.w900)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.enterEmailToReset, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: l10n.email.toUpperCase()),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              if (isSending)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16.0),
+                  child: CircularProgressIndicator(color: Colors.black),
+                ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: isSending ? null : () => Navigator.pop(dialogContext),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              onPressed: isSending ? null : () async {
+                final email = emailController.text.trim();
+                if (email.isEmpty) return;
+
+                setDialogState(() => isSending = true);
+                try {
+                  final provider = Provider.of<CpaProvider>(this.context, listen: false);
+                  await provider.sendPasswordResetEmail(email);
+                  if (mounted) {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(content: Text(l10n.resetLinkSent)),
+                    );
+                  }
+                } catch (e) {
+                  setDialogState(() => isSending = false);
+                  if (mounted) {
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(content: Text(l10n.errorSendingReset(e.toString()))),
+                    );
+                  }
+                }
+              },
+              child: Text(l10n.sendResetLink),
+            ),
+          ],
         ),
       ),
     );

@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // CPAs can read and write their own profile
+    match /cpas/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // CPAs can read and write customers that belong to them
+    match /customers/{customerId} {
+      // Assuming customer documents have a 'cpaUid' field to identify the owner
+      allow read, write: if request.auth != null && (resource == null || resource.data.cpaUid == request.auth.uid || request.resource.data.cpaUid == request.auth.uid);
+    }
+
+    // CPAs can read and write engagements for their customers
+    match /engagements/{engagementId} {
+      // Assuming engagement documents also have a 'cpaUid' field
+      allow read, write: if request.auth != null && (resource == null || resource.data.cpaUid == request.auth.uid || request.resource.data.cpaUid == request.auth.uid);
+    }
+  }
+}

@@ -147,6 +147,14 @@ class CpaProvider with ChangeNotifier {
     }
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } on auth.FirebaseAuthException catch (e) {
+      throw e.message ?? 'Failed to send password reset email';
+    }
+  }
+
   Future<void> loginGuest({bool rememberMe = false}) async {
     final existing = await _localCpaRepo.getCpa('local_user');
     if (existing == null) {

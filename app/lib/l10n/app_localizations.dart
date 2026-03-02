@@ -223,6 +223,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ENGAGEMENT'**
   String get engagement;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get resetPassword;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'SEND RESET LINK'**
+  String get sendResetLink;
+
+  /// No description provided for @enterEmailToReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to receive a password reset link.'**
+  String get enterEmailToReset;
+
+  /// No description provided for @resetLinkSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset link sent to your email.'**
+  String get resetLinkSent;
+
+  /// No description provided for @errorSendingReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reset link: {error}'**
+  String errorSendingReset(String error);
 }
 
 class _AppLocalizationsDelegate

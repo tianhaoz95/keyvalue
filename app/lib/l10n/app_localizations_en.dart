@@ -72,4 +72,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get engagement => 'ENGAGEMENT';
+
+  @override
+  String get forgotPassword => 'Forgot Password?';
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get sendResetLink => 'SEND RESET LINK';
+
+  @override
+  String get enterEmailToReset =>
+      'Enter your email to receive a password reset link.';
+
+  @override
+  String get resetLinkSent => 'Password reset link sent to your email.';
+
+  @override
+  String errorSendingReset(String error) {
+    return 'Failed to send reset link: $error';
+  }
 }

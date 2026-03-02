@@ -19,5 +19,11 @@
   "deleteAccount": "删除账户",
   "language": "语言",
   "saveChanges": "保存更改",
-  "engagement": "互动"
+  "engagement": "互动",
+  "forgotPassword": "忘记密码？",
+  "resetPassword": "重置密码",
+  "sendResetLink": "发送重置链接",
+  "enterEmailToReset": "请输入您的电子邮件以接收密码重置链接。",
+  "resetLinkSent": "密码重置链接已发送到您的邮箱。",
+  "errorSendingReset": "发送重置链接失败：{error}"
 }
