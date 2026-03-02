@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
 import '../services/ai_service.dart';
@@ -290,15 +291,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       l10n.clients,
                                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
                                     ),
-                                  if (_isSearching)
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        width: _isSearching ? 200 : 0,
+                                        height: 36,
+                                        margin: EdgeInsets.symmetric(horizontal: _isSearching ? 12.0 : 0),
+                                        child: ClipRect(
                                           child: SizedBox(
                                             width: 200,
-                                            height: 36,
                                             child: TextField(
                                               controller: _searchController,
                                               autofocus: true,
@@ -329,9 +333,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           ),
                                         ),
                                       ),
-                                    )
-                                  else
-                                    const Spacer(),
+                                    ),
+                                  ),
                                   IconButton(
                                     icon: Icon(_isSearching ? Icons.close : Icons.search_outlined, size: 20, color: Colors.black54),
                                     onPressed: () {
@@ -389,27 +392,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           
-          // Sidebar Container (Conditional Overlay)
-          if (isAnySidebarOpen) 
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: sidebarWidth,
-              child: Row(
-                children: [
-                  if (!isPhone)
-                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-                  Expanded(
-                    child: _isAiOnboardingOpen 
-                      ? _buildAiOnboardingSidebar(context, provider, l10n)
-                      : _isManualAddOpen
-                        ? _buildManualAddSidebar(context, provider, l10n)
-                        : _buildSettingsSidebar(context, provider, l10n),
-                  ),
-                ],
+          // Scrim (Animated Overlay)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !isAnySidebarOpen,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isAiOnboardingOpen = false;
+                    _isManualAddOpen = false;
+                    _isSettingsOpen = false;
+                  });
+                },
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: isAnySidebarOpen ? 1.0 : 0.0,
+                  child: Container(color: Colors.transparent),
+                ),
               ),
             ),
+          ),
+          
+          // Sidebar Container (Animated Positioned)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            right: isAnySidebarOpen ? 0 : -sidebarWidth,
+            top: 0,
+            bottom: 0,
+            width: sidebarWidth,
+            child: Row(
+              children: [
+                if (!isPhone)
+                  const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+                Expanded(
+                  child: _isAiOnboardingOpen 
+                    ? _buildAiOnboardingSidebar(context, provider, l10n)
+                    : _isManualAddOpen
+                      ? _buildManualAddSidebar(context, provider, l10n)
+                      : _isSettingsOpen
+                        ? _buildSettingsSidebar(context, provider, l10n)
+                        : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     ));
@@ -933,7 +960,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  DateFormat('MMM d, y').format(customer.nextEngagementDate),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
+              ],
+            ),
           ],
         ),
       ),
