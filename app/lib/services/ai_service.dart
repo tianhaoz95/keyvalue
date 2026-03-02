@@ -1,11 +1,11 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/customer.dart';
 
-class ChatMessage {
+class AiChatMessage {
   final String text;
   final bool isUser;
 
-  ChatMessage({required this.text, required this.isUser});
+  AiChatMessage({required this.text, required this.isUser});
 }
 
 class AiService {
@@ -49,7 +49,7 @@ class AiService {
     ],
   );
 
-  Future<GenerateContentResponse?> getOnboardingResponseRaw(List<ChatMessage> history) async {
+  Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history) async {
     if (isDemo) return null;
 
     try {
@@ -77,7 +77,7 @@ Assistant:''';
     }
   }
 
-  Future<String> generateOnboardingResponse(List<ChatMessage> history) async {
+  Future<String> generateOnboardingResponse(List<AiChatMessage> history) async {
     if (isDemo) {
       if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. I'll help you create a new client by gathering their details through a quick conversation. To start, what is the client's full name?";
       if (history.last.text.toLowerCase().contains('john')) return "Great, John Doe. What is his email address and occupation?";
@@ -99,7 +99,7 @@ Assistant:''';
     return "I'm processing your request...";
   }
 
-  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<ChatMessage> history) async {
+  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history) async {
     if (isDemo) {
       return {
         'name': 'John Doe (Demo)',
@@ -195,7 +195,7 @@ Updated Details (Markdown):
     }
   }
 
-  Future<GenerateContentResponse?> getProfileRefinementRaw(Customer customer, List<ChatMessage> history) async {
+  Future<GenerateContentResponse?> getProfileRefinementRaw(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) return null;
     try {
       final prompt = '''
@@ -218,7 +218,7 @@ Assistant:''';
     }
   }
 
-  Future<String> generateProfileRefinementResponse(Customer customer, List<ChatMessage> history) async {
+  Future<String> generateProfileRefinementResponse(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) {
       if (history.isEmpty) return "I can help you build a more descriptive profile for ${customer.name}. What recent updates or background information should we add?";
       return "Got it. I'll incorporate that into the profile. Anything else about their financial goals or recent business activities?";
@@ -237,7 +237,7 @@ Assistant:''';
     return "Processing your input...";
   }
 
-  Future<String> extractUpdatedProfile(Customer customer, List<ChatMessage> history) async {
+  Future<String> extractUpdatedProfile(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) return "${customer.details}\n\n### Business & Strategy (Updated via AI)\n- New tech venture launched in Q1.\n- Focus on scaling international operations.\n- Seeking R&D tax credit optimization.";
     
     final response = await getProfileRefinementRaw(customer, history);
@@ -249,11 +249,11 @@ Assistant:''';
     return customer.details;
   }
 
-  Future<String> finalizeProfileRefinement(Customer customer, List<ChatMessage> history) async {
+  Future<String> finalizeProfileRefinement(Customer customer, List<AiChatMessage> history) async {
     return await extractUpdatedProfile(customer, history);
   }
 
-  Future<GenerateContentResponse?> getGuidelinesRefinementRaw(Customer customer, List<ChatMessage> history) async {
+  Future<GenerateContentResponse?> getGuidelinesRefinementRaw(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) return null;
     try {
       final prompt = '''
@@ -277,7 +277,7 @@ Assistant:''';
     }
   }
 
-  Future<String> generateGuidelinesRefinementResponse(Customer customer, List<ChatMessage> history) async {
+  Future<String> generateGuidelinesRefinementResponse(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) {
       if (history.isEmpty) return "I can help you craft personalized engagement guidelines for ${customer.name}. What is your primary focus for this client? (e.g., proactive tax planning, monthly check-ins, or R&D focus?)";
       return "Understood. I'll include that. Should we also set specific rules for communication frequency or document request styles?";
@@ -296,7 +296,7 @@ Assistant:''';
     return "Processing your input...";
   }
 
-  Future<String> extractUpdatedGuidelines(Customer customer, List<ChatMessage> history) async {
+  Future<String> extractUpdatedGuidelines(Customer customer, List<AiChatMessage> history) async {
     if (isDemo) return "${customer.guidelines}\n\n- **Focus**: Strategic tax planning.\n- **Tone**: Professional and direct.\n- **Frequency**: Monthly touchpoints for R&D review.";
     
     final response = await getGuidelinesRefinementRaw(customer, history);
@@ -308,7 +308,7 @@ Assistant:''';
     return customer.guidelines;
   }
 
-  Future<String> finalizeGuidelinesRefinement(Customer customer, List<ChatMessage> history) async {
+  Future<String> finalizeGuidelinesRefinement(Customer customer, List<AiChatMessage> history) async {
     return await extractUpdatedGuidelines(customer, history);
   }
 

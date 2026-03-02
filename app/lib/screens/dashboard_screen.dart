@@ -7,6 +7,9 @@ import '../services/ai_service.dart';
 import '../widgets/pending_review_list.dart';
 import '../widgets/loading_overlay.dart';
 import '../l10n/app_localizations.dart';
+import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
+import '../services/chat_provider.dart';
+import '../widgets/chat_view.dart';
 import 'customer_detail_screen.dart';
 import 'login_screen.dart';
 
@@ -29,9 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isSettingsOpen = false;
   String? _editingField;
   final _editingController = TextEditingController();
-  final List<ChatMessage> _onboardingConversation = [];
-  final TextEditingController _onboardingInputController = TextEditingController();
-  final ScrollController _onboardingScrollController = ScrollController();
+  KeyValueChatProvider? _onboardingChatProvider;
   bool _isAiOnboardingLoading = false;
 
   // Manual Add Controllers
@@ -71,23 +72,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _startAiOnboarding(CpaProvider provider) async {
-    // 1. Immediately open sidebar in loading state
     setState(() {
       _isAiOnboardingOpen = true;
       _isManualAddOpen = false;
       _isSettingsOpen = false;
-      _onboardingConversation.clear();
+      _onboardingChatProvider = KeyValueChatProvider(
+        aiService: provider.aiService,
+        context: ChatContext.onboarding,
+        cpaProvider: provider,
+        onConferenceReady: (_) async {
+          if (_onboardingChatProvider == null) return;
+          setState(() => _isAiOnboardingLoading = true);
+          final customer = await provider.extractCustomerFromOnboarding(
+            _onboardingChatProvider!.history.map((m) => AiChatMessage(
+              text: m.text ?? "",
+              isUser: m.origin == MessageOrigin.user,
+            )).toList()
+          );
+          if (mounted) {
+            setState(() => _isAiOnboardingLoading = false);
+            if (customer != null) {
+              _showOnboardingReviewDialog(customer, provider);
+            }
+          }
+        },
+      );
       _isAiOnboardingLoading = true;
     });
 
-    // 2. Yield to the event loop so the UI can render the sidebar frame
-    await Future.delayed(Duration.zero);
-
-    // 3. Fetch initial greeting
     final response = await provider.getOnboardingResponse([]);
-    if (mounted) {
+    if (mounted && _onboardingChatProvider != null) {
       setState(() {
-        _onboardingConversation.add(ChatMessage(text: response, isUser: false));
+        _onboardingChatProvider!.history = [
+          ChatMessage(
+            text: response,
+            origin: MessageOrigin.llm,
+            attachments: const [],
+          )
+        ];
         _isAiOnboardingLoading = false;
       });
     }
@@ -119,24 +141,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _onboardingScrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_onboardingScrollController.hasClients) {
-        _onboardingScrollController.animateTo(
-          _onboardingScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
     _editingController.dispose();
-    _onboardingInputController.dispose();
-    _onboardingScrollController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _occupationController.dispose();
@@ -407,42 +415,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Future<void> _handleOnboardingSubmit(CpaProvider provider) async {
-    final text = _onboardingInputController.text.trim();
-    if (text.isEmpty || _isAiOnboardingLoading) return;
-    _onboardingInputController.clear();
-    
-    setState(() {
-      _onboardingConversation.add(ChatMessage(text: text, isUser: true));
-      _isAiOnboardingLoading = true;
-    });
-    _onboardingScrollToBottom();
-
-    final response = await provider.getOnboardingResponse(_onboardingConversation);
-
-    if (!mounted) return;
-
-    if (response == 'CONFERENCE_READY') {
-      setState(() => _isAiOnboardingLoading = true);
-      final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
-      if (!mounted) return;
-      setState(() => _isAiOnboardingLoading = false);
-      if (customer != null) {
-        _showOnboardingReviewDialog(customer, provider);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
-        );
-      }
-    } else {
-      setState(() {
-        _onboardingConversation.add(ChatMessage(text: response, isUser: false));
-        _isAiOnboardingLoading = false;
-      });
-      _onboardingScrollToBottom();
-    }
-  }
-
   Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
@@ -470,43 +442,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: ListView.builder(
-                controller: _onboardingScrollController,
-                padding: const EdgeInsets.all(24),
-                itemCount: _onboardingConversation.length + (_isAiOnboardingLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _onboardingConversation.length) {
-                    return const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black12),
-                      ),
-                    );
-                  }
-                  final msg = _onboardingConversation[index];
-                  return _buildChatBubble(msg);
-                },
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _onboardingInputController,
-                    onSubmitted: (_) => _handleOnboardingSubmit(provider),
-                    decoration: InputDecoration(
-                      hintText: 'Type message...',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send_rounded),
-                        onPressed: _isAiOnboardingLoading ? null : () => _handleOnboardingSubmit(provider),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: _onboardingChatProvider == null || _isAiOnboardingLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.black12))
+                : KeyValueChatView(provider: _onboardingChatProvider!),
             ),
           ],
         ),
@@ -896,32 +834,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Text(l10n.deleteAccount.toUpperCase()),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChatBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: message.isUser ? Colors.black : const Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.circular(12).copyWith(
-            bottomRight: message.isUser ? const Radius.circular(0) : const Radius.circular(12),
-            bottomLeft: message.isUser ? const Radius.circular(12) : const Radius.circular(0),
-          ),
-          border: message.isUser ? null : Border.all(color: const Color(0xFFEEEEEE)),
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: message.isUser ? Colors.white : Colors.black,
-            fontSize: 13,
-            height: 1.5
-          ),
-        ),
       ),
     );
   }

@@ -24,6 +24,7 @@ class CpaProvider with ChangeNotifier {
 
   final auth.FirebaseAuth _firebaseAuth;
   AiService _aiService;
+  AiService get aiService => _aiService;
 
   Cpa? _currentCpa;
   Cpa? get currentCpa => _currentCpa;
@@ -396,11 +397,11 @@ class CpaProvider with ChangeNotifier {
         : _engagementRepo.getEngagements(_currentCpa!.uid, customerId);
   }
 
-  Future<String> getOnboardingResponse(List<ChatMessage> history) async {
+  Future<String> getOnboardingResponse(List<AiChatMessage> history) async {
     return _aiService.generateOnboardingResponse(history);
   }
 
-  Future<Customer?> extractCustomerFromOnboarding(List<ChatMessage> history) async {
+  Future<Customer?> extractCustomerFromOnboarding(List<AiChatMessage> history) async {
     final data = await _aiService.extractClientFromFunctionCall(history);
     if (data == null) return null;
 
@@ -417,19 +418,19 @@ class CpaProvider with ChangeNotifier {
     );
   }
 
-  Future<String> getProfileRefinementResponse(Customer customer, List<ChatMessage> history) async {
+  Future<String> getProfileRefinementResponse(Customer customer, List<AiChatMessage> history) async {
     return _aiService.generateProfileRefinementResponse(customer, history);
   }
 
-  Future<String> finalizeProfileRefinement(Customer customer, List<ChatMessage> history) async {
+  Future<String> finalizeProfileRefinement(Customer customer, List<AiChatMessage> history) async {
     return _aiService.finalizeProfileRefinement(customer, history);
   }
 
-  Future<String> getGuidelinesRefinementResponse(Customer customer, List<ChatMessage> history) async {
+  Future<String> getGuidelinesRefinementResponse(Customer customer, List<AiChatMessage> history) async {
     return _aiService.generateGuidelinesRefinementResponse(customer, history);
   }
 
-  Future<String> finalizeGuidelinesRefinement(Customer customer, List<ChatMessage> history) async {
+  Future<String> finalizeGuidelinesRefinement(Customer customer, List<AiChatMessage> history) async {
     return _aiService.finalizeGuidelinesRefinement(customer, history);
   }
 

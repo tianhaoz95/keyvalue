@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
 import '../services/ai_service.dart';
+import '../services/chat_provider.dart';
+import '../widgets/chat_view.dart';
 import '../widgets/engagement_timeline.dart';
 import '../widgets/loading_overlay.dart';
 import '../l10n/app_localizations.dart';
@@ -32,8 +35,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   // AI Side-bar State
   String _aiSidebarMode = 'profile'; // 'profile', 'guidelines', or 'review'
-  final List<ChatMessage> _aiConversation = [];
-  final TextEditingController _aiInputController = TextEditingController();
+  KeyValueChatProvider? _aiChatProvider;
   bool _isAiSidebarLoading = false;
   bool _isAiSidebarOpen = false;
 
@@ -55,7 +57,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     _profileController.dispose();
     _guidelinesController.dispose();
     _cadenceController.dispose();
-    _aiInputController.dispose();
     _reviewDraftController.dispose();
     super.dispose();
   }
@@ -64,7 +65,44 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     // 1. Immediately open sidebar in loading state
     setState(() {
       _aiSidebarMode = mode;
-      _aiConversation.clear();
+      _aiChatProvider = mode == 'review' ? null : KeyValueChatProvider(
+        aiService: provider.aiService,
+        context: mode == 'profile' ? ChatContext.profile : ChatContext.guidelines,
+        cpaProvider: provider,
+        customer: customer,
+        onConferenceReady: (_) async {
+          if (_aiChatProvider == null) return;
+          setState(() => _isAiSidebarLoading = true);
+          final updated = mode == 'profile'
+            ? await provider.finalizeProfileRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+                text: m.text ?? "",
+                isUser: m.origin == MessageOrigin.user,
+              )).toList())
+            : await provider.finalizeGuidelinesRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+                text: m.text ?? "",
+                isUser: m.origin == MessageOrigin.user,
+              )).toList());
+          
+          if (mounted) {
+            setState(() {
+              _isAiSidebarLoading = false;
+              if (mode == 'profile') {
+                _profileController.text = updated;
+                _aiChatProvider!.history = [
+                  ..._aiChatProvider!.history,
+                  ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", origin: MessageOrigin.llm, attachments: const [])
+                ];
+              } else {
+                _guidelinesController.text = updated;
+                _aiChatProvider!.history = [
+                  ..._aiChatProvider!.history,
+                  ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", origin: MessageOrigin.llm, attachments: const [])
+                ];
+              }
+            });
+          }
+        },
+      );
       _activeReviewEngagement = engagement;
       if (mode == 'review' && engagement != null) {
         _reviewDraftController.text = engagement.draftMessage;
@@ -83,9 +121,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       : provider.getGuidelinesRefinementResponse(customer, []);
 
     future.then((response) {
-      if (mounted) {
+      if (mounted && _aiChatProvider != null) {
         setState(() {
-          _aiConversation.add(ChatMessage(text: response, isUser: false));
+          _aiChatProvider!.history = [
+            ChatMessage(
+              text: response,
+              origin: MessageOrigin.llm,
+              attachments: const [],
+            )
+          ];
           _isAiSidebarLoading = false;
         });
       }
@@ -262,48 +306,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     ));
   }
 
-  Future<void> _handleAiSidebarSubmit(CpaProvider provider, Customer customer, bool isProfile) async {
-    final text = _aiInputController.text.trim();
-    if (text.isEmpty || _isAiSidebarLoading) return;
-    _aiInputController.clear();
-    
-    setState(() {
-      _aiConversation.add(ChatMessage(text: text, isUser: true));
-      _isAiSidebarLoading = true;
-    });
-
-    final response = isProfile
-      ? await provider.getProfileRefinementResponse(customer, _aiConversation)
-      : await provider.getGuidelinesRefinementResponse(customer, _aiConversation);
-
-    if (mounted) {
-      if (response == 'CONFERENCE_READY') {
-        setState(() => _isAiSidebarLoading = true);
-        final updated = isProfile
-          ? await provider.finalizeProfileRefinement(customer, _aiConversation)
-          : await provider.finalizeGuidelinesRefinement(customer, _aiConversation);
-        
-        if (mounted) {
-          setState(() {
-            _isAiSidebarLoading = false;
-            if (isProfile) {
-              _profileController.text = updated;
-              _aiConversation.add(ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", isUser: false));
-            } else {
-              _guidelinesController.text = updated;
-              _aiConversation.add(ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", isUser: false));
-            }
-          });
-        }
-      } else {
-        setState(() {
-          _aiConversation.add(ChatMessage(text: response, isUser: false));
-          _isAiSidebarLoading = false;
-        });
-      }
-    }
-  }
-
   Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
     if (_aiSidebarMode == 'review') {
       return _buildDraftReviewSidebar(context, provider, customer);
@@ -337,47 +339,27 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(24),
-                itemCount: _aiConversation.length + (_isAiSidebarLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _aiConversation.length) {
-                    return const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black12),
-                      ),
-                    );
-                  }
-                  final msg = _aiConversation[index];
-                  return _buildChatBubble(msg);
-                },
-              ),
+              child: _aiChatProvider == null || _isAiSidebarLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.black12))
+                : KeyValueChatView(provider: _aiChatProvider!),
             ),
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  TextField(
-                    controller: _aiInputController,
-                    onSubmitted: (_) => _handleAiSidebarSubmit(provider, customer, isProfile),
-                    decoration: InputDecoration(
-                      hintText: 'Type message...',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send_rounded),
-                        onPressed: _isAiSidebarLoading ? null : () => _handleAiSidebarSubmit(provider, customer, isProfile),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _aiConversation.length < 2 || _isAiSidebarLoading ? null : () async {
+                    onPressed: _aiChatProvider == null || _aiChatProvider!.history.length < 2 || _isAiSidebarLoading ? null : () async {
                       setState(() => _isAiSidebarLoading = true);
                       final updated = isProfile
-                        ? await provider.finalizeProfileRefinement(customer, _aiConversation)
-                        : await provider.finalizeGuidelinesRefinement(customer, _aiConversation);
+                        ? await provider.finalizeProfileRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+                            text: m.text ?? "",
+                            isUser: m.origin == MessageOrigin.user,
+                          )).toList())
+                        : await provider.finalizeGuidelinesRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+                            text: m.text ?? "",
+                            isUser: m.origin == MessageOrigin.user,
+                          )).toList());
                       
                       final updatedCustomer = isProfile
                         ? customer.copyWith(details: updated)
@@ -556,32 +538,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChatBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: message.isUser ? Colors.black : const Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.circular(12).copyWith(
-            bottomRight: message.isUser ? const Radius.circular(0) : const Radius.circular(12),
-            bottomLeft: message.isUser ? const Radius.circular(12) : const Radius.circular(0),
-          ),
-          border: message.isUser ? null : Border.all(color: const Color(0xFFEEEEEE)),
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: message.isUser ? Colors.white : Colors.black,
-            fontSize: 13,
-            height: 1.5
-          ),
         ),
       ),
     );
