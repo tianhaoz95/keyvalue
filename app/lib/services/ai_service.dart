@@ -22,13 +22,13 @@ class AiService {
       Tool.functionDeclarations([
         FunctionDeclaration(
           'create_client',
-          'Call this once you have gathered all required client information: Name, Email, Occupation, Details (Background), and Engagement Guidelines.',
+          'Call this once you have gathered all required client information. Synthesize the gathered info into professional, high-quality Markdown.',
           parameters: {
             'name': Schema.string(description: 'Full name of the client'),
             'email': Schema.string(description: 'Email address'),
             'occupation': Schema.string(description: 'Client occupation'),
-            'details': Schema.string(description: 'Detailed background/profile (Markdown)'),
-            'guidelines': Schema.string(description: 'Engagement rules/guidelines (Markdown)'),
+            'details': Schema.string(description: 'A comprehensive, structured background profile in professional Markdown. Summarize and organize all gathered insights.'),
+            'guidelines': Schema.string(description: 'Clear, bulleted engagement guidelines in professional Markdown. Synthesize the CPA\'s preferences into a formal ruleset.'),
           },
         ),
         FunctionDeclaration(
@@ -61,6 +61,9 @@ You are an expert CPA onboarding assistant. Your goal is to help the user create
 2. **Data Gathering**: Ask for the missing information one or two pieces at a time. Be professional and friendly.
 3. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
 4. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
+   - **CRITICAL**: The `details` and `guidelines` arguments must be professional, well-formatted Markdown summaries of everything discussed. Do NOT just pass the raw user input. 
+   - **Details**: Organize the profile into logical sections (e.g., Business Background, Financial Goals, Tax History).
+   - **Guidelines**: Create a clear, actionable list of rules for how the CPA should interact with this specific client.
 
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
