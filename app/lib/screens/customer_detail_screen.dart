@@ -262,6 +262,48 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     ));
   }
 
+  Future<void> _handleAiSidebarSubmit(CpaProvider provider, Customer customer, bool isProfile) async {
+    final text = _aiInputController.text.trim();
+    if (text.isEmpty || _isAiSidebarLoading) return;
+    _aiInputController.clear();
+    
+    setState(() {
+      _aiConversation.add(ChatMessage(text: text, isUser: true));
+      _isAiSidebarLoading = true;
+    });
+
+    final response = isProfile
+      ? await provider.getProfileRefinementResponse(customer, _aiConversation)
+      : await provider.getGuidelinesRefinementResponse(customer, _aiConversation);
+
+    if (mounted) {
+      if (response == 'CONFERENCE_READY') {
+        setState(() => _isAiSidebarLoading = true);
+        final updated = isProfile
+          ? await provider.finalizeProfileRefinement(customer, _aiConversation)
+          : await provider.finalizeGuidelinesRefinement(customer, _aiConversation);
+        
+        if (mounted) {
+          setState(() {
+            _isAiSidebarLoading = false;
+            if (isProfile) {
+              _profileController.text = updated;
+              _aiConversation.add(ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", isUser: false));
+            } else {
+              _guidelinesController.text = updated;
+              _aiConversation.add(ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", isUser: false));
+            }
+          });
+        }
+      } else {
+        setState(() {
+          _aiConversation.add(ChatMessage(text: response, isUser: false));
+          _isAiSidebarLoading = false;
+        });
+      }
+    }
+  }
+
   Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
     if (_aiSidebarMode == 'review') {
       return _buildDraftReviewSidebar(context, provider, customer);
@@ -320,51 +362,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 children: [
                   TextField(
                     controller: _aiInputController,
+                    onSubmitted: (_) => _handleAiSidebarSubmit(provider, customer, isProfile),
                     decoration: InputDecoration(
                       hintText: 'Type message...',
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send_rounded),
-                        onPressed: _isAiSidebarLoading ? null : () async {
-                          final text = _aiInputController.text.trim();
-                          if (text.isEmpty) return;
-                          _aiInputController.clear();
-                          
-                          setState(() {
-                            _aiConversation.add(ChatMessage(text: text, isUser: true));
-                            _isAiSidebarLoading = true;
-                          });
-
-                          final response = isProfile
-                            ? await provider.getProfileRefinementResponse(customer, _aiConversation)
-                            : await provider.getGuidelinesRefinementResponse(customer, _aiConversation);
-
-                          if (mounted) {
-                            if (response == 'CONFERENCE_READY') {
-                              setState(() => _isAiSidebarLoading = true);
-                              final updated = isProfile
-                                ? await provider.finalizeProfileRefinement(customer, _aiConversation)
-                                : await provider.finalizeGuidelinesRefinement(customer, _aiConversation);
-                              
-                              if (mounted) {
-                                setState(() {
-                                  _isAiSidebarLoading = false;
-                                  if (isProfile) {
-                                    _profileController.text = updated;
-                                    _aiConversation.add(ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", isUser: false));
-                                  } else {
-                                    _guidelinesController.text = updated;
-                                    _aiConversation.add(ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", isUser: false));
-                                  }
-                                });
-                              }
-                            } else {
-                              setState(() {
-                                _aiConversation.add(ChatMessage(text: response, isUser: false));
-                                _isAiSidebarLoading = false;
-                              });
-                            }
-                          }
-                        },
+                        onPressed: _isAiSidebarLoading ? null : () => _handleAiSidebarSubmit(provider, customer, isProfile),
                       ),
                     ),
                   ),

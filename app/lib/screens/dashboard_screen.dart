@@ -407,6 +407,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
+  Future<void> _handleOnboardingSubmit(CpaProvider provider) async {
+    final text = _onboardingInputController.text.trim();
+    if (text.isEmpty || _isAiOnboardingLoading) return;
+    _onboardingInputController.clear();
+    
+    setState(() {
+      _onboardingConversation.add(ChatMessage(text: text, isUser: true));
+      _isAiOnboardingLoading = true;
+    });
+    _onboardingScrollToBottom();
+
+    final response = await provider.getOnboardingResponse(_onboardingConversation);
+
+    if (!mounted) return;
+
+    if (response == 'CONFERENCE_READY') {
+      setState(() => _isAiOnboardingLoading = true);
+      final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
+      if (!mounted) return;
+      setState(() => _isAiOnboardingLoading = false);
+      if (customer != null) {
+        _showOnboardingReviewDialog(customer, provider);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
+        );
+      }
+    } else {
+      setState(() {
+        _onboardingConversation.add(ChatMessage(text: response, isUser: false));
+        _isAiOnboardingLoading = false;
+      });
+      _onboardingScrollToBottom();
+    }
+  }
+
   Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
@@ -460,46 +496,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   TextField(
                     controller: _onboardingInputController,
+                    onSubmitted: (_) => _handleOnboardingSubmit(provider),
                     decoration: InputDecoration(
                       hintText: 'Type message...',
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.send_rounded),
-                        onPressed: _isAiOnboardingLoading ? null : () async {
-                          final text = _onboardingInputController.text.trim();
-                          if (text.isEmpty) return;
-                          _onboardingInputController.clear();
-                          
-                          setState(() {
-                            _onboardingConversation.add(ChatMessage(text: text, isUser: true));
-                            _isAiOnboardingLoading = true;
-                          });
-                          _onboardingScrollToBottom();
-
-                          final response = await provider.getOnboardingResponse(_onboardingConversation);
-
-                          if (mounted) {
-                            if (response == 'CONFERENCE_READY') {
-                              setState(() => _isAiOnboardingLoading = true);
-                              final customer = await provider.extractCustomerFromOnboarding(_onboardingConversation);
-                              setState(() => _isAiOnboardingLoading = false);
-                              if (customer != null) {
-                                _showOnboardingReviewDialog(customer, provider);
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Failed to extract client details. Try adding more info.')),
-                                  );
-                                }
-                              }
-                            } else {
-                              setState(() {
-                                _onboardingConversation.add(ChatMessage(text: response, isUser: false));
-                                _isAiOnboardingLoading = false;
-                              });
-                              _onboardingScrollToBottom();
-                            }
-                          }
-                        },
+                        onPressed: _isAiOnboardingLoading ? null : () => _handleOnboardingSubmit(provider),
                       ),
                     ),
                   ),
