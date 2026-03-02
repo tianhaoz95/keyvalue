@@ -1,1 +1,22 @@
+# Tasks
+
 - [ ] the line for the tabs in client page is pink color, make it light grey
+    - [ ] Locate the `TabBar` in `lib/screens/customer_detail_screen.dart`.
+    - [ ] Add `dividerColor: Colors.transparent` or set it to `AppTheme.lightGrey`.
+    - [ ] Ensure `indicatorColor` remains `Colors.black` as per theme.
+- [ ] now when the side bar opens it slides out from the right side, enhance the closing so that when it closes it slide out from left to right out of the screen, also make the close button a right arrow icon
+    - [ ] Refactor sidebar logic in `lib/screens/dashboard_screen.dart` and `lib/screens/customer_detail_screen.dart`.
+    - [ ] Use `AnimatedPositioned` for the sidebar.
+    - [ ] Change `Icons.close` to `Icons.chevron_right` for the close button.
+    - [ ] Update the `right` property logic to ensure smooth sliding out to the right.
+- [ ] during ai onboarding conversation, use the flutter genui sdk to let the ai display filled or partially filled client information during the chat to better inform the user what the end result will be and the current progress
+    - [ ] Review `flutter_ai_toolkit` documentation for custom response builders or GenUI integration.
+    - [ ] Modify `lib/widgets/chat_view.dart` to support a custom `responseBuilder`.
+    - [ ] Implement a `ClientInfoCard` widget that displays `Customer` fields.
+    - [ ] Update `AiService` to include structured data in the AI responses that the `responseBuilder` can parse.
+- [ ] integrate flutter feedback package for sending feedback, add a feedback button next to the setting button on home screen and a feedback button to the right end of the app bar in client screen to trigger feedback
+    - [ ] Add `feedback: ^3.1.0` to `pubspec.yaml`.
+    - [ ] Wrap `MaterialApp` with the `BetterFeedback` widget in `lib/main.dart`.
+    - [ ] Add the feedback `IconButton` in `dashboard_screen.dart` next to settings.
+    - [ ] Add the feedback `IconButton` in `customer_detail_screen.dart` app bar actions.
+    - [ ] Implement the `BetterFeedback.of(context).show(...)` logic to handle feedback submission.
