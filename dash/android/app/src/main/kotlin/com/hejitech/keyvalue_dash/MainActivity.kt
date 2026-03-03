@@ -1,4 +1,4 @@
-package com.example.keyvalue_dash
+package com.hejitech.keyvalue_dash
 
 import io.flutter.embedding.android.FlutterActivity
 
