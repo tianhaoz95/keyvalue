@@ -227,9 +227,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               width: 450,
               decoration: const BoxDecoration(
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(-5, 0)),
-                ],
+                border: Border(
+                  left: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+                ),
               ),
               child: SafeArea(
                 child: Column(

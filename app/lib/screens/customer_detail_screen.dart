@@ -354,9 +354,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(-5, 0)),
-                  ],
+                  border: Border(
+                    left: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+                  ),
                 ),
                 child: _isAiSidebarOpen
                   ? _buildAiSidebarContent(context, provider, currentCustomer, l10n)
