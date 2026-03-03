@@ -26,6 +26,7 @@ app/
 │   ├── main.dart       # App entry point and theme configuration
 │   └── theme.dart      # Custom professional UI theme (Indigo/Amber)
 └── pubspec.yaml        # Project dependencies
+dash/                   # Admin Dashboard site for viewing feedback and admin info
 design/                 # Design system, UX reports, and task tracking
 ```
 
@@ -40,10 +41,13 @@ When a client responds, the `AiService` extracts **Points of Interest** and gene
 ### 3. Relationship Timeline
 Client history is visualized as a vertical timeline, differentiating between outbound messages (Sent), inbound responses (Received), and pending actions (Draft).
 
-### 4. Professional Aesthetic
+### 4. Admin Dashboard (External)
+A dedicated administrative interface (`dash/`) for monitoring system health, reviewing user-submitted feedback, and managing global administrative information.
+
+### 5. Professional Aesthetic
 Designed with a "Premium Professional" feel using a deep Indigo (`#1A237E`) and Amber (`#FFA000`) palette, consistent 16dp rounding, and subtle Material 3 elevation.
 
-### 5. Seamless Onboarding (Demo Mode)
+### 6. Seamless Onboarding (Demo Mode)
 Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users to explore the full AI-driven workflow using pre-populated `demo_user` data.
 
 ## 🛠️ Key Commands & Quality Assurance
