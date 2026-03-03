@@ -31,24 +31,40 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AdvisorProvider()),
       ],
-      child: BetterFeedback(
-        theme: FeedbackThemeData(
-          background: Colors.grey[200]!,
-          feedbackSheetColor: Colors.white,
-          activeFeedbackModeColor: Colors.black,
-          bottomSheetDescriptionStyle: const TextStyle(
-            color: Colors.black87,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+      child: Theme(
+        data: AppTheme.lightTheme.copyWith(
+          inputDecorationTheme: AppTheme.lightTheme.inputDecorationTheme.copyWith(
+            focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.black, width: 2.0),
+            ),
+            enabledBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.black12, width: 1.0),
+            ),
           ),
-          dragHandleColor: Colors.black26,
-          brightness: Brightness.light,
         ),
-        themeMode: ThemeMode.light,
-        localizationsDelegates: [
-          GlobalFeedbackLocalizationsDelegate(),
-        ],
-        child: const KeyValueApp(),
+        child: BetterFeedback(
+          theme: FeedbackThemeData(
+            background: Colors.grey[200]!,
+            feedbackSheetColor: Colors.white,
+            activeFeedbackModeColor: Colors.black,
+            colorScheme: ColorScheme.light(
+              primary: Colors.black,
+              secondary: Colors.black,
+            ),
+            bottomSheetDescriptionStyle: const TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            dragHandleColor: Colors.black26,
+            brightness: Brightness.light,
+          ),
+          themeMode: ThemeMode.light,
+          localizationsDelegates: [
+            GlobalFeedbackLocalizationsDelegate(),
+          ],
+          child: const KeyValueApp(),
+        ),
       ),
     ),
   );

@@ -235,6 +235,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ),
           actions: [
             IconButton(
+              onPressed: () => provider.generateManualDraft(currentCustomer),
+              icon: const Icon(Icons.auto_awesome_outlined),
+              tooltip: 'Generate Draft',
+            ),
+            IconButton(
               icon: const Icon(Icons.feedback_outlined),
               tooltip: 'Send Feedback',
               onPressed: () {
@@ -243,12 +248,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 });
               },
             ),
-            if (!currentCustomer.hasActiveDraft)
-              IconButton(
-                onPressed: () => provider.generateManualDraft(currentCustomer),
-                icon: const Icon(Icons.auto_awesome_outlined),
-                tooltip: 'Generate Draft',
-              ),
+            const SizedBox(width: 8),
           ],
         ),
         body: Stack(
@@ -560,18 +560,25 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                                 title: const Text('Delete Draft', style: TextStyle(fontWeight: FontWeight.w900)),
                                 content: const Text('Are you sure you want to delete this message draft?'),
                                 actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, false), 
-                                    child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                    ),
-                                    child: const Text('DELETE'),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, false), 
+                                        child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context, true),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          minimumSize: const Size(100, 44),
+                                        ),
+                                        child: const Text('DELETE'),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -743,49 +750,37 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   const SizedBox(height: 32),
                   const Text('START DATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _addScheduleStartDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) setState(() => _addScheduleStartDate = picked);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      side: const BorderSide(color: Color(0xFFEEEEEE)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(
-                      DateFormat('MMM d, y').format(_addScheduleStartDate),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                    height: 280,
+                    child: CalendarDatePicker(
+                      initialDate: _addScheduleStartDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      onDateChanged: (date) {
+                        setState(() => _addScheduleStartDate = date);
+                      },
                     ),
                   ),
                   const SizedBox(height: 32),
                   const Text('END DATE (OPTIONAL)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _addScheduleEndDate ?? _addScheduleStartDate.add(const Duration(days: 365)),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      setState(() => _addScheduleEndDate = picked);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      side: const BorderSide(color: Color(0xFFEEEEEE)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    icon: const Icon(Icons.event_busy, size: 18),
-                    label: Text(
-                      _addScheduleEndDate == null ? 'No end date' : DateFormat('MMM d, y').format(_addScheduleEndDate!),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                    height: 280,
+                    child: CalendarDatePicker(
+                      initialDate: _addScheduleEndDate ?? _addScheduleStartDate.add(const Duration(days: 365)),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      onDateChanged: (date) {
+                        setState(() => _addScheduleEndDate = date);
+                      },
                     ),
                   ),
                   if (_addScheduleEndDate != null)
@@ -934,11 +929,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-              TextButton.icon(
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: true,
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              title: const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              trailing: TextButton.icon(
                 onPressed: () => setState(() {
                   _isAddScheduleSidebarOpen = true;
                   _isAiSidebarOpen = false;
@@ -951,73 +949,76 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 label: const Text('ADD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                 style: TextButton.styleFrom(foregroundColor: Colors.black),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (customer.schedules.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9F9F9),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 16, color: Colors.black54),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Using legacy schedule: Every ${customer.cadenceValue} ${customer.cadencePeriod}',
-                      style: const TextStyle(fontSize: 13, color: Colors.black54, fontStyle: FontStyle.italic),
+              children: [
+                const SizedBox(height: 16),
+                if (customer.schedules.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
                     ),
-                  ),
-                ],
-              ),
-            )
-          else
-            ...customer.schedules.map((schedule) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.event_repeat_outlined, size: 20, color: Colors.black87),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          'Every ${schedule.cadenceValue} ${schedule.cadencePeriod}',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' • Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        const Icon(Icons.info_outline, size: 16, color: Colors.black54),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Using legacy schedule: Every ${customer.cadenceValue} ${customer.cadencePeriod}',
+                            style: const TextStyle(fontSize: 13, color: Colors.black54, fontStyle: FontStyle.italic),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)
-                        ..removeWhere((s) => s.scheduleId == schedule.scheduleId);
-                      final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
-                      final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
-                      await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
-                    },
-                    icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-            )),
+                  )
+                else
+                  ...customer.schedules.map((schedule) => Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.event_repeat_outlined, size: 20, color: Colors.black87),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Every ${schedule.cadenceValue} ${schedule.cadencePeriod}',
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' • Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)
+                              ..removeWhere((s) => s.scheduleId == schedule.scheduleId);
+                            final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
+                            // Recalculate next engagement date based on new schedules
+                            final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
+                            await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
+                          },
+                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  )),
+              ],
+            ),
+          ),
           const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1147,21 +1148,32 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         title: const Text('Delete Client?', style: TextStyle(fontWeight: FontWeight.w900)),
         content: Text('Are you sure you want to delete ${customer.name}? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white, elevation: 0),
-            onPressed: () async {
-              await provider.deleteCustomer(customer.customerId);
-              if (context.mounted) {
-                Navigator.pop(context);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${customer.name} removed')));
-              }
-            },
-            child: const Text('DELETE'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context), 
+                child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black, 
+                  foregroundColor: Colors.white, 
+                  elevation: 0,
+                  minimumSize: const Size(100, 44),
+                ),
+                onPressed: () async {
+                  await provider.deleteCustomer(customer.customerId);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${customer.name} removed')));
+                  }
+                },
+                child: const Text('DELETE'),
+              ),
+            ],
           ),
         ],
       ),
@@ -1271,13 +1283,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              await provider.receiveResponse(customer, engagement, controller.text);
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('PROCESS'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold))),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  await provider.receiveResponse(customer, engagement, controller.text);
+                  if (context.mounted) Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(minimumSize: const Size(100, 44)),
+                child: const Text('PROCESS'),
+              ),
+            ],
           ),
         ],
       ),

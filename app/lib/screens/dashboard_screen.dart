@@ -661,6 +661,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
+                    activeThumbColor: Colors.black,
+                    activeTrackColor: Colors.black12,
+                    inactiveThumbColor: Colors.grey,
+                    inactiveTrackColor: Colors.grey.shade200,
                     title: const Text(
                       'Expressive AI UI',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black),
@@ -676,6 +680,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
+                    activeThumbColor: Colors.black,
+                    activeTrackColor: Colors.black12,
+                    inactiveThumbColor: Colors.grey,
+                    inactiveTrackColor: Colors.grey.shade200,
                     title: const Text(
                       'Multimodal AI',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black),
