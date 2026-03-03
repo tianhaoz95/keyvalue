@@ -36,6 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _editingController = TextEditingController();
   KeyValueChatProvider? _onboardingChatProvider;
   bool _isAiOnboardingLoading = false;
+  String _selectedPlan = 'Pro';
 
   // Manual Add Controllers
   final _nameController = TextEditingController();
@@ -215,13 +216,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.bolt_outlined),
-            tooltip: 'AI Scan for Actions',
-            onPressed: isDiscovering ? null : () => provider.discoverProactiveTasks(),
+            tooltip: provider.isGuestMode ? 'AI Scan Disabled in Demo' : 'AI Scan for Actions',
+            onPressed: (isDiscovering || provider.isGuestMode) ? null : () => provider.discoverProactiveTasks(),
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined),
-            tooltip: 'AI Onboarding',
-            onPressed: () => _startAiOnboarding(provider),
+            tooltip: provider.isGuestMode ? 'AI Onboarding Disabled in Demo' : 'AI Onboarding',
+            onPressed: provider.isGuestMode ? null : () => _startAiOnboarding(provider),
           ),
           IconButton(
             icon: const Icon(Icons.person_add_outlined),
@@ -255,6 +256,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
+                      if (provider.isGuestMode)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+                          color: Colors.amber.shade50,
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 16, color: Colors.amber.shade900),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'DEMO MODE: AI features are disabled. Please register for full access.',
+                                  style: TextStyle(
+                                    fontSize: 12, 
+                                    fontWeight: FontWeight.bold, 
+                                    color: Colors.amber.shade900,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       // Welcome Header
                       Container(
                         padding: const EdgeInsets.fromLTRB(24.0, 32.0, 24.0, 12.0),
@@ -651,6 +675,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                   ),
                   const SizedBox(height: 32),
+                  Text('SUBSCRIPTION', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 16),
+                  _buildPlanSelector(),
+                  const SizedBox(height: 24),
+                  const Text('BILLING INFORMATION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 16),
+                  _buildBillingInfoCard(),
+                  const SizedBox(height: 32),
                   Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),                  const SizedBox(height: 24),
                   _buildSidebarLanguageSelector(context, provider),
                   const SizedBox(height: 16),
@@ -945,6 +977,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.grey, letterSpacing: 1.2)),
           const SizedBox(height: 4),
           Text(value.isEmpty ? 'Not found' : value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanSelector() {
+    final plans = [
+      {'name': 'Starter', 'price': '\$29/mo', 'features': 'Up to 10 clients'},
+      {'name': 'Pro', 'price': '\$99/mo', 'features': 'Unlimited clients, AI features'},
+      {'name': 'Enterprise', 'price': 'Custom', 'features': 'Dedicated support, custom rules'},
+    ];
+
+    return Column(
+      children: plans.map((plan) {
+        final isSelected = _selectedPlan == plan['name'];
+        return GestureDetector(
+          onTap: () => setState(() => _selectedPlan = plan['name']!),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.black.withValues(alpha: 0.02) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? Colors.black : const Color(0xFFEEEEEE),
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(plan['name']!.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
+                      const SizedBox(height: 4),
+                      Text(plan['features']!, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                Text(plan['price']!, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBillingInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F9F9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.credit_card, size: 20, color: Colors.black54),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  'Visa ending in 4242',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text('EDIT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            children: [
+              Icon(Icons.history, size: 20, color: Colors.black54),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Next billing on April 1, 2026',
+                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

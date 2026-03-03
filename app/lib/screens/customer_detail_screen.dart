@@ -486,12 +486,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         children: [
                           const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                           TextButton.icon(
-                            onPressed: () => setState(() => _isRefiningDraft = true),
+                            onPressed: provider.isGuestMode ? null : () => setState(() => _isRefiningDraft = true),
                             icon: const Icon(Icons.auto_awesome_outlined, size: 14),
                             label: const Text('REFINE WITH AI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(horizontal: 12),
-                              foregroundColor: Colors.black,
+                              foregroundColor: provider.isGuestMode ? Colors.grey : Colors.black,
                               backgroundColor: const Color(0xFFF9F9F9),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -712,8 +712,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.auto_awesome_outlined, size: 18),
-                    tooltip: 'Build Profile with AI',
-                    onPressed: () => _openAiSidebar('profile', provider, customer),
+                    tooltip: provider.isGuestMode ? 'AI Disabled in Demo' : 'Build Profile with AI',
+                    onPressed: provider.isGuestMode ? null : () => _openAiSidebar('profile', provider, customer),
                   ),
                   IconButton(
                     icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
@@ -856,8 +856,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.auto_awesome_outlined, size: 18),
-                    tooltip: 'Build Guidelines with AI',
-                    onPressed: () => _openAiSidebar('guidelines', provider, customer),
+                    tooltip: provider.isGuestMode ? 'AI Disabled in Demo' : 'Refine Rules with AI',
+                    onPressed: provider.isGuestMode ? null : () => _openAiSidebar('guidelines', provider, customer),
                   ),
                   IconButton(
                     icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
