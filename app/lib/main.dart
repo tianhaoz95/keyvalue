@@ -30,8 +30,17 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => CpaProvider()),
       ],
-      child: const BetterFeedback(
-        child: KeyValueApp(),
+      child: BetterFeedback(
+        theme: FeedbackThemeData(
+          background: Colors.grey[200]!,
+          feedbackSheetColor: Colors.white,
+          bottomSheetDescriptionStyle: const TextStyle(
+            color: Colors.black87,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        child: const KeyValueApp(),
       ),
     ),
   );

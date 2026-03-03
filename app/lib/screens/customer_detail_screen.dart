@@ -453,7 +453,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _reviewDraftController,
-                    maxLines: 15,
+                    maxLines: 7,
                     decoration: InputDecoration(
                       hintText: 'Refine your message...',
                       fillColor: Colors.white,
