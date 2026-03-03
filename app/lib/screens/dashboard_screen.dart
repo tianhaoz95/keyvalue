@@ -436,10 +436,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: sidebarWidth,
             child: Row(
               children: [
-                if (!isPhone)
-                  const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFEEEEEE)),
                 Expanded(
-                  child: _isAiOnboardingOpen 
+                  child: _isAiOnboardingOpen
                     ? _buildAiOnboardingSidebar(context, provider, l10n)
                     : _isManualAddOpen
                       ? _buildManualAddSidebar(context, provider, l10n)
@@ -448,8 +446,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         : const SizedBox.shrink(),
                 ),
               ],
-            ),
-          ),
+            ),          ),
         ],
       ),
     ));

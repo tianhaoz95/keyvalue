@@ -321,16 +321,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             width: sidebarWidth,
             child: Row(
               children: [
-                if (!isPhone)
-                  const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
                 Expanded(
-                  child: _isAiSidebarOpen 
+                  child: _isAiSidebarOpen
                     ? _buildAiSidebarContent(context, provider, currentCustomer, l10n)
                     : const SizedBox.shrink(),
                 ),
               ],
-            ),
-          ),
+            ),          ),
         ],
       ),
     ));
@@ -452,6 +449,78 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
+                  const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _reviewDraftController,
+                    maxLines: 15,
+                    decoration: InputDecoration(
+                      hintText: 'Refine your message...',
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.black, width: 2),
+                      ),
+                    ),
+                    style: const TextStyle(fontSize: 14, height: 1.5),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
+                            if (mounted) {
+                              setState(() => _isAiSidebarOpen = false);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Message sent successfully'), backgroundColor: Colors.black),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 44),
+                          ),
+                          child: const Text('SEND'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _reviewDraftController.text));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
+                        },
+                        icon: const Icon(Icons.copy_outlined, size: 20),
+                        tooltip: 'COPY',
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFFF9F9F9),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          minimumSize: const Size(44, 44),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          Share.share(_reviewDraftController.text);
+                        },
+                        icon: const Icon(Icons.share_outlined, size: 20),
+                        tooltip: 'SHARE',
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFFF9F9F9),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          minimumSize: const Size(44, 44),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
                   Theme(
                     data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
@@ -501,68 +570,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         const SizedBox(height: 16),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _reviewDraftController,
-                    maxLines: 15,
-                    decoration: InputDecoration(
-                      hintText: 'Refine your message...',
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.black, width: 2),
-                      ),
-                    ),
-                    style: const TextStyle(fontSize: 14, height: 1.5),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
-                      if (mounted) {
-                        setState(() => _isAiSidebarOpen = false);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Message sent successfully'), backgroundColor: Colors.black),
-                          );
-                        }
-                      }
-                    },
-                    child: const Text('SEND TO CLIENT'),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: _reviewDraftController.text));
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
-                          },
-                          icon: const Icon(Icons.copy_outlined, size: 16),
-                          label: const Text('COPY', style: TextStyle(fontSize: 11)),
-                          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Share.share(_reviewDraftController.text);
-                          },
-                          icon: const Icon(Icons.share_outlined, size: 16),
-                          label: const Text('SHARE', style: TextStyle(fontSize: 11)),
-                          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
