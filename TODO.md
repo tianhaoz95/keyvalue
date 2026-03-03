@@ -1,5 +1,16 @@
 # Tasks
 
-- [ ] in "review draft" make the "send", copy and share button on the same row, copy and share should only have icon with no text
-- [ ] reroder the sections in review draft, it should be message draft and then buttons, and then client context and engagement rules collapsed
-- [ ] remove the white border outline on the left of the sidebars
+- [ ] UI: Refactor "Review Draft" Action Buttons
+  - [ ] Group "Send", "Copy", and "Share" on a single row
+  - [ ] Set "Copy" and "Share" to icon-only (remove text labels)
+  - [ ] Ensure buttons are logically spaced and aligned
+
+- [ ] UX: Reorder "Review Draft" Content Layout
+  - [ ] Move "Message Draft" section to the top
+  - [ ] Position action buttons directly below the draft
+  - [ ] Update "Client Context" and "Engagement Rules" to be collapsed (Accordion style)
+  - [ ] Ensure clear visual hierarchy between the draft and context sections
+
+- [ ] Aesthetic: Polish Sidebars
+  - [ ] Remove the thin white border/outline from the left edge of the sidebars
+  - [ ] Validate alignment on both mobile and desktop views
