@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import '../providers/cpa_provider.dart';
-import '../models/cpa.dart';
+import '../providers/advisor_provider.dart';
+import '../models/advisor.dart';
 import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,11 +21,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CpaProvider>(context);
+    final provider = Provider.of<AdvisorProvider>(context);
     final l10n = AppLocalizations.of(context)!;
 
     // Auto-navigate if already logged in via remember me
-    if (provider.currentCpa != null) {
+    if (provider.currentAdvisor != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           Navigator.pushReplacement(
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Proactive intelligence for modern accountants.',
+                  'Proactive intelligence for modern business advisors.',
                   style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
                 ),
                 const SizedBox(height: 56),
@@ -225,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 setDialogState(() => isSending = true);
                 try {
-                  final provider = Provider.of<CpaProvider>(this.context, listen: false);
+                  final provider = Provider.of<AdvisorProvider>(this.context, listen: false);
                   await provider.sendPasswordResetEmail(email);
                   if (mounted) {
                     Navigator.pop(dialogContext);
@@ -252,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _enterGuestMode() async {
     setState(() => _isLoading = true);
-    final provider = Provider.of<CpaProvider>(context, listen: false);
+    final provider = Provider.of<AdvisorProvider>(context, listen: false);
     try {
       await provider.loginGuest(rememberMe: _rememberMe);
       if (mounted) {
@@ -279,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
     setState(() => _isLoading = true);
-    final provider = Provider.of<CpaProvider>(context, listen: false);
+    final provider = Provider.of<AdvisorProvider>(context, listen: false);
     try {
       await provider.login(
         _emailController.text.trim(),
@@ -360,14 +360,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 setDialogState(() => isRegistering = true);
 
                 try {
-                  final cpa = Cpa(
+                  final cpa = Advisor(
                     uid: '', // Will be set by Firebase Auth
                     name: nameController.text.trim(),
                     firmName: firmController.text.trim(),
                     email: emailController.text.trim(),
                   );
                   
-                  final provider = Provider.of<CpaProvider>(this.context, listen: false);
+                  final provider = Provider.of<AdvisorProvider>(this.context, listen: false);
                   await provider.register(cpa, passwordController.text.trim());
 
                   if (mounted) {

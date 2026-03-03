@@ -42,6 +42,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      background-color: #ffffff;
     }
     #loading {
       display: flex;
@@ -49,12 +50,20 @@
       align-items: center;
       justify-content: center;
       transition: opacity 0.5s ease-out;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
     }
     .logo {
       width: 120px;
       height: 120px;
       margin-bottom: 24px;
       object-fit: contain;
+      filter: brightness(0); /* Ensures logo is black */
     }
     .loader {
       border: 3px solid #f3f3f3;
@@ -68,11 +77,46 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    /* Hide default Flutter progress bar if any */
+    .flutter-loader,
+    #loading-indicator,
+    .loading {
+      display: none !important;
+    }
   </style>
   <div id="loading">
-    <img src="assets/assets/images/logo_512.png" class="logo" alt="KeyValue Logo">
+    <img src="assets/assets/images/logo_cropped.png" class="logo" alt="KeyValue Logo" onerror="this.style.display='none'">
     <div class="loader"></div>
   </div>
+  <script>
+    // Remove the loading screen once the Flutter app is initialized
+    (function() {
+      var checkFlutterInterval = setInterval(function() {
+        if (document.querySelector('flt-glass-pane')) {
+          removeLoadingScreen();
+        }
+      }, 100);
+
+      function removeLoadingScreen() {
+        var loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(function() {
+            if (loading.parentNode) {
+              loading.remove();
+            }
+          }, 500);
+        }
+        clearInterval(checkFlutterInterval);
+        clearTimeout(fallbackTimeout);
+      }
+
+      // Fallback: force remove after 10 seconds if Flutter fails to load
+      var fallbackTimeout = setTimeout(function() {
+        removeLoadingScreen();
+      }, 10000);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

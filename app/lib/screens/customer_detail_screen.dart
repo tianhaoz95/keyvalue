@@ -7,7 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:feedback/feedback.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
-import '../providers/cpa_provider.dart';
+import '../providers/advisor_provider.dart';
 import '../services/ai_service.dart';
 import '../services/chat_provider.dart';
 import '../widgets/chat_view.dart';
@@ -43,6 +43,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   // Review Draft State
   Engagement? _activeReviewEngagement;
   final TextEditingController _reviewDraftController = TextEditingController();
+  bool _isRefiningDraft = false;
 
   @override
   void initState() {
@@ -62,27 +63,42 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.dispose();
   }
 
-  void _openAiSidebar(String mode, CpaProvider provider, Customer customer, {Engagement? engagement}) async {
+  void _openAiSidebar(String mode, AdvisorProvider provider, Customer customer, {Engagement? engagement}) async {
     // 1. Immediately open sidebar in loading state
     setState(() {
       _aiSidebarMode = mode;
-      _aiChatProvider = mode == 'review' ? null : KeyValueChatProvider(
+      _isRefiningDraft = false;
+      _aiChatProvider = KeyValueChatProvider(
         aiService: provider.aiService,
-        context: mode == 'profile' ? ChatContext.profile : ChatContext.guidelines,
-        cpaProvider: provider,
+        context: mode == 'profile' 
+          ? ChatContext.profile 
+          : mode == 'guidelines' 
+            ? ChatContext.guidelines 
+            : ChatContext.refineDraft,
+        advisorProvider: provider,
         customer: customer,
+        initialDraft: mode == 'review' ? engagement?.draftMessage : null,
         onConferenceReady: (_) async {
           if (_aiChatProvider == null) return;
           setState(() => _isAiSidebarLoading = true);
-          final updated = mode == 'profile'
-            ? await provider.finalizeProfileRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
-                text: m.text ?? "",
-                isUser: m.origin == MessageOrigin.user,
-              )).toList())
-            : await provider.finalizeGuidelinesRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+          
+          String updated;
+          if (mode == 'profile') {
+            updated = await provider.finalizeProfileRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
                 text: m.text ?? "",
                 isUser: m.origin == MessageOrigin.user,
               )).toList());
+          } else if (mode == 'guidelines') {
+            updated = await provider.finalizeGuidelinesRefinement(customer, _aiChatProvider!.history.map((m) => AiChatMessage(
+                text: m.text ?? "",
+                isUser: m.origin == MessageOrigin.user,
+              )).toList());
+          } else {
+            updated = await provider.finalizeDraftRefinement(customer, _reviewDraftController.text, _aiChatProvider!.history.map((m) => AiChatMessage(
+                text: m.text ?? "",
+                isUser: m.origin == MessageOrigin.user,
+              )).toList());
+          }
           
           if (mounted) {
             setState(() {
@@ -93,11 +109,17 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ..._aiChatProvider!.history,
                   ChatMessage(text: "I've prepared the updated profile. You can review and save it now.", origin: MessageOrigin.llm, attachments: const [])
                 ];
-              } else {
+              } else if (mode == 'guidelines') {
                 _guidelinesController.text = updated;
                 _aiChatProvider!.history = [
                   ..._aiChatProvider!.history,
                   ChatMessage(text: "I've prepared the updated guidelines. You can review and save them now.", origin: MessageOrigin.llm, attachments: const [])
+                ];
+              } else {
+                _reviewDraftController.text = updated;
+                _aiChatProvider!.history = [
+                  ..._aiChatProvider!.history,
+                  ChatMessage(text: "I've updated the draft for you. You can review it and send it when ready.", origin: MessageOrigin.llm, attachments: const [])
                 ];
               }
             });
@@ -108,18 +130,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       if (mode == 'review' && engagement != null) {
         _reviewDraftController.text = engagement.draftMessage;
       }
-      _isAiSidebarLoading = (mode != 'review'); // Don't show typing indicator for review
+      _isAiSidebarLoading = true;
       _isAiSidebarOpen = true;
     });
     
     // 2. Yield to event loop
     await Future.delayed(Duration.zero);
 
-    if (mode == 'review') return; // No AI response needed for review mode initialization
-
     final future = mode == 'profile' 
       ? provider.getProfileRefinementResponse(customer, [])
-      : provider.getGuidelinesRefinementResponse(customer, []);
+      : mode == 'guidelines'
+        ? provider.getGuidelinesRefinementResponse(customer, [])
+        : provider.getDraftRefinementResponse(customer, _reviewDraftController.text, []);
 
     future.then((response) {
       if (mounted && _aiChatProvider != null) {
@@ -139,7 +161,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CpaProvider>(context);
+    final provider = Provider.of<AdvisorProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final currentCustomer = provider.customers.firstWhere(
       (c) => c.customerId == widget.customer.customerId,
@@ -333,7 +355,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     ));
   }
 
-  Widget _buildAiSidebarContent(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
+  Widget _buildAiSidebarContent(BuildContext context, AdvisorProvider provider, Customer customer, AppLocalizations l10n) {
     if (_aiSidebarMode == 'review') {
       return _buildDraftReviewSidebar(context, provider, customer);
     }
@@ -417,7 +439,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildDraftReviewSidebar(BuildContext context, CpaProvider provider, Customer customer) {
+  Widget _buildDraftReviewSidebar(BuildContext context, AdvisorProvider provider, Customer customer) {
     if (_activeReviewEngagement == null) return const SizedBox.shrink();
 
     return Container(
@@ -429,14 +451,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Row(
                 children: [
-                  const Icon(Icons.edit_note_outlined, size: 24),
+                  Icon(_isRefiningDraft ? Icons.auto_awesome_outlined : Icons.edit_note_outlined, size: 24),
                   const SizedBox(width: 16),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'REVIEW DRAFT',
-                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                      _isRefiningDraft ? 'REFINE WITH AI' : 'REVIEW DRAFT',
+                      style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
                     ),
                   ),
+                  if (_isRefiningDraft)
+                    IconButton(
+                      onPressed: () => setState(() => _isRefiningDraft = false),
+                      icon: const Icon(Icons.arrow_back, size: 20),
+                      tooltip: 'Back to Editor',
+                    ),
                   IconButton(
                     onPressed: () => setState(() => _isAiSidebarOpen = false),
                     icon: const Icon(Icons.chevron_right),
@@ -446,133 +474,153 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _reviewDraftController,
-                    maxLines: 7,
-                    decoration: InputDecoration(
-                      hintText: 'Refine your message...',
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.black, width: 2),
-                      ),
-                    ),
-                    style: const TextStyle(fontSize: 14, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
+              child: _isRefiningDraft
+                ? (_aiChatProvider == null || _isAiSidebarLoading
+                    ? const Center(child: CircularProgressIndicator(color: Colors.black12))
+                    : KeyValueChatView(provider: _aiChatProvider!))
+                : ListView(
+                    padding: const EdgeInsets.all(24),
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
-                            if (mounted) {
-                              setState(() => _isAiSidebarOpen = false);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Message sent successfully'), backgroundColor: Colors.black),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(0, 44),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('MESSAGE DRAFT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                          TextButton.icon(
+                            onPressed: () => setState(() => _isRefiningDraft = true),
+                            icon: const Icon(Icons.auto_awesome_outlined, size: 14),
+                            label: const Text('REFINE WITH AI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              foregroundColor: Colors.black,
+                              backgroundColor: const Color(0xFFF9F9F9),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
                           ),
-                          child: const Text('SEND'),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _reviewDraftController,
+                        maxLines: 7,
+                        decoration: InputDecoration(
+                          hintText: 'Refine your message...',
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
+                                if (mounted) {
+                                  setState(() => _isAiSidebarOpen = false);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Message sent successfully'), backgroundColor: Colors.black),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(0, 44),
+                              ),
+                              child: const Text('SEND'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: _reviewDraftController.text));
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
+                            },
+                            icon: const Icon(Icons.copy_outlined, size: 20),
+                            tooltip: 'COPY',
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFFF9F9F9),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              minimumSize: const Size(44, 44),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () {
+                              Share.share(_reviewDraftController.text);
+                            },
+                            icon: const Icon(Icons.share_outlined, size: 20),
+                            tooltip: 'SHARE',
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFFF9F9F9),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              minimumSize: const Size(44, 44),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Theme(
+                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          title: const Text('CLIENT CONTEXT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                          tilePadding: EdgeInsets.zero,
+                          childrenPadding: EdgeInsets.zero,
+                          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9F9F9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFEEEEEE)),
+                              ),
+                              child: MarkdownBody(
+                                data: customer.details,
+                                styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: _reviewDraftController.text));
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
-                        },
-                        icon: const Icon(Icons.copy_outlined, size: 20),
-                        tooltip: 'COPY',
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFFF9F9F9),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          minimumSize: const Size(44, 44),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          Share.share(_reviewDraftController.text);
-                        },
-                        icon: const Icon(Icons.share_outlined, size: 20),
-                        tooltip: 'SHARE',
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFFF9F9F9),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          minimumSize: const Size(44, 44),
+                      Theme(
+                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          title: const Text('ENGAGEMENT RULES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                          tilePadding: EdgeInsets.zero,
+                          childrenPadding: EdgeInsets.zero,
+                          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9F9F9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFEEEEEE)),
+                              ),
+                              child: MarkdownBody(
+                                data: customer.guidelines,
+                                styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5, fontStyle: FontStyle.italic)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      title: const Text('CLIENT CONTEXT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                      tilePadding: EdgeInsets.zero,
-                      childrenPadding: EdgeInsets.zero,
-                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF9F9F9),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFEEEEEE)),
-                          ),
-                          child: MarkdownBody(
-                            data: customer.details,
-                            styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      title: const Text('ENGAGEMENT RULES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                      tilePadding: EdgeInsets.zero,
-                      childrenPadding: EdgeInsets.zero,
-                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF9F9F9),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFEEEEEE)),
-                          ),
-                          child: MarkdownBody(
-                            data: customer.guidelines,
-                            styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5, fontStyle: FontStyle.italic)),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -580,7 +628,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Future<void> _saveProfile(CpaProvider provider) async {
+  Future<void> _saveProfile(AdvisorProvider provider) async {
     final currentCustomer = provider.customers.firstWhere(
       (c) => c.customerId == widget.customer.customerId,
       orElse: () => widget.customer,
@@ -592,7 +640,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     });
   }
 
-  Future<void> _saveRules(CpaProvider provider) async {
+  Future<void> _saveRules(AdvisorProvider provider) async {
     final currentCustomer = provider.customers.firstWhere(
       (c) => c.customerId == widget.customer.customerId,
       orElse: () => widget.customer,
@@ -606,7 +654,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     });
   }
 
-  Future<void> _saveSchedule(CpaProvider provider) async {
+  Future<void> _saveSchedule(AdvisorProvider provider) async {
     final currentCustomer = provider.customers.firstWhere(
       (c) => c.customerId == widget.customer.customerId,
       orElse: () => widget.customer,
@@ -622,7 +670,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     });
   }
 
-  Widget _buildProfileTab(BuildContext context, CpaProvider provider, Customer customer, List<Engagement> engagements, AppLocalizations l10n) {
+  Widget _buildProfileTab(BuildContext context, AdvisorProvider provider, Customer customer, List<Engagement> engagements, AppLocalizations l10n) {
     final pendingAiEngagement = engagements.cast<Engagement?>().firstWhere(
       (e) => e?.status == EngagementStatus.received,
       orElse: () => null,
@@ -732,7 +780,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildGuidelinesTab(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
+  Widget _buildGuidelinesTab(BuildContext context, AdvisorProvider provider, Customer customer, AppLocalizations l10n) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -846,7 +894,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildSettingsTab(BuildContext context, CpaProvider provider, Customer customer, AppLocalizations l10n) {
+  Widget _buildSettingsTab(BuildContext context, AdvisorProvider provider, Customer customer, AppLocalizations l10n) {
     final nameController = TextEditingController(text: customer.name);
     final emailController = TextEditingController(text: customer.email);
     final occupationController = TextEditingController(text: customer.occupation);
@@ -904,7 +952,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, CpaProvider provider, Customer customer) {
+  void _showDeleteConfirmation(BuildContext context, AdvisorProvider provider, Customer customer) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -929,7 +977,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildAiInsightsSection(BuildContext context, CpaProvider provider, Customer customer, Engagement engagement) {
+  Widget _buildAiInsightsSection(BuildContext context, AdvisorProvider provider, Customer customer, Engagement engagement) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1051,7 +1099,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  void _showResponseDialog(BuildContext context, CpaProvider provider, Customer customer, Engagement engagement) {
+  void _showResponseDialog(BuildContext context, AdvisorProvider provider, Customer customer, Engagement engagement) {
     final controller = TextEditingController();
     showDialog(
       context: context,

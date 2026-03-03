@@ -4,7 +4,7 @@ import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'dart:convert';
 import '../services/chat_provider.dart';
-import '../providers/cpa_provider.dart';
+import '../providers/advisor_provider.dart';
 
 class KeyValueChatView extends StatelessWidget {
   final KeyValueChatProvider provider;
@@ -13,7 +13,7 @@ class KeyValueChatView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cpaProvider = Provider.of<CpaProvider>(context);
+    final advisorProvider = Provider.of<AdvisorProvider>(context);
     
     return LlmChatView(
       provider: provider,
@@ -23,7 +23,7 @@ class KeyValueChatView extends StatelessWidget {
           final previewHeader = parts[0];
           final followUpText = parts.length > 1 ? parts.sublist(1).join('\n') : "";
           
-          if (!cpaProvider.isExpressiveAiEnabled) {
+          if (!advisorProvider.isExpressiveAiEnabled) {
             return followUpText.isNotEmpty ? MarkdownBody(data: followUpText) : const SizedBox.shrink();
           }
 

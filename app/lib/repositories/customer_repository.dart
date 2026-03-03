@@ -7,17 +7,17 @@ class CustomerRepository {
   CustomerRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference _customersRef(String cpaUid) {
-    return _firestore.collection('cpas').doc(cpaUid).collection('customers');
+  CollectionReference _customersRef(String advisorUid) {
+    return _firestore.collection('advisors').doc(advisorUid).collection('customers');
   }
 
-  Future<void> saveCustomer(String cpaUid, Customer customer) async {
-    if (cpaUid == 'demo_user') return;
-    await _customersRef(cpaUid).doc(customer.customerId).set(customer.toMap());
+  Future<void> saveCustomer(String advisorUid, Customer customer) async {
+    if (advisorUid == 'demo_user') return;
+    await _customersRef(advisorUid).doc(customer.customerId).set(customer.toMap());
   }
 
-  Stream<List<Customer>> getCustomers(String cpaUid) {
-    if (cpaUid == 'demo_user') {
+  Stream<List<Customer>> getCustomers(String advisorUid) {
+    if (advisorUid == 'demo_user') {
       return Stream.value([
         Customer(
           customerId: 'demo_1',
@@ -41,13 +41,13 @@ class CustomerRepository {
         ),
       ]);
     }
-    return _customersRef(cpaUid).snapshots().map((snapshot) {
+    return _customersRef(advisorUid).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => Customer.fromMap(doc.data() as Map<String, dynamic>)).toList();
     });
   }
 
-  Future<List<Customer>> getCustomersDue(String cpaUid) async {
-    if (cpaUid == 'demo_user') {
+  Future<List<Customer>> getCustomersDue(String advisorUid) async {
+    if (advisorUid == 'demo_user') {
       return [
         Customer(
           customerId: 'demo_1',
@@ -62,19 +62,19 @@ class CustomerRepository {
       ];
     }
     final now = DateTime.now();
-    final snapshot = await _customersRef(cpaUid)
+    final snapshot = await _customersRef(advisorUid)
         .where('nextEngagementDate', isLessThanOrEqualTo: Timestamp.fromDate(now))
         .get();
     return snapshot.docs.map((doc) => Customer.fromMap(doc.data() as Map<String, dynamic>)).toList();
   }
 
-  Future<void> updateCustomer(String cpaUid, Customer customer) async {
-    if (cpaUid == 'demo_user') return;
-    await _customersRef(cpaUid).doc(customer.customerId).update(customer.toMap());
+  Future<void> updateCustomer(String advisorUid, Customer customer) async {
+    if (advisorUid == 'demo_user') return;
+    await _customersRef(advisorUid).doc(customer.customerId).update(customer.toMap());
   }
 
-  Future<void> deleteCustomer(String cpaUid, String customerId) async {
-    if (cpaUid == 'demo_user') return;
-    await _customersRef(cpaUid).doc(customerId).delete();
+  Future<void> deleteCustomer(String advisorUid, String customerId) async {
+    if (advisorUid == 'demo_user') return;
+    await _customersRef(advisorUid).doc(customerId).delete();
   }
 }

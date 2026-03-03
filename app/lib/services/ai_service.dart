@@ -40,7 +40,7 @@ class AiService {
             'email': Schema.string(description: 'Email address'),
             'occupation': Schema.string(description: 'Client occupation'),
             'details': Schema.string(description: 'A comprehensive, structured background profile in professional Markdown. Summarize and organize all gathered insights.'),
-            'guidelines': Schema.string(description: 'Clear, bulleted engagement guidelines in professional Markdown. Synthesize the CPA\'s preferences into a formal ruleset.'),
+            'guidelines': Schema.string(description: 'Clear, bulleted engagement guidelines in professional Markdown. Synthesize the advisor\'s preferences into a formal ruleset.'),
           },
         ),
         FunctionDeclaration(
@@ -55,6 +55,13 @@ class AiService {
           'Call this once you have gathered enough information to provide a comprehensive, high-quality update to the engagement guidelines.',
           parameters: {
             'updated_guidelines': Schema.string(description: 'The full, updated engagement guidelines in Markdown format.'),
+          },
+        ),
+        FunctionDeclaration(
+          'update_draft',
+          'Call this when you have a refined version of the message draft based on the conversation.',
+          parameters: {
+            'refined_draft': Schema.string(description: 'The full, refined message draft text.'),
           },
         )
       ])
@@ -73,7 +80,7 @@ class AiService {
 ''';
 
       final prompt = '''
-You are an expert CPA onboarding assistant. Your goal is to help the user create a new client by gathering their Name, Email, Occupation, Detailed Profile (Background), and Engagement Guidelines.
+You are an expert small business advisor onboarding assistant. Your goal is to help the user create a new client by gathering their Name, Email, Occupation, Detailed Profile (Background), and Engagement Guidelines.
 
 ### Process:
 1. **Introduction**: Inform the user that you are here to help them create a new client through an interactive conversation.
@@ -82,11 +89,11 @@ $previewInstruction
 4. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
 5. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
    - **CRITICAL**: The `details` and `guidelines` arguments must be professional, well-formatted Markdown summaries of everything discussed. Do NOT just pass the raw user input. 
-   - **Details**: Organize the profile into logical sections (e.g., Business Background, Financial Goals, Tax History).
-   - **Guidelines**: Create a clear, actionable list of rules for how the CPA should interact with this specific client.
+   - **Details**: Organize the profile into logical sections (e.g., Business Background, Professional Goals).
+   - **Guidelines**: Create a clear, actionable list of rules for how the advisor should interact with this specific client.
 
 Conversation History:
-${history.map((m) => "${m.isUser ? 'User' : 'Assistant'}: ${m.text}").join('\n')}
+${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
 Assistant:''';
 
@@ -165,16 +172,16 @@ Assistant:''';
 
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) {
-      return "Hi ${customer.name}, hope your quarter is going well! I've been reviewing your latest details regarding ${customer.occupation} and wanted to see if we should schedule a quick touchpoint to discuss your tax strategy.";
+      return "Hi ${customer.name}, hope your quarter is going well! I've been reviewing your latest details regarding ${customer.occupation} and wanted to see if we should schedule a quick touchpoint to discuss your business strategy.";
     }
     try {
       final prompt = '''
-Draft a warm, professional check-in message for a CPA to send to their client, ${customer.name}.
+Draft a warm, professional check-in message for a small business advisor to send to their client, ${customer.name}.
 Context:
 Customer Details (Markdown):
 ${customer.details}
 
-CPA Engagement Guidelines (Markdown):
+Advisor Engagement Guidelines (Markdown):
 ${customer.guidelines}
 
 The message should align with the guidelines and reference recent details from the customer's profile.
@@ -191,14 +198,14 @@ Return only the message text.
   Future<List<String>> extractPointsOfInterest(String response, String guidelines) async {
     if (isDemo) {
       return [
-        "Client mentioned new international sales (Potential tax treaty issues)",
+        "Client mentioned new growth initiatives",
         "Expected revenue increase of 20%",
         "Wants to schedule a follow-up meeting next week"
       ];
     }
     try {
       final prompt = '''
-Based on these CPA guidelines, what are the 3 most important points in this customer response?
+Based on these advisor guidelines, what are the 3 most important points in this customer response?
 Guidelines:
 $guidelines
 
@@ -244,16 +251,16 @@ Updated Details (Markdown):
     if (isDemo) return null;
     try {
       final prompt = '''
-You are an expert CPA assistant. You are helping a CPA refine and expand the profile of their client, ${customer.name}.
+You are an expert advisor assistant. You are helping an advisor refine and expand the profile of their client, ${customer.name}.
 Current Profile:
 ${customer.details}
 
-Your goal is to have a professional conversation with the CPA to gather more descriptive details and then summarize them into a high-quality markdown profile.
+Your goal is to have a professional conversation with the advisor to gather more descriptive details and then summarize them into a high-quality markdown profile.
 Once you have enough information to provide a solid update, call the `update_profile` function.
 Be concise, inquisitive, and professional.
 
 Conversation History:
-${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
 Assistant:''';
       final content = [Content.text(prompt)];
@@ -302,17 +309,17 @@ Assistant:''';
     if (isDemo) return null;
     try {
       final prompt = '''
-You are an expert CPA assistant. You are helping a CPA define "Engagement Guidelines" for their client, ${customer.name}.
+You are an expert advisor assistant. You are helping an advisor define "Engagement Guidelines" for their client, ${customer.name}.
 Current Guidelines:
 ${customer.guidelines}
 
-Your goal is to have a professional conversation with the CPA to define how they should proactively engage with this client.
+Your goal is to have a professional conversation with the advisor to define how they should proactively engage with this client.
 Gather details like: Communication style, proactive focus areas, preferred frequency, and tone.
 Once you have enough information to provide a solid set of guidelines, call the `update_guidelines` function.
 Be concise, inquisitive, and professional.
 
 Conversation History:
-${history.map((m) => "${m.isUser ? 'CPA' : 'Assistant'}: ${m.text}").join('\n')}
+${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
 Assistant:''';
       final content = [Content.text(prompt)];
@@ -357,4 +364,63 @@ Assistant:''';
     return await extractUpdatedGuidelines(customer, history);
   }
 
+  Future<GenerateContentResponse?> getDraftRefinementRaw(Customer customer, String currentDraft, List<AiChatMessage> history) async {
+    if (isDemo) return null;
+    try {
+      final prompt = '''
+You are an expert advisor assistant. You are helping an advisor refine a message draft for their client, ${customer.name}.
+Initial Draft:
+$currentDraft
+
+Client Context:
+${customer.details}
+
+Engagement Rules:
+${customer.guidelines}
+
+Your goal is to have a professional conversation with the advisor to improve this draft. 
+Ask for the advisor's feedback or suggest specific improvements.
+Once you have a refined draft ready, call the `update_draft` function with the full text.
+
+Conversation History:
+${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
+
+Assistant:''';
+      final content = [Content.text(prompt)];
+      return await _effectiveModel.generateContent(content);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<String> generateDraftRefinementResponse(Customer customer, String currentDraft, List<AiChatMessage> history) async {
+    if (isDemo) {
+      if (history.isEmpty) return "I can help you improve this draft for ${customer.name}. What would you like to change? I can make it more formal, focus more on a specific detail, or shorten it.";
+      return "That sounds like a good adjustment. I'll prepare a new version of the draft for you. Anything else?";
+    }
+
+    final response = await getDraftRefinementRaw(customer, currentDraft, history);
+    if (response == null) return "I'm having trouble assisting with the draft refinement right now.";
+    
+    final text = response.text;
+    if (text != null && text.isNotEmpty) return text;
+    
+    if (response.functionCalls.any((call) => call.name == 'update_draft')) {
+      return "CONFERENCE_READY";
+    }
+    
+    return "Processing your input...";
+  }
+
+  Future<String> finalizeDraftRefinement(Customer customer, String currentDraft, List<AiChatMessage> history) async {
+    if (isDemo) return "$currentDraft\n\n(Refined via AI conversation to be more professional)";
+    
+    final response = await getDraftRefinementRaw(customer, currentDraft, history);
+    if (response != null && response.functionCalls.isNotEmpty) {
+      final call = response.functionCalls.firstWhere((c) => c.name == 'update_draft', orElse: () => response.functionCalls.first);
+      final refined = call.args['refined_draft'] as String?;
+      return refined ?? currentDraft;
+    }
+    return currentDraft;
+  }
 }

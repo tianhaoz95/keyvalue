@@ -4,8 +4,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:keyvalue_app/providers/cpa_provider.dart';
-import 'package:keyvalue_app/repositories/cpa_repository.dart';
+import 'package:keyvalue_app/providers/advisor_provider.dart';
+import 'package:keyvalue_app/repositories/advisor_repository.dart';
 import 'package:keyvalue_app/repositories/customer_repository.dart';
 import 'package:keyvalue_app/repositories/engagement_repository.dart';
 import 'package:keyvalue_app/services/ai_service.dart';
@@ -19,13 +19,13 @@ void main() {
     final auth = MockFirebaseAuth();
     final firestore = FakeFirebaseFirestore();
     
-    final cpaRepo = CpaRepository(firestore: firestore);
+    final advisorRepo = AdvisorRepository(firestore: firestore);
     final customerRepo = CustomerRepository(firestore: firestore);
     final engagementRepo = EngagementRepository(firestore: firestore);
     final aiService = AiService(isDemo: true); // Use demo mode for tests to avoid FirebaseAI initialization issues
 
-    final provider = CpaProvider(
-      cpaRepo: cpaRepo,
+    final provider = AdvisorProvider(
+      advisorRepo: advisorRepo,
       customerRepo: customerRepo,
       engagementRepo: engagementRepo,
       aiService: aiService,
@@ -35,7 +35,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<CpaProvider>.value(value: provider),
+          ChangeNotifierProvider<AdvisorProvider>.value(value: provider),
         ],
         child: const MaterialApp(home: LoginScreen()),
       ),

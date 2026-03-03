@@ -31,23 +31,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String portfolioStats(int count) {
-    return 'Your portfolio consists of $count clients';
+    return 'You have $count clients in your list';
   }
 
   @override
   String get clients => 'Clients';
 
   @override
-  String get pendingActions => 'PENDING ACTIONS';
+  String get pendingActions => 'URGENT REVIEWS';
 
   @override
-  String get reviewNow => 'REVIEW NOW';
+  String get reviewNow => 'REVIEW';
 
   @override
-  String get aiOnboarding => 'AI ONBOARDING';
+  String get aiOnboarding => 'AI CLIENT ONBOARDING';
 
   @override
-  String get addClient => 'Add Client';
+  String get addClient => 'Add New Client';
 
   @override
   String get settings => 'SETTINGS';

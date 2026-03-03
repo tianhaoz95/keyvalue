@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:feedback/feedback.dart';
 import 'package:intl/intl.dart';
-import '../providers/cpa_provider.dart';
+import '../providers/advisor_provider.dart';
 import '../models/customer.dart';
 import '../services/ai_service.dart';
 import '../widgets/pending_review_list.dart';
@@ -73,7 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _startAiOnboarding(CpaProvider provider) async {
+  void _startAiOnboarding(AdvisorProvider provider) async {
     setState(() {
       _isAiOnboardingOpen = true;
       _isManualAddOpen = false;
@@ -81,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _onboardingChatProvider = KeyValueChatProvider(
         aiService: provider.aiService,
         context: ChatContext.onboarding,
-        cpaProvider: provider,
+        advisorProvider: provider,
         isExpressiveAiEnabled: provider.isExpressiveAiEnabled,
         onConferenceReady: (_) async {
           if (_onboardingChatProvider == null) return;
@@ -160,10 +160,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CpaProvider>(context);
+    final provider = Provider.of<AdvisorProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final allCustomers = provider.customers;
-    final cpa = provider.currentCpa;
+    final cpa = provider.currentAdvisor;
     final isDiscovering = provider.isDiscovering;
 
     if (cpa == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -452,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Widget _buildAiOnboardingSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
+  Widget _buildAiOnboardingSidebar(BuildContext context, AdvisorProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -489,7 +489,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildManualAddSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
+  Widget _buildManualAddSidebar(BuildContext context, AdvisorProvider provider, AppLocalizations l10n) {
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -586,8 +586,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSettingsSidebar(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
-    final cpa = provider.currentCpa!;
+  Widget _buildSettingsSidebar(BuildContext context, AdvisorProvider provider, AppLocalizations l10n) {
+    final cpa = provider.currentAdvisor!;
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -685,7 +685,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSidebarLanguageSelector(BuildContext context, CpaProvider provider) {
+  Widget _buildSidebarLanguageSelector(BuildContext context, AdvisorProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -712,7 +712,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSidebarAiCapabilitySelector(BuildContext context, CpaProvider provider) {
+  Widget _buildSidebarAiCapabilitySelector(BuildContext context, AdvisorProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -739,7 +739,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSidebarProfileCard(BuildContext context, CpaProvider provider, dynamic cpa, AppLocalizations l10n) {
+  Widget _buildSidebarProfileCard(BuildContext context, AdvisorProvider provider, dynamic cpa, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -782,7 +782,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildSidebarInfoRow(
     BuildContext context,
-    CpaProvider provider,
+    AdvisorProvider provider,
     String fieldKey,
     String label, 
     String value, 
@@ -812,8 +812,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     filled: false,
                   ),
                   onSubmitted: (val) async {
-                    final updatedCpa = copyWith(val.trim());
-                    await provider.updateProfile(updatedCpa);
+                    final updatedAdvisor = copyWith(val.trim());
+                    await provider.updateProfile(updatedAdvisor);
                     setState(() => _editingField = null);
                   },
                 )
@@ -828,8 +828,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                      color: isEditing ? Colors.black : Colors.black54),
           onPressed: () async {
             if (isEditing) {
-              final updatedCpa = copyWith(_editingController.text.trim());
-              await provider.updateProfile(updatedCpa);
+              final updatedAdvisor = copyWith(_editingController.text.trim());
+              await provider.updateProfile(updatedAdvisor);
               setState(() => _editingField = null);
             } else {
               setState(() {
@@ -871,7 +871,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showSidebarDeleteAccountDialog(BuildContext context, CpaProvider provider, AppLocalizations l10n) {
+  void _showSidebarDeleteAccountDialog(BuildContext context, AdvisorProvider provider, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -900,7 +900,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showOnboardingReviewDialog(Customer customer, CpaProvider provider) {
+  void _showOnboardingReviewDialog(Customer customer, AdvisorProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

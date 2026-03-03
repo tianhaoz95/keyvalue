@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'ai_service.dart' as ai;
 import '../models/customer.dart';
-import '../providers/cpa_provider.dart';
+import '../providers/advisor_provider.dart';
 
-enum ChatContext { onboarding, profile, guidelines }
+enum ChatContext { onboarding, profile, guidelines, refineDraft }
 
 class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
   final ai.AiService _aiService;
   final ChatContext _context;
   final Customer? _customer;
+  final String? initialDraft;
   // ignore: unused_field
-  final CpaProvider _cpaProvider;
+  final AdvisorProvider _advisorProvider;
   final Function(String)? onConferenceReady;
   final bool isExpressiveAiEnabled;
 
@@ -20,13 +21,14 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
   KeyValueChatProvider({
     required ai.AiService aiService,
     required ChatContext context,
-    required CpaProvider cpaProvider,
+    required AdvisorProvider advisorProvider,
     this.isExpressiveAiEnabled = true,
     Customer? customer,
+    this.initialDraft,
     this.onConferenceReady,
   })  : _aiService = aiService,
         _context = context,
-        _cpaProvider = cpaProvider,
+        _advisorProvider = advisorProvider,
         _customer = customer;
 
   @override
@@ -80,6 +82,9 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
           break;
         case ChatContext.guidelines:
           response = await _aiService.generateGuidelinesRefinementResponse(_customer!, aiHistory);
+          break;
+        case ChatContext.refineDraft:
+          response = await _aiService.generateDraftRefinementResponse(_customer!, initialDraft ?? "", aiHistory);
           break;
       }
     } catch (e) {

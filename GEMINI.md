@@ -1,6 +1,6 @@
-# CPA Proactive Engagement App (KeyValue)
+# Proactive Engagement App (KeyValue)
 
-A sophisticated Flutter application designed for CPAs to proactively manage client relationships using generative AI (Gemini). The app acts as an "engine" that identifies client needs, suggests engagement drafts, and intelligently updates client profiles based on their responses.
+A sophisticated Flutter application designed for advisors to proactively manage client relationships using generative AI (Gemini). The app acts as an "engine" that identifies client needs, suggests engagement drafts, and intelligently updates client profiles based on their responses.
 
 ## 🚀 Tech Stack
 
@@ -17,8 +17,8 @@ A sophisticated Flutter application designed for CPAs to proactively manage clie
 app/
 ├── integration_test/   # Automated end-to-end and flow tests
 ├── lib/
-│   ├── models/         # Immutable data models (Cpa, Customer, Engagement)
-│   ├── providers/      # Business logic and state (CpaProvider)
+│   ├── models/         # Immutable data models (Advisor, Customer, Engagement)
+│   ├── providers/      # Business logic and state (AdvisorProvider)
 │   ├── repositories/   # Data access layer for Firestore
 │   ├── screens/        # Feature-specific UI screens
 │   ├── services/       # External service wrappers (AiService)
@@ -32,10 +32,10 @@ design/                 # Design system, UX reports, and task tracking
 ## 🔑 Core Features & Design Patterns
 
 ### 1. Proactive Discovery ("App-as-Engine")
-The app doesn't just wait for user input. It periodically scans for clients due for contact and automatically generates personalized draft messages using Gemini. These appear in the **Urgent Actions** section of the Dashboard.
+The app doesn't just wait for user input. It periodically scans for clients due for contact and automatically generates personalized draft messages using Gemini. These appear in the **Urgent Reviews** section of the Dashboard.
 
 ### 2. Intelligence Hub (Closed-Loop AI)
-When a client responds, the `AiService` extracts **Points of Interest** and generates a **Proposed Profile Update**. The **Intelligence Hub** presents a side-by-side diff, requiring CPA approval before updating the client's master record—ensuring AI utility with human oversight.
+When a client responds, the `AiService` extracts **Points of Interest** and generates a **Proposed Profile Update**. The **Intelligence Hub** presents a side-by-side diff, requiring advisor approval before updating the client's master record—ensuring AI utility with human oversight.
 
 ### 3. Relationship Timeline
 Client history is visualized as a vertical timeline, differentiating between outbound messages (Sent), inbound responses (Received), and pending actions (Draft).

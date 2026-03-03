@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
-import '../providers/cpa_provider.dart';
+import '../providers/advisor_provider.dart';
 import '../l10n/app_localizations.dart';
 
 class EngagementTimeline extends StatelessWidget {
   final Customer customer;
   final List<Engagement> engagements;
-  final CpaProvider provider;
+  final AdvisorProvider provider;
   final Function(Engagement) onRespond;
   final Function(Engagement)? onReviewDraft;
 

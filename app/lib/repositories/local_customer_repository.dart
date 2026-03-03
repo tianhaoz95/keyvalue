@@ -6,29 +6,29 @@ class LocalCustomerRepository {
 
   Future<Box<Customer>> get _box async => await Hive.openBox<Customer>(boxName);
 
-  Future<void> saveCustomer(String cpaUid, Customer customer) async {
+  Future<void> saveCustomer(String advisorUid, Customer customer) async {
     final box = await _box;
     await box.put(customer.customerId, customer);
   }
 
-  Stream<List<Customer>> getCustomers(String cpaUid) async* {
+  Stream<List<Customer>> getCustomers(String advisorUid) async* {
     final box = await _box;
     yield box.values.toList();
     yield* box.watch().map((_) => box.values.toList());
   }
 
-  Future<List<Customer>> getCustomersDue(String cpaUid) async {
+  Future<List<Customer>> getCustomersDue(String advisorUid) async {
     final box = await _box;
     final now = DateTime.now();
     return box.values.where((c) => c.nextEngagementDate.isBefore(now) || c.nextEngagementDate.isAtSameMomentAs(now)).toList();
   }
 
-  Future<void> updateCustomer(String cpaUid, Customer customer) async {
+  Future<void> updateCustomer(String advisorUid, Customer customer) async {
     final box = await _box;
     await box.put(customer.customerId, customer);
   }
 
-  Future<void> deleteCustomer(String cpaUid, String customerId) async {
+  Future<void> deleteCustomer(String advisorUid, String customerId) async {
     final box = await _box;
     await box.delete(customerId);
   }

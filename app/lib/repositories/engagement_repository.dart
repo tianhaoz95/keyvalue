@@ -7,30 +7,30 @@ class EngagementRepository {
   EngagementRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference _engagementsRef(String cpaUid, String customerId) {
-    return _firestore.collection('cpas').doc(cpaUid).collection('customers').doc(customerId).collection('engagements');
+  CollectionReference _engagementsRef(String advisorUid, String customerId) {
+    return _firestore.collection('advisors').doc(advisorUid).collection('customers').doc(customerId).collection('engagements');
   }
 
-  Future<void> saveEngagement(String cpaUid, String customerId, Engagement engagement) async {
-    if (cpaUid == 'demo_user') return;
-    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).set(engagement.toMap());
+  Future<void> saveEngagement(String advisorUid, String customerId, Engagement engagement) async {
+    if (advisorUid == 'demo_user') return;
+    await _engagementsRef(advisorUid, customerId).doc(engagement.engagementId).set(engagement.toMap());
   }
 
-  Future<void> updateEngagement(String cpaUid, String customerId, Engagement engagement) async {
-    if (cpaUid == 'demo_user') return;
-    await _engagementsRef(cpaUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
+  Future<void> updateEngagement(String advisorUid, String customerId, Engagement engagement) async {
+    if (advisorUid == 'demo_user') return;
+    await _engagementsRef(advisorUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
   }
 
-  Future<void> deleteCustomerEngagements(String cpaUid, String customerId) async {
-    if (cpaUid == 'demo_user') return;
-    final snapshots = await _engagementsRef(cpaUid, customerId).get();
+  Future<void> deleteCustomerEngagements(String advisorUid, String customerId) async {
+    if (advisorUid == 'demo_user') return;
+    final snapshots = await _engagementsRef(advisorUid, customerId).get();
     for (var doc in snapshots.docs) {
       await doc.reference.delete();
     }
   }
 
-  Stream<List<Engagement>> getEngagements(String cpaUid, String customerId) {
-    if (cpaUid == 'demo_user') {
+  Stream<List<Engagement>> getEngagements(String advisorUid, String customerId) {
+    if (advisorUid == 'demo_user') {
       return Stream.value([
         Engagement(
           engagementId: 'e_demo_1',
@@ -44,14 +44,14 @@ class EngagementRepository {
         ),
       ]);
     }
-    return _engagementsRef(cpaUid, customerId).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    return _engagementsRef(advisorUid, customerId).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => Engagement.fromMap(doc.data() as Map<String, dynamic>)).toList();
     });
   }
 
-  Future<bool> hasDraft(String cpaUid, String customerId) async {
-    if (cpaUid == 'demo_user') return false;
-    final snapshot = await _engagementsRef(cpaUid, customerId)
+  Future<bool> hasDraft(String advisorUid, String customerId) async {
+    if (advisorUid == 'demo_user') return false;
+    final snapshot = await _engagementsRef(advisorUid, customerId)
         .where('status', isEqualTo: EngagementStatus.draft.name)
         .get();
     return snapshot.docs.isNotEmpty;

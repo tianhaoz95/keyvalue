@@ -1,6 +1,6 @@
 # KeyValue App
 
-A Flutter application for CPA engagement management.
+A Flutter application for Small Business Advisor proactive engagement management.
 
 ## Getting Started
 

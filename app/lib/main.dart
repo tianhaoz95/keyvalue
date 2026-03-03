@@ -6,10 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:feedback/feedback.dart';
 import 'firebase_options.dart';
-import 'providers/cpa_provider.dart';
+import 'providers/advisor_provider.dart';
 import 'screens/login_screen.dart';
 import 'theme.dart';
-import 'models/cpa.dart';
+import 'models/advisor.dart';
 import 'models/customer.dart';
 import 'models/engagement.dart';
 
@@ -20,7 +20,7 @@ void main() async {
   );
 
   await Hive.initFlutter();
-  Hive.registerAdapter(CpaAdapter());
+  Hive.registerAdapter(AdvisorAdapter());
   Hive.registerAdapter(CustomerAdapter());
   Hive.registerAdapter(EngagementStatusAdapter());
   Hive.registerAdapter(EngagementAdapter());
@@ -28,7 +28,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CpaProvider()),
+        ChangeNotifierProvider(create: (_) => AdvisorProvider()),
       ],
       child: BetterFeedback(
         theme: FeedbackThemeData(
@@ -51,11 +51,11 @@ class KeyValueApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CpaProvider>(context);
+    final provider = Provider.of<AdvisorProvider>(context);
     
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'KeyValue - Proactive CPA',
+      title: 'KeyValue - Proactive Advisor',
       theme: AppTheme.lightTheme,
       localizationsDelegates: const [
         AppLocalizations.delegate,

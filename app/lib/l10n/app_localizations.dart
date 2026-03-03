@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @portfolioStats.
   ///
   /// In en, this message translates to:
-  /// **'Your portfolio consists of {count} clients'**
+  /// **'You have {count} clients in your list'**
   String portfolioStats(int count);
 
   /// No description provided for @clients.
@@ -155,25 +155,25 @@ abstract class AppLocalizations {
   /// No description provided for @pendingActions.
   ///
   /// In en, this message translates to:
-  /// **'PENDING ACTIONS'**
+  /// **'URGENT REVIEWS'**
   String get pendingActions;
 
   /// No description provided for @reviewNow.
   ///
   /// In en, this message translates to:
-  /// **'REVIEW NOW'**
+  /// **'REVIEW'**
   String get reviewNow;
 
   /// No description provided for @aiOnboarding.
   ///
   /// In en, this message translates to:
-  /// **'AI ONBOARDING'**
+  /// **'AI CLIENT ONBOARDING'**
   String get aiOnboarding;
 
   /// No description provided for @addClient.
   ///
   /// In en, this message translates to:
-  /// **'Add Client'**
+  /// **'Add New Client'**
   String get addClient;
 
   /// No description provided for @settings.

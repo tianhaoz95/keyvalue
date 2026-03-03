@@ -2,15 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // CPAs can read and write their own profile
-    match /cpas/{userId} {
+    // Advisors can read and write their own profile
+    match /advisors/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
-      // CPAs can read and write customers that belong to them
+      // Advisors can read and write customers that belong to them
       match /customers/{customerId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
 
-        // CPAs can read and write engagements for their customers
+        // Advisors can read and write engagements for their customers
         match /engagements/{engagementId} {
           allow read, write: if request.auth != null && request.auth.uid == userId;
         }
