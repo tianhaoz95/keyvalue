@@ -42,7 +42,12 @@ void main() async {
             fontWeight: FontWeight.bold,
           ),
           dragHandleColor: Colors.black26,
+          brightness: Brightness.light,
         ),
+        themeMode: ThemeMode.light,
+        localizationsDelegates: [
+          GlobalFeedbackLocalizationsDelegate(),
+        ],
         child: const KeyValueApp(),
       ),
     ),
