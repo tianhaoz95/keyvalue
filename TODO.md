@@ -1,5 +1,17 @@
 # Tasks
 
-- [ ] for the ui to collect and send feedback, it should not use system theme. its theme should be consistent with the rest of the app
-- [ ] when the app is doing initial load, it now shows a blue progress bar on the top, change it to show the logo at the center with a circular progress under the logo
-- [ ] in review draft, make the message draft text field height 50% of what it is now to save vertical space
+- [ ] **Feedback UI Theme Consistency**
+  - [ ] Update `app/lib/main.dart` to apply a custom `FeedbackThemeData` to the `BetterFeedback` widget.
+  - [ ] Use the app's professional palette (Indigo/Amber/Black) and ensure consistent 16dp rounding.
+  - [ ] Verify the feedback UI matches the "Premium Professional" aesthetic defined in `GEMINI.md`.
+
+- [ ] **Custom Web Initial Loading Screen**
+  - [ ] Modify `app/web/index.html` to replace the default blue loading bar with a custom centered loader.
+  - [ ] Implement a centered logo using `assets/images/logo_512.png`.
+  - [ ] Add a circular progress indicator below the logo using CSS or a lightweight SVG.
+  - [ ] Ensure the loading UI is removed cleanly once the Flutter engine is initialized via `flutter_bootstrap.js`.
+
+- [ ] **Optimize Review Draft UI**
+  - [ ] Modify `app/lib/screens/customer_detail_screen.dart` in the `_buildDraftReviewSidebar` method.
+  - [ ] Reduce the `maxLines` of the message draft `TextField` from 15 to 7 or 8 to save vertical space.
+  - [ ] Ensure the sidebar still provides enough context for the CPA to review the AI's reasoning.
