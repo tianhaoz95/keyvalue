@@ -13,6 +13,7 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
   // ignore: unused_field
   final CpaProvider _cpaProvider;
   final Function(String)? onConferenceReady;
+  final bool isExpressiveAiEnabled;
 
   List<ChatMessage> _history = [];
 
@@ -20,6 +21,7 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
     required ai.AiService aiService,
     required ChatContext context,
     required CpaProvider cpaProvider,
+    this.isExpressiveAiEnabled = true,
     Customer? customer,
     this.onConferenceReady,
   })  : _aiService = aiService,
@@ -54,17 +56,24 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
     notifyListeners();
 
     // 2. Prepare history for AI service
-    final aiHistory = _history.map((m) => ai.AiChatMessage(
-      text: m.text ?? "",
-      isUser: m.origin == MessageOrigin.user,
-    )).toList();
+    final aiHistory = _history.map((m) {
+      String text = m.text ?? "";
+      if (text.startsWith('PREVIEW_DATA:')) {
+        final parts = text.split('\n');
+        text = parts.length > 1 ? parts.sublist(1).join('\n') : "";
+      }
+      return ai.AiChatMessage(
+        text: text,
+        isUser: m.origin == MessageOrigin.user,
+      );
+    }).where((m) => m.text.isNotEmpty).toList();
 
     // 3. Get AI response
     String response;
     try {
       switch (_context) {
         case ChatContext.onboarding:
-          response = await _aiService.generateOnboardingResponse(aiHistory);
+          response = await _aiService.generateOnboardingResponse(aiHistory, isExpressiveAiEnabled: isExpressiveAiEnabled);
           break;
         case ChatContext.profile:
           response = await _aiService.generateProfileRefinementResponse(_customer!, aiHistory);
@@ -84,6 +93,23 @@ class KeyValueChatProvider extends ChangeNotifier implements LlmProvider {
       }
       // We don't yield anything here so the user doesn't see "CONFERENCE_READY"
       yield "";
+    } else if (response.startsWith('PREVIEW_DATA:')) {
+      final llmMsg = ChatMessage(
+        text: response, // Keep full string for responseBuilder to parse
+        origin: MessageOrigin.llm,
+        attachments: const [],
+      );
+      _history.add(llmMsg);
+      notifyListeners();
+
+      // If there's more after the PREVIEW_DATA line, yield it to show the AI's question/text
+      final lines = response.split('\n');
+      if (lines.length > 1) {
+        yield lines.sublist(1).join('\n');
+      } else {
+        // Fallback to avoid empty yield which might hide the message bubble
+        yield "I've updated the client record.";
+      }
     } else {
       final llmMsg = ChatMessage(
         text: response,

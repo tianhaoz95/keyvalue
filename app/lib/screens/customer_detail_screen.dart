@@ -4,6 +4,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:feedback/feedback.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/cpa_provider.dart';
@@ -205,6 +206,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.feedback_outlined),
+              tooltip: 'Send Feedback',
+              onPressed: () {
+                BetterFeedback.of(context).show((feedback) {
+                  // Handle feedback
+                  debugPrint('Feedback text: ${feedback.text}');
+                });
+              },
+            ),
             if (!currentCustomer.hasActiveDraft)
               IconButton(
                 onPressed: () => provider.generateManualDraft(currentCustomer),
@@ -231,6 +242,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         child: Column(
                           children: [
                             TabBar(
+                              dividerColor: Colors.transparent,
                               tabs: [
                                 Tab(
                                   icon: Badge(
@@ -284,23 +296,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ),
           ),
           
-          // AI Sidebar (Conditional Overlay)
-          if (_isAiSidebarOpen)
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: sidebarWidth,
-              child: Row(
-                children: [
-                  if (!isPhone)
-                    const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
-                  Expanded(
-                    child: _buildAiSidebarContent(context, provider, currentCustomer, l10n),
-                  ),
-                ],
+          // Scrim (Animated Overlay)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_isAiSidebarOpen,
+              child: GestureDetector(
+                onTap: () => setState(() => _isAiSidebarOpen = false),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: _isAiSidebarOpen ? 1.0 : 0.0,
+                  child: Container(color: Colors.transparent),
+                ),
               ),
             ),
+          ),
+          
+          // AI Sidebar (Animated Positioned)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            right: _isAiSidebarOpen ? 0 : -sidebarWidth,
+            top: 0,
+            bottom: 0,
+            width: sidebarWidth,
+            child: Row(
+              children: [
+                if (!isPhone)
+                  const VerticalDivider(width: 1, color: Color(0xFFEEEEEE)),
+                Expanded(
+                  child: _isAiSidebarOpen 
+                    ? _buildAiSidebarContent(context, provider, currentCustomer, l10n)
+                    : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     ));
@@ -332,7 +362,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _isAiSidebarOpen = false),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -412,7 +442,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _isAiSidebarOpen = false),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),

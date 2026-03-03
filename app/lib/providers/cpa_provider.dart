@@ -32,6 +32,9 @@ class CpaProvider with ChangeNotifier {
   String _aiCapability = 'pro'; // 'pro' or 'fast'
   String get aiCapability => _aiCapability;
 
+  bool _isExpressiveAiEnabled = true;
+  bool get isExpressiveAiEnabled => _isExpressiveAiEnabled;
+
   Locale _locale = const Locale('en');
   Locale get locale => _locale;
 
@@ -63,6 +66,20 @@ class CpaProvider with ChangeNotifier {
     _checkRememberedUser();
     _loadLocale();
     _loadAiCapability();
+    _loadExpressiveAiPreference();
+  }
+
+  Future<void> _loadExpressiveAiPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isExpressiveAiEnabled = prefs.getBool('isExpressiveAiEnabled') ?? true;
+    notifyListeners();
+  }
+
+  Future<void> setExpressiveAiEnabled(bool enabled) async {
+    _isExpressiveAiEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isExpressiveAiEnabled', enabled);
+    notifyListeners();
   }
 
   Future<void> _loadAiCapability() async {
@@ -406,11 +423,11 @@ class CpaProvider with ChangeNotifier {
   }
 
   Future<String> getOnboardingResponse(List<AiChatMessage> history) async {
-    return _aiService.generateOnboardingResponse(history);
+    return _aiService.generateOnboardingResponse(history, isExpressiveAiEnabled: _isExpressiveAiEnabled);
   }
 
   Future<Customer?> extractCustomerFromOnboarding(List<AiChatMessage> history) async {
-    final data = await _aiService.extractClientFromFunctionCall(history);
+    final data = await _aiService.extractClientFromFunctionCall(history, isExpressiveAiEnabled: _isExpressiveAiEnabled);
     if (data == null) return null;
 
     return Customer(

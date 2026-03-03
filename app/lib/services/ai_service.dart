@@ -1,4 +1,5 @@
 import 'package:firebase_ai/firebase_ai.dart';
+import 'dart:convert';
 import '../models/customer.dart';
 
 class AiChatMessage {
@@ -20,6 +21,17 @@ class AiService {
     model: modelName,
     tools: [
       Tool.functionDeclarations([
+        FunctionDeclaration(
+          'update_client_preview',
+          'Call this whenever you have new or updated information for the client being onboarded. This provides a real-time preview to the user.',
+          parameters: {
+            'name': Schema.string(description: 'Full name of the client (if known)'),
+            'email': Schema.string(description: 'Email address (if known)'),
+            'occupation': Schema.string(description: 'Client occupation (if known)'),
+            'details': Schema.string(description: 'Background profile summary (if known)'),
+            'guidelines': Schema.string(description: 'Engagement guidelines summary (if known)'),
+          },
+        ),
         FunctionDeclaration(
           'create_client',
           'Call this once you have gathered all required client information. Synthesize the gathered info into professional, high-quality Markdown.',
@@ -49,18 +61,26 @@ class AiService {
     ],
   );
 
-  Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history) async {
+  Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) return null;
 
     try {
+      final previewInstruction = isExpressiveAiEnabled ? '''
+3. **Real-time Preview**: **CRITICAL**: Whenever the user provides a new piece of information (Name, Email, Occupation, Profile info, or Guidelines), you MUST immediately call the `update_client_preview` function with all the information you have gathered so far. This updates the live preview card on the screen.
+   - **IMPORTANT**: Even when calling a function, you MUST also provide a text response to the user. Acknowledge the info received and ask for the next missing piece (e.g., "Thanks! I've updated the preview with John's email. What is his occupation?"). Never send a function call alone.
+''' : '''
+3. **Internal State**: Keep track of the information you have gathered so far (Name, Email, Occupation, Profile info, or Guidelines). You do NOT need to provide a real-time preview card. Just continue the conversation naturally to gather the next missing piece.
+''';
+
       final prompt = '''
 You are an expert CPA onboarding assistant. Your goal is to help the user create a new client by gathering their Name, Email, Occupation, Detailed Profile (Background), and Engagement Guidelines.
 
 ### Process:
 1. **Introduction**: Inform the user that you are here to help them create a new client through an interactive conversation.
 2. **Data Gathering**: Ask for the missing information one or two pieces at a time. Be professional and friendly.
-3. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
-4. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
+$previewInstruction
+4. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
+5. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
    - **CRITICAL**: The `details` and `guidelines` arguments must be professional, well-formatted Markdown summaries of everything discussed. Do NOT just pass the raw user input. 
    - **Details**: Organize the profile into logical sections (e.g., Business Background, Financial Goals, Tax History).
    - **Guidelines**: Create a clear, actionable list of rules for how the CPA should interact with this specific client.
@@ -77,29 +97,54 @@ Assistant:''';
     }
   }
 
-  Future<String> generateOnboardingResponse(List<AiChatMessage> history) async {
+  Future<String> generateOnboardingResponse(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) {
       if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. I'll help you create a new client by gathering their details through a quick conversation. To start, what is the client's full name?";
-      if (history.last.text.toLowerCase().contains('john')) return "Great, John Doe. What is his email address and occupation?";
-      if (history.any((m) => m.text.contains('@'))) return "I've got those details. Now, could you provide some background details for his profile and any specific engagement guidelines I should follow?";
+      
+      String responsePrefix = "";
+      if (isExpressiveAiEnabled) {
+         if (history.last.text.toLowerCase().contains('john')) {
+            responsePrefix = 'PREVIEW_DATA:{"name":"John Doe"}\n';
+         } else if (history.any((m) => m.text.contains('@'))) {
+            responsePrefix = 'PREVIEW_DATA:{"name":"John Doe","email":"john@example.com","occupation":"Software Engineer"}\n';
+         }
+      }
+
+      if (history.last.text.toLowerCase().contains('john')) {
+        return '${responsePrefix}Great, John Doe. What is his email address and occupation?';
+      }
+      if (history.any((m) => m.text.contains('@'))) {
+        return '${responsePrefix}I\'ve got those details. Now, could you provide some background details for his profile and any specific engagement guidelines I should follow?';
+      }
       return "I'm ready to create the client profile for John Doe once you provide the background and guidelines.";
     }
 
-    final response = await getOnboardingResponseRaw(history);
+    final response = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
     if (response == null) return "I'm having trouble connecting to the AI service.";
     
-    final text = response.text;
-    if (text != null && text.isNotEmpty) return text;
-    
     final functionCalls = response.functionCalls;
+    final text = response.text ?? "";
+    
     if (functionCalls.isNotEmpty) {
+      final call = functionCalls.first;
+      if (call.name == 'update_client_preview') {
+        final fallback = "I've updated the preview with those details. What else can you tell me?";
+        if (!isExpressiveAiEnabled) {
+          return text.isNotEmpty ? text : fallback;
+        }
+        String combined = "PREVIEW_DATA:" + jsonEncode(call.args);
+        combined += "\n" + (text.isNotEmpty ? text : fallback);
+        return combined;
+      }
       return "CONFERENCE_READY"; // Special token to signal UI to show review
     }
+    
+    if (text.isNotEmpty) return text;
     
     return "I'm processing your request...";
   }
 
-  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history) async {
+  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) {
       return {
         'name': 'John Doe (Demo)',
@@ -110,7 +155,7 @@ Assistant:''';
       };
     }
 
-    final response = await getOnboardingResponseRaw(history);
+    final response = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
     if (response != null && response.functionCalls.isNotEmpty) {
       return response.functionCalls.first.args;
     }

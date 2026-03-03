@@ -4,6 +4,7 @@ import 'l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:feedback/feedback.dart';
 import 'firebase_options.dart';
 import 'providers/cpa_provider.dart';
 import 'screens/login_screen.dart';
@@ -29,7 +30,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => CpaProvider()),
       ],
-      child: const KeyValueApp(),
+      child: const BetterFeedback(
+        child: KeyValueApp(),
+      ),
     ),
   );
 }

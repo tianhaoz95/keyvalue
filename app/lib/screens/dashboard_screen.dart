@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:feedback/feedback.dart';
 import 'package:intl/intl.dart';
 import '../providers/cpa_provider.dart';
 import '../models/customer.dart';
@@ -81,6 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         aiService: provider.aiService,
         context: ChatContext.onboarding,
         cpaProvider: provider,
+        isExpressiveAiEnabled: provider.isExpressiveAiEnabled,
         onConferenceReady: (_) async {
           if (_onboardingChatProvider == null) return;
           setState(() => _isAiOnboardingLoading = true);
@@ -225,6 +227,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.person_add_outlined),
             tooltip: 'Add Client',
             onPressed: _startManualAdd,
+          ),
+          IconButton(
+            icon: const Icon(Icons.feedback_outlined),
+            tooltip: 'Send Feedback',
+            onPressed: () {
+              BetterFeedback.of(context).show((feedback) {
+                // Here you would send the feedback to your backend or a service
+                debugPrint('Feedback text: ${feedback.text}');
+                debugPrint('Feedback screenshot: ${feedback.screenshot.length} bytes');
+              });
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -462,7 +475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _isAiOnboardingOpen = false),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -499,7 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _isManualAddOpen = false),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -597,7 +610,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   IconButton(
                     onPressed: () => setState(() => _isSettingsOpen = false),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -614,9 +627,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text('AI CAPABILITY', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 24),
                   _buildSidebarAiCapabilitySelector(context, provider),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'EXPERIMENTAL FEATURES',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: Colors.grey,
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 24),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Expressive AI UI',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black),
+                    ),
+                    subtitle: const Text(
+                      'Enable real-time client preview cards during onboarding conversations.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    value: provider.isExpressiveAiEnabled,
+                    onChanged: (value) {
+                      provider.setExpressiveAiEnabled(value);
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  Text(l10n.account.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),                  const SizedBox(height: 24),
                   _buildSidebarLanguageSelector(context, provider),
                   const SizedBox(height: 16),
                   _buildSidebarActionItem(
