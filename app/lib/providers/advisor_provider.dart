@@ -35,6 +35,9 @@ class AdvisorProvider with ChangeNotifier {
   bool _isExpressiveAiEnabled = true;
   bool get isExpressiveAiEnabled => _isExpressiveAiEnabled;
 
+  bool _isMultimodalAiEnabled = false;
+  bool get isMultimodalAiEnabled => _isMultimodalAiEnabled;
+
   Locale _locale = const Locale('en');
   Locale get locale => _locale;
 
@@ -72,6 +75,7 @@ class AdvisorProvider with ChangeNotifier {
   Future<void> _loadExpressiveAiPreference() async {
     final prefs = await SharedPreferences.getInstance();
     _isExpressiveAiEnabled = prefs.getBool('isExpressiveAiEnabled') ?? true;
+    _isMultimodalAiEnabled = prefs.getBool('isMultimodalAiEnabled') ?? false;
     notifyListeners();
   }
 
@@ -79,6 +83,13 @@ class AdvisorProvider with ChangeNotifier {
     _isExpressiveAiEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isExpressiveAiEnabled', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setMultimodalAiEnabled(bool enabled) async {
+    _isMultimodalAiEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isMultimodalAiEnabled', enabled);
     notifyListeners();
   }
 
@@ -412,6 +423,26 @@ class AdvisorProvider with ChangeNotifier {
       await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     } else {
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
+    }
+  }
+
+  Future<void> deleteEngagement(Customer customer, Engagement engagement) async {
+    if (_currentAdvisor == null) return;
+    
+    if (isGuestMode) {
+      await _localEngagementRepo.deleteEngagement(_currentAdvisor!.uid, customer.customerId, engagement.engagementId);
+    } else {
+      await _engagementRepo.deleteEngagement(_currentAdvisor!.uid, customer.customerId, engagement.engagementId);
+    }
+
+    // If it was a draft, update customer flag
+    if (engagement.status == EngagementStatus.draft) {
+      final updatedCustomer = customer.copyWith(hasActiveDraft: false);
+      if (isGuestMode) {
+        await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
+      } else {
+        await _customerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
+      }
     }
   }
 

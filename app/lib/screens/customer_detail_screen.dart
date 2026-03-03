@@ -4,6 +4,8 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import 'package:feedback/feedback.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
@@ -28,11 +30,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isEditingProfile = false;
   bool _isEditingRules = false;
-  bool _isEditingSchedule = false;
   late TextEditingController _profileController;
   late TextEditingController _guidelinesController;
-  late TextEditingController _cadenceController;
-  String _selectedCadencePeriod = 'days';
 
   // AI Side-bar State
   String _aiSidebarMode = 'profile'; // 'profile', 'guidelines', or 'review'
@@ -50,15 +49,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.initState();
     _profileController = TextEditingController(text: widget.customer.details);
     _guidelinesController = TextEditingController(text: widget.customer.guidelines);
-    _cadenceController = TextEditingController(text: widget.customer.cadenceValue.toString());
-    _selectedCadencePeriod = widget.customer.cadencePeriod;
   }
 
   @override
   void dispose() {
     _profileController.dispose();
     _guidelinesController.dispose();
-    _cadenceController.dispose();
     _reviewDraftController.dispose();
     super.dispose();
   }
@@ -520,8 +516,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 3,
-                            child: ElevatedButton(
+                            child: ElevatedButton.icon(
                               onPressed: () async {
                                 await provider.sendEngagement(customer, _activeReviewEngagement!, _reviewDraftController.text);
                                 if (mounted) {
@@ -536,7 +531,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size(0, 44),
                               ),
-                              child: const Text('SEND'),
+                              icon: const Icon(Icons.send, size: 18),
+                              label: const Text('SEND'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Draft'),
+                                  content: const Text('Are you sure you want to delete this message draft?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                      child: const Text('DELETE', style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await provider.deleteEngagement(customer, _activeReviewEngagement!);
+                                if (mounted) {
+                                  setState(() => _isAiSidebarOpen = false);
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                            tooltip: 'DELETE DRAFT',
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.redAccent.withValues(alpha: 0.05),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              minimumSize: const Size(44, 44),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -651,22 +680,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     await provider.addCustomer(updatedCustomer);
     setState(() {
       _isEditingRules = false;
-    });
-  }
-
-  Future<void> _saveSchedule(AdvisorProvider provider) async {
-    final currentCustomer = provider.customers.firstWhere(
-      (c) => c.customerId == widget.customer.customerId,
-      orElse: () => widget.customer,
-    );
-    final cadenceValue = int.tryParse(_cadenceController.text) ?? currentCustomer.cadenceValue;
-    final updatedCustomer = currentCustomer.copyWith(
-      cadenceValue: cadenceValue,
-      cadencePeriod: _selectedCadencePeriod,
-    );
-    await provider.addCustomer(updatedCustomer);
-    setState(() {
-      _isEditingSchedule = false;
     });
   }
 
@@ -789,64 +802,81 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('SCHEDULE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-              IconButton(
-                icon: Icon(_isEditingSchedule ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
-                onPressed: () {
-                  if (_isEditingSchedule) {
-                    _saveSchedule(provider);
-                  } else {
-                    setState(() {
-                      _isEditingSchedule = true;
-                      _cadenceController.text = customer.cadenceValue.toString();
-                      _selectedCadencePeriod = customer.cadencePeriod;
-                    });
-                  }
-                },
+              const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              TextButton.icon(
+                onPressed: () => _showAddScheduleDialog(context, provider, customer),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('ADD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                style: TextButton.styleFrom(foregroundColor: Colors.black),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _isEditingSchedule
-              ? Row(
-                  children: [
-                    const Text('Every ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: _cadenceController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          if (customer.schedules.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9F9F9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEEEEEE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 16, color: Colors.black54),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Using legacy schedule: Every ${customer.cadenceValue} ${customer.cadencePeriod}',
+                      style: const TextStyle(fontSize: 13, color: Colors.black54, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...customer.schedules.map((schedule) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEEEEEE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.event_repeat_outlined, size: 20, color: Colors.black87),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Every ${schedule.cadenceValue} ${schedule.cadencePeriod}',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' • Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
+                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    DropdownButton<String>(
-                      value: _selectedCadencePeriod,
-                      underline: const SizedBox(),
-                      items: ['days', 'weeks', 'months'].map((p) => DropdownMenuItem(
-                        value: p,
-                        child: Text(p, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                      )).toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedCadencePeriod = val);
-                      },
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    const Icon(Icons.event_repeat_outlined, size: 18, color: Colors.black54),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Every ${customer.cadenceValue} ${customer.cadencePeriod}',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)
+                        ..removeWhere((s) => s.scheduleId == schedule.scheduleId);
+                      final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
+                      // Recalculate next engagement date based on new schedules
+                      final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
+                      await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
+                    },
+                    icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            )),
           const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -890,6 +920,115 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                 ),
         ],
+      ),
+    );
+  }
+
+  void _showAddScheduleDialog(BuildContext context, AdvisorProvider provider, Customer customer) {
+    final cadenceController = TextEditingController(text: '1');
+    String selectedPeriod = 'months';
+    DateTime startDate = DateTime.now();
+    DateTime? endDate;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Add Schedule', style: TextStyle(fontWeight: FontWeight.w900)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('RECURRENCE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.grey)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Text('Every ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 50,
+                      child: TextField(
+                        controller: cadenceController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 8)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    DropdownButton<String>(
+                      value: selectedPeriod,
+                      underline: const SizedBox(),
+                      items: ['days', 'weeks', 'months', 'years'].map((p) => DropdownMenuItem(
+                        value: p,
+                        child: Text(p, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      )).toList(),
+                      onChanged: (val) => setDialogState(() => selectedPeriod = val!),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                const Text('START DATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.grey)),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: startDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setDialogState(() => startDate = picked);
+                  },
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(DateFormat('MMM d, y').format(startDate)),
+                ),
+                const SizedBox(height: 24),
+                const Text('END DATE (OPTIONAL)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.grey)),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: endDate ?? startDate.add(const Duration(days: 365)),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    setDialogState(() => endDate = picked);
+                  },
+                  icon: const Icon(Icons.event_busy, size: 16),
+                  label: Text(endDate == null ? 'No end date' : DateFormat('MMM d, y').format(endDate!)),
+                ),
+                if (endDate != null)
+                  TextButton(
+                    onPressed: () => setDialogState(() => endDate = null),
+                    child: const Text('Clear end date', style: TextStyle(fontSize: 12, color: Colors.redAccent)),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+            ElevatedButton(
+              onPressed: () async {
+                final schedule = EngagementSchedule(
+                  scheduleId: const Uuid().v4(),
+                  startDate: startDate,
+                  endDate: endDate,
+                  cadenceValue: int.tryParse(cadenceController.text) ?? 1,
+                  cadencePeriod: selectedPeriod,
+                );
+                
+                final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)..add(schedule);
+                final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
+                final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
+                await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('ADD'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -24,6 +24,7 @@ void main() async {
   Hive.registerAdapter(CustomerAdapter());
   Hive.registerAdapter(EngagementStatusAdapter());
   Hive.registerAdapter(EngagementAdapter());
+  Hive.registerAdapter(EngagementScheduleAdapter());
 
   runApp(
     MultiProvider(
@@ -34,11 +35,13 @@ void main() async {
         theme: FeedbackThemeData(
           background: Colors.grey[200]!,
           feedbackSheetColor: Colors.white,
+          activeFeedbackModeColor: Colors.black,
           bottomSheetDescriptionStyle: const TextStyle(
             color: Colors.black87,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
+          dragHandleColor: Colors.black26,
         ),
         child: const KeyValueApp(),
       ),

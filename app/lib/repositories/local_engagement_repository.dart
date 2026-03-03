@@ -35,6 +35,13 @@ class LocalEngagementRepository {
     }
   }
 
+  Future<void> deleteEngagement(String advisorUid, String customerId, String engagementId) async {
+    final box = await _box;
+    final list = box.get(customerId)?.cast<Engagement>() ?? [];
+    list.removeWhere((e) => e.engagementId == engagementId);
+    await box.put(customerId, list);
+  }
+
   Future<void> clearCustomerEngagements(String advisorUid, String customerId) async {
     final box = await _box;
     await box.delete(customerId);

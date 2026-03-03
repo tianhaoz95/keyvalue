@@ -6,6 +6,52 @@ part of 'customer.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
+class EngagementScheduleAdapter extends TypeAdapter<EngagementSchedule> {
+  @override
+  final int typeId = 4;
+
+  @override
+  EngagementSchedule read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return EngagementSchedule(
+      scheduleId: fields[0] as String,
+      startDate: fields[1] as DateTime,
+      endDate: fields[2] as DateTime?,
+      cadenceValue: fields[3] as int,
+      cadencePeriod: fields[4] as String,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, EngagementSchedule obj) {
+    writer
+      ..writeByte(5)
+      ..writeByte(0)
+      ..write(obj.scheduleId)
+      ..writeByte(1)
+      ..write(obj.startDate)
+      ..writeByte(2)
+      ..write(obj.endDate)
+      ..writeByte(3)
+      ..write(obj.cadenceValue)
+      ..writeByte(4)
+      ..write(obj.cadencePeriod);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EngagementScheduleAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
 class CustomerAdapter extends TypeAdapter<Customer> {
   @override
   final int typeId = 1;
@@ -32,13 +78,14 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       tags: (fields[12] as List).cast<String>(),
       cadenceValue: fields[13] as int,
       cadencePeriod: fields[14] as String,
+      schedules: (fields[15] as List).cast<EngagementSchedule>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Customer obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.customerId)
       ..writeByte(1)
@@ -68,7 +115,9 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       ..writeByte(13)
       ..write(obj.cadenceValue)
       ..writeByte(14)
-      ..write(obj.cadencePeriod);
+      ..write(obj.cadencePeriod)
+      ..writeByte(15)
+      ..write(obj.schedules);
   }
 
   @override

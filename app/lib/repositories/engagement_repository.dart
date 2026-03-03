@@ -21,6 +21,11 @@ class EngagementRepository {
     await _engagementsRef(advisorUid, customerId).doc(engagement.engagementId).update(engagement.toMap());
   }
 
+  Future<void> deleteEngagement(String advisorUid, String customerId, String engagementId) async {
+    if (advisorUid == 'demo_user') return;
+    await _engagementsRef(advisorUid, customerId).doc(engagementId).delete();
+  }
+
   Future<void> deleteCustomerEngagements(String advisorUid, String customerId) async {
     if (advisorUid == 'demo_user') return;
     final snapshots = await _engagementsRef(advisorUid, customerId).get();

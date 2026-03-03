@@ -17,6 +17,8 @@ class KeyValueChatView extends StatelessWidget {
     
     return LlmChatView(
       provider: provider,
+      enableAttachments: advisorProvider.isMultimodalAiEnabled,
+      enableVoiceNotes: advisorProvider.isMultimodalAiEnabled,
       responseBuilder: (context, message) {
         if (message.startsWith('PREVIEW_DATA:')) {
           final parts = message.split('\n');

@@ -674,6 +674,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       provider.setExpressiveAiEnabled(value);
                     },
                   ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Multimodal AI',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black),
+                    ),
+                    subtitle: const Text(
+                      'Enable voice and image inputs in AI conversations.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    value: provider.isMultimodalAiEnabled,
+                    onChanged: (value) {
+                      provider.setMultimodalAiEnabled(value);
+                    },
+                  ),
                   const SizedBox(height: 32),
                   Text('SUBSCRIPTION', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 16),
@@ -708,11 +723,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     isDestructive: true,
                     onTap: () => _showSidebarDeleteAccountDialog(context, provider, l10n),
                   ),
+                  const SizedBox(height: 48),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _showPrivacyPolicy(context),
+                      child: const Text(
+                        'PRIVACY NOTICE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                          color: Colors.black54,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'KeyValue respects your privacy and the privacy of your clients.\n\n'
+            '1. DATA COLLECTION: We collect advisor profile information, client details, and engagement history to provide our services.\n\n'
+            '2. AI PROCESSING: Client data is processed by Google Gemini AI to generate insights and message drafts. Data is handled securely and in accordance with Firebase and Google Cloud security standards.\n\n'
+            '3. SECURITY: We use industry-standard encryption and security measures to protect your data stored in Cloud Firestore and Hive.\n\n'
+            '4. THIRD-PARTY SERVICES: We may use third-party services like Firebase and Twilio to provide core functionality.\n\n'
+            '5. DATA OWNERSHIP: You retain ownership of your client data. We do not sell or share your data with unauthorized third parties.',
+            style: TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CLOSE')),
+        ],
       ),
     );
   }
@@ -1118,9 +1173,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                const Text(
+                  'NEXT CONTACT',
+                  style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 0.5),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   DateFormat('MMM d, y').format(customer.nextEngagementDate),
-                  style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 11, color: Colors.black87, fontWeight: FontWeight.w700),
                 ),
                 const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
               ],

@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 450),
+          constraints: const BoxConstraints(maxWidth: 550),
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
             child: Column(
@@ -250,6 +250,52 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showUserAgreement(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('User Agreement', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'By using KeyValue, you agree to the following terms:\n\n'
+            '1. PROACTIVE ENGAGEMENT: KeyValue is an AI-powered tool designed to assist advisors in managing client relationships. You are responsible for reviewing and approving all AI-generated content before it is sent to clients.\n\n'
+            '2. DATA ACCURACY: While we strive for high-quality AI outputs, we do not guarantee the accuracy or completeness of AI-generated suggestions or profile updates. Human oversight is mandatory.\n\n'
+            '3. CONFIDENTIALITY: You agree to use KeyValue in compliance with all professional standards and regulations regarding client confidentiality.\n\n'
+            '4. INTELLECTUAL PROPERTY: The KeyValue app and its underlying AI technology are the property of KeyValue. You are granted a limited license to use the tool for your professional practice.\n\n'
+            '5. LIMITATION OF LIABILITY: KeyValue shall not be liable for any indirect, incidental, or consequential damages resulting from the use of the app or AI-generated content.',
+            style: TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CLOSE')),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'KeyValue respects your privacy and the privacy of your clients.\n\n'
+            '1. DATA COLLECTION: We collect advisor profile information, client details, and engagement history to provide our services.\n\n'
+            '2. AI PROCESSING: Client data is processed by Google Gemini AI to generate insights and message drafts. Data is handled securely and in accordance with Firebase and Google Cloud security standards.\n\n'
+            '3. SECURITY: We use industry-standard encryption and security measures to protect your data stored in Cloud Firestore and Hive.\n\n'
+            '4. THIRD-PARTY SERVICES: We may use third-party services like Firebase and Twilio to provide core functionality.\n\n'
+            '5. DATA OWNERSHIP: You retain ownership of your client data. We do not sell or share your data with unauthorized third parties.',
+            style: TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CLOSE')),
+        ],
+      ),
+    );
+  }
+
   void _enterGuestMode() async {
     setState(() => _isLoading = true);
     final provider = Provider.of<AdvisorProvider>(context, listen: false);
@@ -317,6 +363,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     bool isRegistering = false;
+    bool acceptedTerms = false;
 
     showDialog(
       context: context,
@@ -335,6 +382,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
                 const SizedBox(height: 12),
                 TextField(controller: firmController, decoration: const InputDecoration(labelText: 'Firm Name')),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: acceptedTerms,
+                      activeColor: Colors.black,
+                      onChanged: (val) => setDialogState(() => acceptedTerms = val ?? false),
+                    ),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 12, color: Colors.black),
+                          children: [
+                            const TextSpan(text: 'I agree to the '),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () => _showUserAgreement(context),
+                                child: const Text(
+                                  'User Agreement',
+                                  style: TextStyle(fontSize: 12, decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            const TextSpan(text: ' and '),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () => _showPrivacyPolicy(context),
+                                child: const Text(
+                                  'Privacy Policy',
+                                  style: TextStyle(fontSize: 12, decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 if (isRegistering)
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
@@ -349,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: const Text('CANCEL'),
             ),
             ElevatedButton(
-              onPressed: isRegistering ? null : () async {
+              onPressed: (isRegistering || !acceptedTerms) ? null : () async {
                 if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Email and Password are required')),
