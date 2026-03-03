@@ -42,6 +42,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   // Add Schedule Sidebar State
   bool _isAddScheduleSidebarOpen = false;
   bool _isAddScheduleLoading = false;
+  bool _isSchedulesExpanded = true;
+  bool _useAddScheduleEndDate = false;
   final _addScheduleCadenceController = TextEditingController(text: '1');
   String _addSchedulePeriod = 'months';
   DateTime _addScheduleStartDate = DateTime.now();
@@ -335,7 +337,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 300),
                     opacity: isAnySidebarOpen ? 1.0 : 0.0,
-                    child: Container(color: Colors.black26),
+                    child: Container(color: Colors.transparent),
                   ),
                 ),
               ),
@@ -766,31 +768,44 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text('END DATE (OPTIONAL)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                      borderRadius: BorderRadius.circular(12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: Colors.black,
+                    activeTrackColor: Colors.black12,
+                    inactiveThumbColor: Colors.grey,
+                    inactiveTrackColor: Colors.grey.shade200,
+                    title: const Text(
+                      'SET END DATE',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey),
                     ),
-                    height: 280,
-                    child: CalendarDatePicker(
-                      initialDate: _addScheduleEndDate ?? _addScheduleStartDate.add(const Duration(days: 365)),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                      onDateChanged: (date) {
-                        setState(() => _addScheduleEndDate = date);
-                      },
-                    ),
+                    value: _useAddScheduleEndDate,
+                    onChanged: (value) {
+                      setState(() {
+                        _useAddScheduleEndDate = value;
+                        if (value && _addScheduleEndDate == null) {
+                          _addScheduleEndDate = _addScheduleStartDate.add(const Duration(days: 365));
+                        }
+                      });
+                    },
                   ),
-                  if (_addScheduleEndDate != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: TextButton(
-                        onPressed: () => setState(() => _addScheduleEndDate = null),
-                        child: const Text('Clear end date', style: TextStyle(fontSize: 12, color: Colors.redAccent)),
+                  if (_useAddScheduleEndDate) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      height: 280,
+                      child: CalendarDatePicker(
+                        initialDate: _addScheduleEndDate ?? _addScheduleStartDate.add(const Duration(days: 365)),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                        onDateChanged: (date) {
+                          setState(() => _addScheduleEndDate = date);
+                        },
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -804,7 +819,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 final schedule = EngagementSchedule(
                   scheduleId: const Uuid().v4(),
                   startDate: _addScheduleStartDate,
-                  endDate: _addScheduleEndDate,
+                  endDate: _useAddScheduleEndDate ? _addScheduleEndDate : null,
                   cadenceValue: int.tryParse(_addScheduleCadenceController.text) ?? 1,
                   cadencePeriod: _addSchedulePeriod,
                 );
@@ -929,96 +944,102 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: true,
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: EdgeInsets.zero,
-              title: const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-              trailing: TextButton.icon(
-                onPressed: () => setState(() {
-                  _isAddScheduleSidebarOpen = true;
-                  _isAiSidebarOpen = false;
-                  _addScheduleStartDate = DateTime.now();
-                  _addScheduleEndDate = null;
-                  _addScheduleCadenceController.text = '1';
-                  _addSchedulePeriod = 'months';
-                }),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('ADD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
-                style: TextButton.styleFrom(foregroundColor: Colors.black),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () => setState(() {
+                      _isAddScheduleSidebarOpen = true;
+                      _isAiSidebarOpen = false;
+                      _addScheduleStartDate = DateTime.now();
+                      _addScheduleEndDate = null;
+                      _useAddScheduleEndDate = false;
+                      _addScheduleCadenceController.text = '1';
+                      _addSchedulePeriod = 'months';
+                    }),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('ADD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                    style: TextButton.styleFrom(foregroundColor: Colors.black),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _isSchedulesExpanded = !_isSchedulesExpanded),
+                    icon: Icon(_isSchedulesExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey, size: 20),
+                  ),
+                ],
               ),
-              children: [
-                const SizedBox(height: 16),
-                if (customer.schedules.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9F9F9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline, size: 16, color: Colors.black54),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Using legacy schedule: Every ${customer.cadenceValue} ${customer.cadencePeriod}',
-                            style: const TextStyle(fontSize: 13, color: Colors.black54, fontStyle: FontStyle.italic),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  ...customer.schedules.map((schedule) => Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.event_repeat_outlined, size: 20, color: Colors.black87),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Every ${schedule.cadenceValue} ${schedule.cadencePeriod}',
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' • Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)
-                              ..removeWhere((s) => s.scheduleId == schedule.scheduleId);
-                            final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
-                            // Recalculate next engagement date based on new schedules
-                            final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
-                            await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
-                          },
-                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      ],
-                    ),
-                  )),
-              ],
-            ),
+            ],
           ),
+          if (_isSchedulesExpanded) ...[
+            const SizedBox(height: 16),
+            if (customer.schedules.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9F9F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16, color: Colors.black54),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Using legacy schedule: Every ${customer.cadenceValue} ${customer.cadencePeriod}',
+                        style: const TextStyle(fontSize: 13, color: Colors.black54, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...customer.schedules.map((schedule) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEEEEEE)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.event_repeat_outlined, size: 20, color: Colors.black87),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Every ${schedule.cadenceValue} ${schedule.cadencePeriod}',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' • Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)
+                          ..removeWhere((s) => s.scheduleId == schedule.scheduleId);
+                        final updatedCustomer = customer.copyWith(schedules: updatedSchedules);
+                        // Recalculate next engagement date based on new schedules
+                        final nextDate = updatedCustomer.calculateNextEngagementDate(DateTime.now());
+                        await provider.addCustomer(updatedCustomer.copyWith(nextEngagementDate: nextDate));
+                      },
+                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              )),
+          ],
           const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
