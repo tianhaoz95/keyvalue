@@ -1,8 +1,39 @@
 # Tasks
 
-- [ ] make sign up/register a separate page instead of a pop up window and when the user tap on privacy notice or user agreement, open the content in a sidebar. Also make a check box so that unless the user check to agree on the privacy notice and user agreement, the user cannot proceed to sign up
-- [ ] the user agreement and privacy notice is too primitive, add more details according to the product details
-- [ ] add feedback button on the sign in screen
-- [ ] the feedback collector text input field underline turns purple when activated, remove it, it should be black regardless of activated or not
-- [ ] now adding a new engagement schedule will open a pop up window, make it use a sidebar
-- [ ] when the user tap delete in review draft side bar, the pop up window to confirm the deletion has a pink background and inconsistent stlye with the rest of the app, make it consistent with the rest of the app
+- [ ] **Modernize Registration Flow**
+  - [ ] Create `app/lib/screens/register_screen.dart` as a standalone page.
+  - [ ] Implement side-by-side or sidebar views within the registration page to display full legal documents.
+  - [ ] Enforce mandatory checkbox validation for "I agree to the User Agreement and Privacy Policy" before enabling the sign-up button.
+  - [ ] Update `LoginScreen` to navigate to the new registration page.
+
+- [ ] **Draft Professional Legal Content**
+  - [ ] Expand the **User Agreement** to include detailed clauses on:
+    - Human-in-the-loop requirement for AI messages.
+    - Disclaimer of AI-generated content accuracy.
+    - Proper use of the "App-as-Engine" proactive features.
+  - [ ] Expand the **Privacy Policy** to include:
+    - Detailed data handling for Firestore and Hive.
+    - Specific mention of Google Gemini AI processing.
+    - Twilio SMS integration and phone number data usage.
+    - Advisor-client confidentiality standards.
+
+- [ ] **Login Screen Enhancements**
+  - [ ] Add a `Feedback` icon/button to the `LoginScreen` (top right or footer).
+  - [ ] Ensure guest users and prospective users can send feedback before logging in.
+
+- [ ] **Fix Feedback UI Colors**
+  - [ ] Update `FeedbackThemeData` in `app/lib/main.dart`.
+  - [ ] Investigate `lightTheme` properties used by `BetterFeedback` to override the purple underline.
+  - [ ] Ensure all inputs and buttons in the feedback overlay use strictly Black/Grey/White colors.
+
+- [ ] **Transition Dialogs to Sidebars**
+  - [ ] Implement a `_buildAddScheduleSidebar` in `CustomerDetailScreen`.
+  - [ ] Replace the pop-up schedule dialog with a right-aligned sliding sidebar.
+  - [ ] Ensure the sidebar provides a consistent user experience with the AI Refinement sidebar.
+
+- [ ] **Fix Deletion Confirmation Style**
+  - [ ] Update the `showDialog` logic in `_buildDraftReviewSidebar`.
+  - [ ] Style the `AlertDialog` with the app's professional palette:
+    - White background, 16dp rounding.
+    - Black primary buttons, grey text.
+    - Remove any default pink or blue highlights.
