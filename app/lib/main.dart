@@ -7,6 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:feedback/feedback.dart';
 import 'firebase_options.dart';
 import 'providers/advisor_provider.dart';
+import 'providers/ui_context_provider.dart';
+import 'providers/chat_provider.dart';
 import 'screens/login_screen.dart';
 import 'theme.dart';
 import 'models/advisor.dart';
@@ -29,7 +31,30 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AdvisorProvider()),
+        ChangeNotifierProvider(create: (_) => UiContextProvider()),
+        ChangeNotifierProxyProvider<UiContextProvider, AdvisorProvider>(
+          create: (context) => AdvisorProvider(
+            uiContext: Provider.of<UiContextProvider>(context, listen: false),
+          ),
+          update: (context, uiContext, advisorProvider) {
+            if (advisorProvider == null) {
+              return AdvisorProvider(uiContext: uiContext);
+            }
+            return advisorProvider..updateUiContext(uiContext);
+          },
+        ),
+        ChangeNotifierProxyProvider2<UiContextProvider, AdvisorProvider, GlobalChatProvider>(
+          create: (context) => GlobalChatProvider(
+            uiContext: Provider.of<UiContextProvider>(context, listen: false),
+            advisorProvider: Provider.of<AdvisorProvider>(context, listen: false),
+          ),
+          update: (context, uiContext, advisorProvider, chatProvider) {
+            if (chatProvider == null) {
+              return GlobalChatProvider(uiContext: uiContext, advisorProvider: advisorProvider);
+            }
+            return chatProvider; // We don't necessarily need to update it every time if it holds its own state, but maybe we want to.
+          },
+        ),
       ],
       child: Theme(
         data: AppTheme.lightTheme.copyWith(

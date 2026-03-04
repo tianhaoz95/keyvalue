@@ -107,6 +107,10 @@ class Customer {
   final String cadencePeriod; // Legacy
   @HiveField(15)
   final List<EngagementSchedule> schedules;
+  @HiveField(16)
+  final String? proposedDetails;
+  @HiveField(17)
+  final String? proposedGuidelines;
 
   Customer({
     required this.customerId,
@@ -125,6 +129,8 @@ class Customer {
     this.cadenceValue = 30,
     this.cadencePeriod = 'days',
     this.schedules = const [],
+    this.proposedDetails,
+    this.proposedGuidelines,
   });
 
   factory Customer.fromMap(Map<String, dynamic> map) {
@@ -148,6 +154,8 @@ class Customer {
               ?.map((e) => EngagementSchedule.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      proposedDetails: map['proposedDetails'] as String?,
+      proposedGuidelines: map['proposedGuidelines'] as String?,
     );
   }
 
@@ -169,6 +177,8 @@ class Customer {
       'cadenceValue': cadenceValue,
       'cadencePeriod': cadencePeriod,
       'schedules': schedules.map((e) => e.toMap()).toList(),
+      'proposedDetails': proposedDetails,
+      'proposedGuidelines': proposedGuidelines,
     };
   }
 
@@ -188,6 +198,8 @@ class Customer {
     int? cadenceValue,
     String? cadencePeriod,
     List<EngagementSchedule>? schedules,
+    String? proposedDetails,
+    String? proposedGuidelines,
   }) {
     return Customer(
       customerId: customerId,
@@ -206,6 +218,8 @@ class Customer {
       cadenceValue: cadenceValue ?? this.cadenceValue,
       cadencePeriod: cadencePeriod ?? this.cadencePeriod,
       schedules: schedules ?? this.schedules,
+      proposedDetails: proposedDetails ?? this.proposedDetails,
+      proposedGuidelines: proposedGuidelines ?? this.proposedGuidelines,
     );
   }
 

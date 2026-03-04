@@ -5,7 +5,7 @@ import 'package:feedback/feedback.dart';
 import '../providers/advisor_provider.dart';
 import '../models/advisor.dart';
 import '../constants/legal_content.dart';
-import 'dashboard_screen.dart';
+import '../widgets/universal_shell.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const UniversalShell()),
         );
       }
     } catch (e) {

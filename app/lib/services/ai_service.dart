@@ -13,12 +13,30 @@ class AiService {
   final GenerativeModel? _model;
   final String modelName;
   final bool isDemo;
+  final Map<String, dynamic>? uiContext;
 
-  AiService({GenerativeModel? model, this.modelName = 'gemini-2.5-flash', this.isDemo = false})
-      : _model = model;
+  AiService({
+    GenerativeModel? model, 
+    this.modelName = 'gemini-2.5-flash', 
+    this.isDemo = false,
+    this.uiContext,
+  }) : _model = model;
 
   GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(
     model: modelName,
+    systemInstruction: Content.system('''
+You are the primary interface for this advisor application. You are the "Intelligence Hub." 
+The application has a "Main Port" (center of the screen) and you reside in the "AI Sidebar."
+You can autonomously navigate the UI, update records, and generate drafts using your tools.
+
+Current UI Context:
+${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
+
+Guidelines:
+1. **Contextual Awareness**: You know what is currently on screen based on the UI Context.
+2. **Visual Context**: The Main Port is the "Live State." Your actions should update it when appropriate.
+3. **Tool Use**: Use functions to manipulate the Main Port or update client data.
+'''),
     tools: [
       Tool.functionDeclarations([
         FunctionDeclaration(
@@ -63,10 +81,72 @@ class AiService {
           parameters: {
             'refined_draft': Schema.string(description: 'The full, refined message draft text.'),
           },
-        )
+        ),
+        FunctionDeclaration(
+          'navigate_to_client',
+          'Navigates the Main Port to show a specific client\'s details and history.',
+          parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client to view.'),
+          },
+        ),
+        FunctionDeclaration(
+          'list_clients',
+          'Navigates to the Dashboard and optionally applies a search filter.',
+          parameters: {
+            'filter': Schema.string(description: 'Optional search text to filter the client list.'),
+          },
+        ),
+        FunctionDeclaration(
+          'update_client_info',
+          'Updates a client\'s primary information in the database.',
+          parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
+            'name': Schema.string(description: 'Updated full name.'),
+            'email': Schema.string(description: 'Updated email address.'),
+            'occupation': Schema.string(description: 'Updated occupation.'),
+          },
+        ),
+        FunctionDeclaration(
+          'generate_outreach',
+          'Triggers the AI to generate a new proactive outreach draft for a client.',
+          parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client.'),
+          },
+        ),
+        FunctionDeclaration(
+          'manage_schedules',
+          'Adds or removes engagement schedules for a client to control how often proactive discovery triggers drafts.',
+          parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client.'),
+            'action': Schema.string(description: 'The action to perform: "ADD" or "REMOVE_ALL".'),
+            'cadenceValue': Schema.number(description: 'The numeric value of the cadence (e.g., 1, 3, 6). Only for "ADD".'),
+            'cadencePeriod': Schema.string(description: 'The period: "days", "weeks", "months", "years". Only for "ADD".'),
+          },
+        ),
       ])
     ],
   );
+
+  Future<GenerateContentResponse?> getGeneralResponseRaw(List<AiChatMessage> history) async {
+    if (isDemo) return null;
+    try {
+      final prompt = '''
+You are an expert advisor assistant. You can help the advisor manage their clients, navigate the app, and generate drafts.
+You have access to tools to navigate and update information.
+
+Current UI Context:
+${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
+
+Conversation History:
+${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
+
+Assistant:''';
+      final content = [Content.text(prompt)];
+      return await _effectiveModel.generateContent(content);
+    } catch (e) {
+      return null;
+    }
+  }
 
   Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) return null;

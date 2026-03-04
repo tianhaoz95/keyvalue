@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/customer.dart';
-import '../screens/customer_detail_screen.dart';
+import '../providers/ui_context_provider.dart';
 import '../l10n/app_localizations.dart';
 
 class PendingReviewList extends StatelessWidget {
@@ -45,11 +46,9 @@ class PendingReviewList extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: InkWell(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CustomerDetailScreen(customer: customer),
-                        ),
+                      context.read<UiContextProvider>().setView(
+                        AppView.customerDetail,
+                        customerId: customer.customerId,
                       );
                     },
                     borderRadius: BorderRadius.circular(12),

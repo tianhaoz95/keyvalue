@@ -103,6 +103,17 @@ class AppTheme {
         color: backgroundWhite,
         surfaceTintColor: Colors.transparent,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack;
+          return accentGrey;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack.withOpacity(0.5);
+          return lightGrey;
+        }),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
     );
   }
 }

@@ -13,6 +13,7 @@ import '../repositories/local_advisor_repository.dart';
 import '../repositories/local_customer_repository.dart';
 import '../repositories/local_engagement_repository.dart';
 import '../services/ai_service.dart';
+import 'ui_context_provider.dart';
 
 class AdvisorProvider with ChangeNotifier {
   final AdvisorRepository _advisorRepo;
@@ -26,6 +27,8 @@ class AdvisorProvider with ChangeNotifier {
   final auth.FirebaseAuth _firebaseAuth;
   AiService _aiService;
   AiService get aiService => _aiService;
+
+  UiContextProvider? _uiContext;
 
   Advisor? _currentAdvisor;
   Advisor? get currentAdvisor => _currentAdvisor;
@@ -59,13 +62,20 @@ class AdvisorProvider with ChangeNotifier {
     EngagementRepository? engagementRepo,
     AiService? aiService,
     auth.FirebaseAuth? firebaseAuth,
+    UiContextProvider? uiContext,
   })  : _advisorRepo = advisorRepo ?? AdvisorRepository(),
         _customerRepo = customerRepo ?? CustomerRepository(),
         _engagementRepo = engagementRepo ?? EngagementRepository(),
         _aiService = aiService ?? AiService(),
-        _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance {
+        _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance,
+        _uiContext = uiContext {
     _checkRememberedUser();
     _loadLocale();
+  }
+
+  void updateUiContext(UiContextProvider uiContext) {
+    _uiContext = uiContext;
+    _updateAiService();
   }
 
   Future<void> setExpressiveAiEnabled(bool enabled) async {
@@ -84,7 +94,11 @@ class AdvisorProvider with ChangeNotifier {
 
   void _updateAiService() {
     final modelName = aiCapability == 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
-    _aiService = AiService(modelName: modelName, isDemo: isGuestMode);
+    _aiService = AiService(
+      modelName: modelName, 
+      isDemo: isGuestMode,
+      uiContext: _uiContext?.toAiContext(),
+    );
   }
 
   Future<void> setAiCapability(String capability) async {
@@ -408,6 +422,36 @@ class AdvisorProvider with ChangeNotifier {
       final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     }
+  }
+
+  Future<void> approveProposedDetails(Customer customer) async {
+    if (_currentAdvisor == null || customer.proposedDetails == null) return;
+    final updated = customer.copyWith(
+      details: customer.proposedDetails,
+      proposedDetails: null,
+    );
+    await addCustomer(updated);
+  }
+
+  Future<void> approveProposedGuidelines(Customer customer) async {
+    if (_currentAdvisor == null || customer.proposedGuidelines == null) return;
+    final updated = customer.copyWith(
+      guidelines: customer.proposedGuidelines,
+      proposedGuidelines: null,
+    );
+    await addCustomer(updated);
+  }
+
+  Future<void> dismissProposedDetails(Customer customer) async {
+    if (_currentAdvisor == null) return;
+    final updated = customer.copyWith(proposedDetails: null);
+    await addCustomer(updated);
+  }
+
+  Future<void> dismissProposedGuidelines(Customer customer) async {
+    if (_currentAdvisor == null) return;
+    final updated = customer.copyWith(proposedGuidelines: null);
+    await addCustomer(updated);
   }
 
   Future<void> dismissResponse(Customer customer, Engagement engagement) async {

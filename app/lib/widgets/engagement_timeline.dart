@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/advisor_provider.dart';
@@ -10,7 +12,6 @@ class EngagementTimeline extends StatefulWidget {
   final List<Engagement> engagements;
   final AdvisorProvider provider;
   final Function(Engagement) onRespond;
-  final Function(Engagement)? onReviewDraft;
 
   const EngagementTimeline({
     super.key,
@@ -18,7 +19,6 @@ class EngagementTimeline extends StatefulWidget {
     required this.engagements,
     required this.provider,
     required this.onRespond,
-    this.onReviewDraft,
   });
 
   @override
@@ -27,6 +27,22 @@ class EngagementTimeline extends StatefulWidget {
 
 class _EngagementTimelineState extends State<EngagementTimeline> {
   String? _expandedInsightEngagementId;
+  final Map<String, TextEditingController> _draftControllers = {};
+
+  @override
+  void dispose() {
+    for (var controller in _draftControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _getDraftController(Engagement engagement) {
+    if (!_draftControllers.containsKey(engagement.engagementId)) {
+      _draftControllers[engagement.engagementId] = TextEditingController(text: engagement.draftMessage);
+    }
+    return _draftControllers[engagement.engagementId]!;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +51,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32.0),
-          child: Text('No engagement history yet.', style: TextStyle(color: Colors.grey)),
+          child: Text('No engagement history yet.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
         ),
       );
     }
@@ -51,21 +67,32 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Modern minimalist timeline
+              // Enhanced timeline visuals
               Column(
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
+                    width: 20,
+                    height: 20,
                     decoration: BoxDecoration(
-                      color: _getStatusColor(engagement.status),
+                      color: _getStatusColor(engagement.status).withOpacity(0.1),
                       shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(engagement.status),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
                     child: Container(
-                      width: 1,
-                      color: isLast ? Colors.transparent : Colors.black12,
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: isLast ? Colors.transparent : Colors.black.withOpacity(0.05),
                     ),
                   ),
                 ],
@@ -74,19 +101,27 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               // Content
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 40.0),
+                  padding: const EdgeInsets.only(bottom: 48.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            _getStatusLabel(engagement.status, l10n),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 11,
-                              letterSpacing: 1.5,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(engagement.status).withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _getStatusLabel(engagement.status, l10n),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 9,
+                                letterSpacing: 1,
+                                color: _getStatusColor(engagement.status),
+                              ),
                             ),
                           ),
                           Row(
@@ -95,9 +130,9 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                                 engagement.createdAt.toLocal().toString().split(' ')[0],
                                 style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.grey),
+                                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.black26),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 tooltip: 'Delete Engagement',
@@ -107,25 +142,27 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      if (engagement.sentMessage.isNotEmpty)
-                        _buildModernSnippet('OUTBOUND', engagement.sentMessage),
-                      if (engagement.customerResponse.isNotEmpty)
-                        _buildModernSnippet('INBOUND', engagement.customerResponse, isDark: true),
-                      
-                      if (_expandedInsightEngagementId == engagement.engagementId)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                          child: _buildAiInsightsSection(context, engagement),
-                        ),
-
-                      if (engagement.status == EngagementStatus.draft)
-                        const Text(
-                          'A proactive outreach draft is prepared and waiting for your final approval.',
-                          style: TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
-                        ),
                       const SizedBox(height: 20),
-                      _buildActions(context, engagement, l10n),
+                      
+                      // Handle DRAFT status differently: show editable content
+                      if (engagement.status == EngagementStatus.draft)
+                        _buildDraftSection(context, engagement)
+                      else ...[
+                        if (engagement.sentMessage.isNotEmpty)
+                          _buildModernSnippet('OUTBOUND', engagement.sentMessage, Icons.outbox_outlined),
+                        
+                        if (engagement.customerResponse.isNotEmpty)
+                          _buildModernSnippet('INBOUND', engagement.customerResponse, Icons.move_to_inbox_outlined, isDark: true),
+                        
+                        if (_expandedInsightEngagementId == engagement.engagementId)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12.0),
+                            child: _buildAiInsightsSection(context, engagement),
+                          ),
+                        
+                        const SizedBox(height: 24),
+                        _buildActions(context, engagement, l10n),
+                      ],
                     ],
                   ),
                 ),
@@ -137,30 +174,131 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
     );
   }
 
-  Widget _buildModernSnippet(String label, String text, {bool isDark = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+  Widget _buildDraftSection(BuildContext context, Engagement engagement) {
+    final controller = _getDraftController(engagement);
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
-          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_outlined, size: 16, color: Colors.black),
+              const SizedBox(width: 8),
+              const Text(
+                'AI DRAFT READY',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
+              ),
+              const Spacer(),
+              const Text(
+                'EDITABLE',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8, color: Colors.grey, letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLines: null,
+            style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              hintText: 'Edit draft...',
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => widget.provider.sendEngagement(widget.customer, engagement, controller.text.trim()),
+                  icon: const Icon(Icons.send_outlined, size: 16),
+                  label: const Text('SEND', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size(0, 44),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: controller.text.trim()));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+                },
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  side: const BorderSide(color: Colors.black12),
+                ),
+                child: const Icon(Icons.copy_outlined, size: 18, color: Colors.black54),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton(
+                onPressed: () => Share.share(controller.text.trim()),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  side: const BorderSide(color: Colors.black12),
+                ),
+                child: const Icon(Icons.share_outlined, size: 18, color: Colors.black54),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernSnippet(String label, String text, IconData icon, {bool isDark = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 12, color: Colors.grey),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
+            ],
+          ),
+          const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.black : const Color(0xFFF9F9F9),
-              borderRadius: BorderRadius.circular(8),
+              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF9F9F9),
+              borderRadius: BorderRadius.circular(12),
               border: isDark ? null : Border.all(color: const Color(0xFFEEEEEE)),
             ),
             child: Text(
               text,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13, 
-                height: 1.5, 
-                color: isDark ? Colors.white : Colors.black87
+                fontSize: 14, 
+                height: 1.6, 
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: isDark ? FontWeight.w500 : FontWeight.w400,
               ),
             ),
           ),
@@ -197,28 +335,26 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                         ),
                       ],
                     ),
-                    TextButton.icon(
+                    IconButton(
                       onPressed: () => widget.provider.receiveResponse(widget.customer, engagement, engagement.customerResponse),
-                      icon: const Icon(Icons.refresh, size: 14),
-                      label: const Text('REGENERATE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900)),
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        foregroundColor: Colors.black54,
-                      ),
+                      icon: const Icon(Icons.refresh, size: 16),
+                      tooltip: 'Regenerate Insights',
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: engagement.pointsOfInterest.map((poi) => Chip(
-                    label: Text(poi, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                    backgroundColor: const Color(0xFFF9F9F9),
-                    side: const BorderSide(color: Color(0xFFEEEEEE)),
-                    padding: EdgeInsets.zero,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: engagement.pointsOfInterest.map((poi) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F0F0),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(poi, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87)),
                   )).toList(),
                 ),
               ],
@@ -236,40 +372,47 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                 ),
                 const SizedBox(height: 12),
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF9F9F9),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFEEEEEE)),
                   ),
                   child: MarkdownBody(
                     data: engagement.updatedDetailsDiff,
-                    styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 12, height: 1.5)),
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 12, height: 1.5),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 40),
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          minimumSize: const Size(0, 44),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         onPressed: () => widget.provider.approveResponse(widget.customer, engagement),
-                        child: const Text('APPROVE', style: TextStyle(fontSize: 11)),
+                        child: const Text('APPROVE UPDATE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(80, 40),
+                        minimumSize: const Size(100, 44),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       onPressed: () {
                         setState(() {
                           _expandedInsightEngagementId = null;
                         });
                       },
-                      child: const Text('DISMISS', style: TextStyle(fontSize: 11)),
+                      child: const Text('DISMISS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.grey)),
                     ),
                   ],
                 ),
@@ -282,44 +425,38 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
   }
 
   Widget _buildActions(BuildContext context, Engagement engagement, AppLocalizations l10n) {
-    if (engagement.status == EngagementStatus.draft) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(140, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        onPressed: () {
-          widget.onReviewDraft?.call(engagement);
-        },
-        child: Text(l10n.reviewNow.toUpperCase(), style: const TextStyle(fontSize: 12, letterSpacing: 1)),
-      );
-    } else if (engagement.status == EngagementStatus.received) {
+    if (engagement.status == EngagementStatus.received) {
       if (_expandedInsightEngagementId == engagement.engagementId) {
         return const SizedBox.shrink();
       }
-      return ElevatedButton(
+      return ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
-          minimumSize: const Size(140, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          minimumSize: const Size(180, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         ),
+        icon: const Icon(Icons.auto_awesome_outlined, size: 18),
         onPressed: () {
           setState(() {
             _expandedInsightEngagementId = engagement.engagementId;
           });
         },
-        child: const Text('VIEW AI INSIGHTS', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+        label: const Text('VIEW AI INSIGHTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1)),
       );
     } else if (engagement.status == EngagementStatus.sent) {
-      return OutlinedButton(
+      return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(140, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          minimumSize: const Size(180, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           side: const BorderSide(color: Colors.black, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         ),
+        icon: const Icon(Icons.add_comment_outlined, size: 18),
         onPressed: () => widget.onRespond(engagement),
-        child: const Text('ADD RESPONSE', style: TextStyle(fontSize: 12, letterSpacing: 1)),
+        label: const Text('ADD RESPONSE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1, color: Colors.black)),
       );
     }
     return const SizedBox.shrink();
@@ -368,17 +505,17 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
 
   Color _getStatusColor(EngagementStatus status) {
     switch (status) {
-      case EngagementStatus.draft: return Colors.black26;
-      case EngagementStatus.sent: return Colors.black45;
+      case EngagementStatus.draft: return Colors.amber;
+      case EngagementStatus.sent: return Colors.blueGrey;
       case EngagementStatus.received: return Colors.black;
-      case EngagementStatus.completed: return Colors.black12;
+      case EngagementStatus.completed: return Colors.grey;
       default: return Colors.black;
     }
   }
 
   String _getStatusLabel(EngagementStatus status, AppLocalizations l10n) {
     switch (status) {
-      case EngagementStatus.draft: return l10n.pendingActions.toUpperCase();
+      case EngagementStatus.draft: return 'PENDING DRAFT';
       case EngagementStatus.sent: return 'OUTBOUND SENT';
       case EngagementStatus.received: return 'INBOUND RECEIVED';
       case EngagementStatus.completed: return 'COMPLETED';
