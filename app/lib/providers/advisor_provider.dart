@@ -375,11 +375,7 @@ class AdvisorProvider with ChangeNotifier {
       hasActiveDraft: false,
     );
     
-    if (isGuestMode) {
-      await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
-    } else {
-      await _customerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
-    }
+    await addCustomer(updatedCustomer);
   }
 
   Future<void> receiveResponse(Customer customer, Engagement engagement, String response) async {
@@ -413,15 +409,13 @@ class AdvisorProvider with ChangeNotifier {
 
     final updatedCustomer = customer.copyWith(details: engagement.updatedDetailsDiff);
     
+    final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
     if (isGuestMode) {
-      await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
-      final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
       await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     } else {
-      await _customerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
-      final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     }
+    await addCustomer(updatedCustomer);
   }
 
   Future<void> approveProposedDetails(Customer customer) async {
@@ -560,6 +554,16 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> addCustomer(Customer customer) async {
     if (_currentAdvisor == null) return;
+    
+    // Optimistic local update
+    final index = _customers.indexWhere((c) => c.customerId == customer.customerId);
+    if (index != -1) {
+      _customers[index] = customer;
+    } else {
+      _customers.add(customer);
+    }
+    notifyListeners();
+
     if (isGuestMode) {
       await _localCustomerRepo.saveCustomer(_currentAdvisor!.uid, customer);
     } else {

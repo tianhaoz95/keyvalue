@@ -70,7 +70,7 @@ class CustomerRepository {
 
   Future<void> updateCustomer(String advisorUid, Customer customer) async {
     if (advisorUid == 'demo_user') return;
-    await _customersRef(advisorUid).doc(customer.customerId).update(customer.toMap());
+    await _customersRef(advisorUid).doc(customer.customerId).set(customer.toMap(), SetOptions(merge: true));
   }
 
   Future<void> deleteCustomer(String advisorUid, String customerId) async {
