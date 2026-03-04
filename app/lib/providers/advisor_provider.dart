@@ -265,7 +265,7 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
-  Future<void> submitFeedback(String text) async {
+  Future<void> submitFeedback(String text, String screenName) async {
     if (_currentAdvisor == null) return;
     
     final db = FirebaseFirestore.instance;
@@ -273,6 +273,7 @@ class AdvisorProvider with ChangeNotifier {
       'advisorUid': _currentAdvisor!.uid,
       'advisorName': _currentAdvisor!.name,
       'text': text,
+      'screenName': screenName,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

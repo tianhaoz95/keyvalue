@@ -13,9 +13,13 @@ class AdminProvider with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isAuthReady = false;
+  bool get isAuthReady => _isAuthReady;
+
   AdminProvider() {
     _auth.authStateChanges().listen((user) {
       _user = user;
+      _isAuthReady = true;
       notifyListeners();
     });
   }

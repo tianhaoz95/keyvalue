@@ -246,7 +246,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               tooltip: 'Send Feedback',
               onPressed: () {
                 BetterFeedback.of(context).show((feedback) {
-                  context.read<AdvisorProvider>().submitFeedback(feedback.text);
+                  context.read<AdvisorProvider>().submitFeedback(feedback.text, 'CUSTOMER_DETAIL');
                 });
               },
             ),

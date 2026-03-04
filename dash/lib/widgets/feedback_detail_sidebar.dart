@@ -57,6 +57,20 @@ class FeedbackDetailSidebar extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(DateFormat('MMMM d, yyyy • HH:mm:ss').format(item.createdAt), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   const SizedBox(height: 32),
+                  const Text('SOURCE SCREEN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item.screenName,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   const Text('MESSAGE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 16),
                   Container(

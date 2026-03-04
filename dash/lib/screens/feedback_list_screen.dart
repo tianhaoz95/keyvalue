@@ -43,6 +43,30 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                 child: StreamBuilder<List<FeedbackItem>>(
                   stream: provider.getFeedbacks(),
                   builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Error loading feedback: ${snapshot.error}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: () => setState(() {}),
+                                child: const Text('RETRY'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator(color: Colors.black));
                     }

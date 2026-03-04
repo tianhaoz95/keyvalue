@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
           IconButton(
             onPressed: () {
               BetterFeedback.of(context).show((feedback) {
-                context.read<AdvisorProvider>().submitFeedback(feedback.text);
+                context.read<AdvisorProvider>().submitFeedback(feedback.text, 'LOGIN');
               });
             },
             icon: const Icon(Icons.feedback_outlined, color: Colors.black),

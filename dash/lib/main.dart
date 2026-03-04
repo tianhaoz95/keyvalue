@@ -41,6 +41,12 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<AdminProvider>(context);
     
+    if (!provider.isAuthReady) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Colors.black)),
+      );
+    }
+
     if (provider.user != null) {
       return const FeedbackListScreen();
     } else {

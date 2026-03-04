@@ -5,6 +5,7 @@ class FeedbackItem {
   final String advisorUid;
   final String advisorName;
   final String text;
+  final String screenName;
   final DateTime createdAt;
 
   FeedbackItem({
@@ -12,6 +13,7 @@ class FeedbackItem {
     required this.advisorUid,
     required this.advisorName,
     required this.text,
+    required this.screenName,
     required this.createdAt,
   });
 
@@ -22,6 +24,7 @@ class FeedbackItem {
       advisorUid: data['advisorUid'] ?? '',
       advisorName: data['advisorName'] ?? '',
       text: data['text'] ?? '',
+      screenName: data['screenName'] ?? 'UNKNOWN',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }

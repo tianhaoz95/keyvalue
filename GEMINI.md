@@ -57,6 +57,30 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 - **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
 
+## 🛡️ Admin Management
+
+Administrators have global access to review and delete user feedback via the Admin Dashboard (`dash/`).
+
+### Manage Admins Script
+Use the provided Python script to manage the administrative allowlist in Firestore.
+
+**Requirements:**
+- Python 3.x
+- `firebase-admin` package (`pip install firebase-admin`)
+- `admin-sdk.json` in the root directory
+
+**Commands:**
+```bash
+# List all administrators
+python3 scripts/manage_admins.py list
+
+# Add a new administrator by email
+python3 scripts/manage_admins.py add admin@example.com
+
+# Remove an administrator by email
+python3 scripts/manage_admins.py remove admin@example.com
+```
+
 ## 🌐 Web Deployment
 
 The application can be deployed to Firebase Hosting for web access. **Do not deploy the application unless the user explicitly requests it.**

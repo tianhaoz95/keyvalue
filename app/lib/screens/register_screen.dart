@@ -95,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           IconButton(
             onPressed: () {
               BetterFeedback.of(context).show((feedback) {
-                context.read<AdvisorProvider>().submitFeedback(feedback.text);
+                context.read<AdvisorProvider>().submitFeedback(feedback.text, 'REGISTER');
               });
             },
             icon: const Icon(Icons.feedback_outlined, color: Colors.black),
