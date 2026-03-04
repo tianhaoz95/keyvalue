@@ -22,7 +22,7 @@ class AiService {
     this.uiContext,
   }) : _model = model;
 
-  GenerativeModel get _effectiveModel => _model ?? FirebaseAI.googleAI().generativeModel(
+  GenerativeModel get model => _model ?? FirebaseAI.googleAI().generativeModel(
     model: modelName,
     systemInstruction: Content.system('''
 You are the primary interface for this advisor application. You are the "Intelligence Hub." 
@@ -36,7 +36,8 @@ Guidelines:
 1. **Contextual Awareness**: You know what is currently on screen based on the UI Context.
 2. **Visual Context**: The Main Port is the "Live State." Your actions should update it when appropriate.
 3. **Tool Use**: Use functions to manipulate the Main Port or update client data.
-4. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
+4. **Data Acquisition**: **CRITICAL**: If you are asked to "modify" or "update" a profile or guidelines and you do not have the full, current text in your history, you MUST first call `get_current_profile` to ensure your updates are additive and preserve existing high-quality information. Never overwrite a detailed profile with a shorter summary unless specifically asked to.
+5. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
 '''),
     tools: [
       Tool.functionDeclarations([
@@ -118,6 +119,13 @@ Guidelines:
           },
         ),
         FunctionDeclaration(
+          'get_current_profile',
+          'Retrieves the current detailed profile and engagement guidelines for a specific client. Use this before suggesting modifications to ensure you have the latest data.',
+          parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client to fetch data for.'),
+          },
+        ),
+        FunctionDeclaration(
           'manage_schedules',
           'Adds or removes engagement schedules for a client to control how often proactive discovery triggers drafts.',
           parameters: {
@@ -150,7 +158,7 @@ ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\
 
 Assistant:''';
       final content = [Content.text(prompt)];
-      return await _effectiveModel.generateContent(content);
+      return await model.generateContent(content);
     } catch (e) {
       return null;
     }
@@ -187,7 +195,7 @@ ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\
 Assistant:''';
 
       final content = [Content.text(prompt)];
-      return await _effectiveModel.generateContent(content);
+      return await model.generateContent(content);
     } catch (e) {
       return null;
     }
@@ -280,7 +288,7 @@ The message should align with the guidelines and reference recent details from t
 Return only the message text.
 ''';
       final content = [Content.text(prompt)];
-      final response = await _effectiveModel.generateContent(content);
+      final response = await model.generateContent(content);
       return response.text ?? "Failed to generate draft message.";
     } catch (e) {
       return "Error: ${e.toString()}";
@@ -307,7 +315,7 @@ $response
 Return a bulleted list of the 3 most important points.
 ''';
       final content = [Content.text(prompt)];
-      final aiResponse = await _effectiveModel.generateContent(content);
+      final aiResponse = await model.generateContent(content);
       final text = aiResponse.text ?? "";
       return text.split('\n').where((line) => line.trim().isNotEmpty).toList();
     } catch (e) {
@@ -332,7 +340,7 @@ $response
 Updated Details (Markdown):
 ''';
       final content = [Content.text(prompt)];
-      final aiResponse = await _effectiveModel.generateContent(content);
+      final aiResponse = await model.generateContent(content);
       return aiResponse.text ?? currentDetails;
     } catch (e) {
       return currentDetails;
@@ -359,7 +367,7 @@ ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\
 
 Assistant:''';
       final content = [Content.text(prompt)];
-      return await _effectiveModel.generateContent(content);
+      return await model.generateContent(content);
     } catch (e) {
       return null;
     }
@@ -419,7 +427,7 @@ ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\
 
 Assistant:''';
       final content = [Content.text(prompt)];
-      return await _effectiveModel.generateContent(content);
+      return await model.generateContent(content);
     } catch (e) {
       return null;
     }
@@ -484,7 +492,7 @@ ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\
 
 Assistant:''';
       final content = [Content.text(prompt)];
-      return await _effectiveModel.generateContent(content);
+      return await model.generateContent(content);
     } catch (e) {
       return null;
     }

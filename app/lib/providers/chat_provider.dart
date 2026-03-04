@@ -68,21 +68,42 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
     }).where((m) => m.text.isNotEmpty).toList();
 
     // 3. Get AI response based on current UI context
-    String response;
+    String response = "";
     try {
       _isLoading = true;
       notifyListeners();
 
-      final aiResponse = await aiService.getGeneralResponseRaw(aiHistory);
-      if (aiResponse == null) {
-        response = "I'm having trouble connecting to the AI service.";
-      } else {
-        // EXECUTION ENGINE: Map function calls to provider methods
+      // Convert aiHistory (excluding the current prompt) to Content list for startChat
+      final List<Content> chatHistory = aiHistory.length > 1 
+          ? aiHistory.sublist(0, aiHistory.length - 1).map((m) {
+              return Content(m.isUser ? 'user' : 'model', [TextPart(m.text)]);
+            }).toList()
+          : [];
+
+      final chat = aiService.model.startChat(history: chatHistory);
+      var aiResponse = await chat.sendMessage(Content.text(prompt));
+
+      // Execution Loop for Tool Calling
+      int loopCount = 0;
+      while (aiResponse.functionCalls.isNotEmpty && loopCount < 5) {
+        loopCount++;
+        final toolResponses = <FunctionResponse>[];
+        
         for (final call in aiResponse.functionCalls) {
-          await _executeAiTool(call);
+          final result = await _executeAiTool(call);
+          if (result != null) {
+            toolResponses.add(result);
+          } else {
+            // For actions that don't return data, we should still provide a success response
+            // so the AI can continue if it needs to.
+            toolResponses.add(FunctionResponse(call.name, {'status': 'success'}));
+          }
         }
-        response = aiResponse.text ?? (aiResponse.functionCalls.isNotEmpty ? "I've handled that for you." : "I'm not sure how to respond.");
+        
+        aiResponse = await chat.sendMessage(Content.functionResponses(toolResponses));
       }
+
+      response = aiResponse.text ?? (aiResponse.functionCalls.isNotEmpty ? "I've handled those tasks for you." : "I'm not sure how to respond.");
     } catch (e) {
       response = "Error: $e";
     } finally {
@@ -127,8 +148,24 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
     }
   }
 
-  Future<void> _executeAiTool(FunctionCall call) async {
+  Future<FunctionResponse?> _executeAiTool(FunctionCall call) async {
     switch (call.name) {
+      case 'get_current_profile':
+        final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
+        if (customerId != null) {
+          try {
+            final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
+            return FunctionResponse(call.name, {
+              'details': customer.details,
+              'guidelines': customer.guidelines,
+              'name': customer.name,
+              'occupation': customer.occupation,
+            });
+          } catch (e) {
+            return FunctionResponse(call.name, {'error': 'Customer not found'});
+          }
+        }
+        return FunctionResponse(call.name, {'error': 'No customer ID provided'});
       case 'navigate_to_client':
         final customerId = call.args['customerId'] as String?;
         if (customerId != null) {
@@ -239,5 +276,6 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         }
         break;
     }
+    return null;
   }
 }
