@@ -140,12 +140,6 @@ abstract class AppLocalizations {
   /// **'Welcome back'**
   String get welcomeBack;
 
-  /// No description provided for @portfolioStats.
-  ///
-  /// In en, this message translates to:
-  /// **'You have {count} clients in your list'**
-  String portfolioStats(int count);
-
   /// No description provided for @clients.
   ///
   /// In en, this message translates to:
@@ -155,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingActions.
   ///
   /// In en, this message translates to:
-  /// **'URGENT REVIEWS'**
+  /// **'REVIEWS'**
   String get pendingActions;
 
   /// No description provided for @reviewNow.

@@ -30,15 +30,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get welcomeBack => '欢迎回来';
 
   @override
-  String portfolioStats(int count) {
-    return '您的投资组合包含 $count 位客户';
-  }
-
-  @override
   String get clients => '客户';
 
   @override
-  String get pendingActions => '待处理事项';
+  String get pendingActions => '待阅事项';
 
   @override
   String get reviewNow => '立即查看';

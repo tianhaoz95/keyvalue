@@ -847,21 +847,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Widget _buildProfileTab(BuildContext context, AdvisorProvider provider, Customer customer, List<Engagement> engagements, AppLocalizations l10n) {
-    final pendingAiEngagement = engagements.cast<Engagement?>().firstWhere(
-      (e) => e?.status == EngagementStatus.received,
-      orElse: () => null,
-    );
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (pendingAiEngagement != null) ...[
-            _buildAiInsightsSection(context, provider, customer, pendingAiEngagement),
-            const SizedBox(height: 40),
-          ],
-          
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -1195,95 +1185,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 child: const Text('DELETE'),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAiInsightsSection(BuildContext context, AdvisorProvider provider, Customer customer, Engagement engagement) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.auto_awesome_outlined, color: Colors.black, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'AI INSIGHTS',
-                      style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: engagement.pointsOfInterest.map((poi) => Chip(
-                    label: Text(poi, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                    backgroundColor: const Color(0xFFF9F9F9),
-                    side: const BorderSide(color: Color(0xFFEEEEEE)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  )).toList(),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'PROPOSED PROFILE UPDATE',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9F9F9),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFEEEEEE)),
-                  ),
-                  child: MarkdownBody(
-                    data: engagement.updatedDetailsDiff,
-                    styleSheet: MarkdownStyleSheet(p: const TextStyle(fontSize: 13, height: 1.5)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => provider.approveResponse(customer, engagement),
-                        child: const Text('APPROVE & UPDATE'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(120, 52),
-                      ),
-                      onPressed: () => provider.dismissResponse(customer, engagement),
-                      child: const Text('DISMISS'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ],
       ),

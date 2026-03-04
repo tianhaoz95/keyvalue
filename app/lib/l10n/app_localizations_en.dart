@@ -30,15 +30,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeBack => 'Welcome back';
 
   @override
-  String portfolioStats(int count) {
-    return 'You have $count clients in your list';
-  }
-
-  @override
   String get clients => 'Clients';
 
   @override
-  String get pendingActions => 'URGENT REVIEWS';
+  String get pendingActions => 'REVIEWS';
 
   @override
   String get reviewNow => 'REVIEW';

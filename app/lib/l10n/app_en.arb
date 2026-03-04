@@ -6,16 +6,8 @@
   "createAccount": "CREATE AN ACCOUNT",
   "continueAsGuest": "CONTINUE AS GUEST",
   "welcomeBack": "Welcome back",
-  "portfolioStats": "You have {count} clients in your list",
-  "@portfolioStats": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "clients": "Clients",
-  "pendingActions": "URGENT REVIEWS",
+  "pendingActions": "REVIEWS",
   "reviewNow": "REVIEW",
   "aiOnboarding": "AI CLIENT ONBOARDING",
   "addClient": "Add New Client",
