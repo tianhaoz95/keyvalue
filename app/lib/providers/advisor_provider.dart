@@ -274,6 +274,7 @@ class AdvisorProvider with ChangeNotifier {
       'advisorName': _currentAdvisor!.name,
       'text': text,
       'screenName': screenName,
+      'status': 'open',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

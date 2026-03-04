@@ -6,6 +6,7 @@ class FeedbackItem {
   final String advisorName;
   final String text;
   final String screenName;
+  final String status; // 'open', 'inProgress', 'resolved', 'backlog'
   final DateTime createdAt;
 
   FeedbackItem({
@@ -14,6 +15,7 @@ class FeedbackItem {
     required this.advisorName,
     required this.text,
     required this.screenName,
+    required this.status,
     required this.createdAt,
   });
 
@@ -25,6 +27,7 @@ class FeedbackItem {
       advisorName: data['advisorName'] ?? '',
       text: data['text'] ?? '',
       screenName: data['screenName'] ?? 'UNKNOWN',
+      status: data['status'] ?? 'open',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }

@@ -32,9 +32,9 @@ service cloud.firestore {
       // Any authenticated user can create feedback
       allow create: if request.auth != null;
       
-      // Admins can read/delete all feedback. Users can only read their own (if they have their UID stored).
-      allow read: if request.auth != null && (isAdmin() || resource.data.advisorUid == request.auth.uid);
-      allow delete: if request.auth != null && isAdmin();
+      // Admins can read/update/delete all feedback. Users can only read their own.
+      allow read: if request.auth != null && (isAdmin() || (resource != null && resource.data.advisorUid == request.auth.uid));
+      allow update, delete: if request.auth != null && isAdmin();
     }
   }
 }

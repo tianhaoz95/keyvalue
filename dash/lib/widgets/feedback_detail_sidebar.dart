@@ -71,6 +71,10 @@ class FeedbackDetailSidebar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  const Text('STATUS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  _buildStatusPicker(context, Provider.of<AdminProvider>(context, listen: false)),
+                  const SizedBox(height: 32),
                   const Text('MESSAGE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
                   const SizedBox(height: 16),
                   Container(
@@ -106,6 +110,46 @@ class FeedbackDetailSidebar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusPicker(BuildContext context, AdminProvider provider) {
+    final statuses = [
+      {'value': 'open', 'label': 'OPEN', 'color': Colors.blueGrey},
+      {'value': 'inProgress', 'label': 'IN PROGRESS', 'color': Colors.amber.shade900},
+      {'value': 'resolved', 'label': 'RESOLVED', 'color': Colors.green.shade800},
+      {'value': 'backlog', 'label': 'BACKLOG', 'color': Colors.grey},
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: statuses.map((status) {
+        final isSelected = item.status == status['value'];
+        return GestureDetector(
+          onTap: () => provider.updateFeedbackStatus(item.id, status['value'] as String),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.black : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected ? Colors.black : const Color(0xFFEEEEEE),
+                width: 1.5,
+              ),
+            ),
+            child: Text(
+              status['label'] as String,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: isSelected ? Colors.white : Colors.black54,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

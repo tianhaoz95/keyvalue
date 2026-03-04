@@ -12,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -64,26 +65,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icon(Icons.lock_outline, size: 20),
                   ),
                   obscureText: true,
+                  onSubmitted: (_) => _performLogin(),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        activeColor: Colors.black,
+                        onChanged: (value) {
+                          setState(() => _rememberMe = value ?? false);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Remember me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  ],
                 ),
                 const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: provider.isLoading ? null : () async {
-                      try {
-                        await provider.login(
-                          _emailController.text.trim(),
-                          _passwordController.text.trim(),
-                        );
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Login failed: $e')),
-                          );
-                        }
-                      }
-                    },
+                    onPressed: provider.isLoading ? null : _performLogin,
                     child: provider.isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Text('SIGN IN'),
@@ -95,5 +102,22 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _performLogin() async {
+    final provider = Provider.of<AdminProvider>(context, listen: false);
+    try {
+      await provider.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        rememberMe: _rememberMe,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: $e')),
+        );
+      }
+    }
   }
 }

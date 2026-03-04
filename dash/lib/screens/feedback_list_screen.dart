@@ -15,6 +15,28 @@ class FeedbackListScreen extends StatefulWidget {
 class _FeedbackListScreenState extends State<FeedbackListScreen> {
   FeedbackItem? _selectedFeedback;
   bool _isSidebarOpen = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'inProgress':
+        return Colors.amber.shade900;
+      case 'resolved':
+        return Colors.green.shade800;
+      case 'backlog':
+        return Colors.grey;
+      case 'open':
+      default:
+        return Colors.blueGrey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,98 +59,159 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
       ),
       body: Stack(
         children: [
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: StreamBuilder<List<FeedbackItem>>(
-                  stream: provider.getFeedbacks(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Error loading feedback: ${snapshot.error}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton(
-                                onPressed: () => setState(() {}),
-                                child: const Text('RETRY'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Colors.black));
-                    }
-                    final feedbacks = snapshot.data ?? [];
-                    if (feedbacks.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No feedback submitted yet.',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                      );
-                    }
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(24),
-                      itemCount: feedbacks.length,
-                      separatorBuilder: (_, _) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final item = feedbacks[index];
-                        final isSelected = _selectedFeedback?.id == item.id;
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          tileColor: isSelected ? Colors.black.withValues(alpha: 0.02) : null,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          title: Text(
-                            item.advisorName,
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                item.text,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, color: Colors.black87),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat('MMM d, y • HH:mm').format(item.createdAt),
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.black12),
-                          onTap: () {
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'SEARCH BY ADVISOR OR CONTENT...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty 
+                      ? IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          onPressed: () {
                             setState(() {
-                              _selectedFeedback = item;
-                              _isSidebarOpen = true;
+                              _searchController.clear();
+                              _searchQuery = '';
                             });
                           },
-                        );
-                      },
-                    );
+                        )
+                      : null,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
                   },
                 ),
               ),
-              if (!isPhone && _isSidebarOpen) SizedBox(width: sidebarWidth),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: StreamBuilder<List<FeedbackItem>>(
+                        stream: provider.getFeedbacks(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent)),
+                            );
+                          }
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator(color: Colors.black));
+                          }
+                          
+                          var feedbacks = snapshot.data ?? [];
+                          
+                          // Sync selected feedback with stream data to reflect status changes
+                          if (_selectedFeedback != null) {
+                            final updated = feedbacks.cast<FeedbackItem?>().firstWhere(
+                              (item) => item?.id == _selectedFeedback!.id,
+                              orElse: () => null,
+                            );
+                            if (updated != null && updated.status != _selectedFeedback!.status) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) setState(() => _selectedFeedback = updated);
+                              });
+                            }
+                          }
+                          
+                          // Apply Search Filter
+                          if (_searchQuery.isNotEmpty) {
+                            feedbacks = feedbacks.where((item) => 
+                              item.advisorName.toLowerCase().contains(_searchQuery) ||
+                              item.text.toLowerCase().contains(_searchQuery)
+                            ).toList();
+                          }
+
+                          if (feedbacks.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'No matching feedback found.',
+                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            );
+                          }
+
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: feedbacks.length,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final item = feedbacks[index];
+                              final isSelected = _selectedFeedback?.id == item.id;
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                tileColor: isSelected ? Colors.black.withValues(alpha: 0.02) : null,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        item.advisorName,
+                                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _getStatusColor(item.status).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: _getStatusColor(item.status).withValues(alpha: 0.2)),
+                                      ),
+                                      child: Text(
+                                        item.status.toUpperCase(),
+                                        style: TextStyle(
+                                          color: _getStatusColor(item.status),
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item.text,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('MMM d, y • HH:mm').format(item.createdAt),
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                                trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.black12),
+                                onTap: () {
+                                  setState(() {
+                                    _selectedFeedback = item;
+                                    _isSidebarOpen = true;
+                                  });
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    if (!isPhone && _isSidebarOpen) SizedBox(width: sidebarWidth),
+                  ],
+                ),
+              ),
             ],
           ),
           
-          // Scrim (Transparent as per style guide)
+          // Scrim
           Positioned.fill(
             child: IgnorePointer(
               ignoring: !_isSidebarOpen,

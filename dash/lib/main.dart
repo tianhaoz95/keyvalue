@@ -1,3 +1,4 @@
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -8,11 +9,22 @@ import 'screens/feedback_list_screen.dart';
 import 'theme.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    runApp(const MyApp());
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Failed to initialize app: $e'),
+        ),
+      ),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -34,16 +46,48 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _tookTooLong = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && !Provider.of<AdminProvider>(context, listen: false).isAuthReady) {
+        setState(() => _tookTooLong = true);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AdminProvider>(context);
     
     if (!provider.isAuthReady) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.black)),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Colors.black),
+              if (_tookTooLong) ...[
+                const SizedBox(height: 24),
+                const Text('Connecting to services...', style: TextStyle(color: Colors.grey)),
+                TextButton(
+                  onPressed: () => html.window.location.reload(),
+                  child: const Text('RELOAD PAGE'),
+                ),
+              ],
+            ],
+          ),
+        ),
       );
     }
 
