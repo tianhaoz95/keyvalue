@@ -274,6 +274,20 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Widget _buildAiSettingsCard(AdvisorProvider provider, AppLocalizations l10n) {
+    String capabilityText;
+    switch (provider.aiCapability) {
+      case 'fast':
+        capabilityText = 'Fast (Gemini Flash Lite)';
+        break;
+      case 'preview':
+        capabilityText = 'Preview (Gemini 3 Flash)';
+        break;
+      case 'pro':
+      default:
+        capabilityText = 'Pro (Gemini Flash)';
+        break;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF9F9F9),
@@ -285,12 +299,13 @@ class _SettingsViewState extends State<SettingsView> {
           ListTile(
             dense: true,
             title: const Text('Model Capability', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: Text(provider.aiCapability == 'fast' ? 'Fast (Gemini Flash Lite)' : 'Pro (Gemini Flash)', style: const TextStyle(fontSize: 11)),
+            subtitle: Text(capabilityText, style: const TextStyle(fontSize: 11)),
             trailing: PopupMenuButton<String>(
               onSelected: provider.setAiCapability,
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'fast', child: Text('Fast')),
                 const PopupMenuItem(value: 'pro', child: Text('Pro')),
+                const PopupMenuItem(value: 'preview', child: Text('Preview')),
               ],
               child: const Icon(Icons.tune, size: 18),
             ),

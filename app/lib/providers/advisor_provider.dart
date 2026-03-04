@@ -93,7 +93,20 @@ class AdvisorProvider with ChangeNotifier {
   }
 
   void _updateAiService() {
-    final modelName = aiCapability == 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+    String modelName;
+    switch (aiCapability) {
+      case 'fast':
+        modelName = 'gemini-2.5-flash-lite';
+        break;
+      case 'preview':
+        modelName = 'gemini-3-flash-preview';
+        break;
+      case 'pro':
+      default:
+        modelName = 'gemini-2.5-flash';
+        break;
+    }
+    
     _aiService = AiService(
       modelName: modelName, 
       isDemo: isGuestMode,
