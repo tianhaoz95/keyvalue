@@ -64,6 +64,8 @@ class _DashboardViewState extends State<DashboardView> {
     final allCustomers = provider.customers;
     final cpa = provider.currentAdvisor;
     final isDiscovering = provider.isDiscovering;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
 
     if (cpa == null) return const Center(child: CircularProgressIndicator());
 
@@ -118,7 +120,7 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                 // Welcome Header
                 Container(
-                  padding: const EdgeInsets.fromLTRB(24.0, 32.0, 24.0, 12.0),
+                  padding: EdgeInsets.fromLTRB(isCompact ? 16 : 24, 32.0, isCompact ? 16 : 24, 12.0),
                   color: Colors.white,
                   width: double.infinity,
                   child: Column(
@@ -127,9 +129,12 @@ class _DashboardViewState extends State<DashboardView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${l10n.welcomeBack}, ${cpa.name.split(' ')[0]}',
-                            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
+                          Flexible(
+                            child: Text(
+                              '${l10n.welcomeBack}, ${cpa.name.split(' ')[0]}',
+                              style: TextStyle(fontSize: isCompact ? 24 : 28, fontWeight: FontWeight.w900, letterSpacing: -1),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           if (isDiscovering)
                             const SizedBox(
@@ -152,26 +157,32 @@ class _DashboardViewState extends State<DashboardView> {
                 SizedBox(
                   height: 48,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 12, 0),
+                    padding: EdgeInsets.fromLTRB(isCompact ? 16 : 24, 0, isCompact ? 8 : 12, 0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          l10n.clients,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black54),
-                        ),
+                        if (!_isSearching || !isCompact)
+                          Text(
+                            l10n.clients.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 10, 
+                              fontWeight: FontWeight.w900, 
+                              letterSpacing: 1.5, 
+                              color: Colors.grey,
+                            ),
+                          ),
                         Expanded(
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
-                              width: _isSearching ? 200 : 0,
+                              width: _isSearching ? (isCompact ? screenWidth - 120 : 200) : 0,
                               height: 36,
                               margin: EdgeInsets.symmetric(horizontal: _isSearching ? 12.0 : 0),
                               child: ClipRect(
                                 child: SizedBox(
-                                  width: 200,
+                                  width: isCompact ? screenWidth - 120 : 200,
                                   child: TextField(
                                     controller: _searchController,
                                     autofocus: true,
@@ -182,19 +193,19 @@ class _DashboardViewState extends State<DashboardView> {
                                       hintText: 'Search...',
                                       hintStyle: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.normal),
                                       filled: true,
-                                      fillColor: Colors.black.withOpacity(0.04),
+                                      fillColor: const Color(0xFFF9F9F9),
                                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(18),
-                                        borderSide: BorderSide.none,
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
                                       ),
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(18),
-                                        borderSide: BorderSide.none,
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(18),
-                                        borderSide: BorderSide.none,
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: const BorderSide(color: Colors.black, width: 1.5),
                                       ),
                                     ),
                                     onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
@@ -217,18 +228,26 @@ class _DashboardViewState extends State<DashboardView> {
                               }
                             });
                           },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
+                        const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.person_add_alt_1_outlined, size: 20, color: Colors.black54),
                           tooltip: 'Add New Client',
                           onPressed: () {
                             context.read<UiContextProvider>().setView(AppView.addClient);
                           },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
+                        const SizedBox(width: 8),
                         PopupMenuButton<CustomerSortOption>(
                           icon: const Icon(Icons.sort_outlined, size: 20, color: Colors.black54),
                           tooltip: 'Sort Clients',
                           onSelected: _updateSortPreference,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                           itemBuilder: (context) => [
                             CheckedPopupMenuItem(
                               value: CustomerSortOption.name,
@@ -252,10 +271,10 @@ class _DashboardViewState extends State<DashboardView> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: filteredCustomers.length,
                   padding: const EdgeInsets.only(bottom: 100),
-                  separatorBuilder: (_, index) => const Divider(height: 1, indent: 24, endIndent: 24),
+                  separatorBuilder: (_, index) => Divider(height: 1, indent: isCompact ? 16 : 24, endIndent: isCompact ? 16 : 24),
                   itemBuilder: (context, index) {
                     final customer = filteredCustomers[index];
-                    return _buildCustomerTile(context, customer);
+                    return _buildCustomerTile(context, customer, isCompact);
                   },
                 ),
               ],
@@ -266,7 +285,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildCustomerTile(BuildContext context, Customer customer) {
+  Widget _buildCustomerTile(BuildContext context, Customer customer, bool isCompact) {
     return InkWell(
       onTap: () {
         context.read<UiContextProvider>().setView(
@@ -275,20 +294,20 @@ class _DashboardViewState extends State<DashboardView> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 16 : 24, vertical: 12),
         child: Row(
           children: [
             Hero(
               tag: 'avatar_${customer.customerId}',
               child: CircleAvatar(
-                radius: 22,
+                radius: isCompact ? 18 : 22,
                 backgroundColor: Colors.black12,
                 child: Text(
                   customer.name[0],
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w900,
-                    fontSize: 16,
+                    fontSize: isCompact ? 14 : 16,
                   ),
                 ),
               ),
@@ -300,15 +319,18 @@ class _DashboardViewState extends State<DashboardView> {
                 children: [
                   Text(
                     customer.name,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 14 : 15),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     customer.email,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -319,9 +341,9 @@ class _DashboardViewState extends State<DashboardView> {
                 const SizedBox(height: 2),
                 Text(
                   DateFormat('MMM d, y').format(customer.nextEngagementDate),
-                  style: const TextStyle(fontSize: 11, color: Colors.black87, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: isCompact ? 10 : 11, color: Colors.black87, fontWeight: FontWeight.w700),
                 ),
-                const Icon(Icons.chevron_right, color: Colors.black12, size: 20),
+                Icon(Icons.chevron_right, color: Colors.black12, size: isCompact ? 16 : 20),
               ],
             ),
           ],

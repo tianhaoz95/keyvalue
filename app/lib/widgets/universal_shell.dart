@@ -18,7 +18,9 @@ class UniversalShell extends StatelessWidget {
     final uiContext = Provider.of<UiContextProvider>(context);
     final advisorProvider = Provider.of<AdvisorProvider>(context);
     final chatProvider = Provider.of<GlobalChatProvider>(context);
-    final isDesktop = MediaQuery.of(context).size.width > 900;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+    final isMobile = screenWidth < 600;
     
     if (advisorProvider.currentAdvisor == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -33,11 +35,12 @@ class UniversalShell extends StatelessWidget {
         }
       },
       child: Scaffold(
+        drawerScrimColor: Colors.transparent,
         appBar: AppBar(
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1.0),
             child: Container(
-              color: Colors.black.withOpacity(0.05),
+              color: const Color(0xFFEEEEEE),
               height: 1.0,
             ),
           ),
@@ -50,53 +53,67 @@ class UniversalShell extends StatelessWidget {
                 children: [
                   Image.asset(
                     'assets/images/logo_120.png',
-                    height: 28,
+                    height: 24,
                     color: Colors.black,
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    advisorProvider.currentAdvisor?.firmName ?? 'KeyValue',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                  ),
+                  if (!isMobile) ...[
+                    const SizedBox(width: 12),
+                    Text(
+                      advisorProvider.currentAdvisor?.firmName ?? 'KeyValue',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
           actions: [
-            TextButton.icon(
-              onPressed: () {
-                BetterFeedback.of(context).show((feedback) {
-                  advisorProvider.submitFeedback(feedback.text, uiContext.currentView.name);
-                });
-              },
-              icon: const Icon(Icons.feedback_outlined, size: 18),
-              label: const Text('FEEDBACK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
-              style: TextButton.styleFrom(foregroundColor: Colors.black),
-            ),
-            const SizedBox(width: 8),
+            if (isMobile)
+              IconButton(
+                icon: const Icon(Icons.feedback_outlined, size: 20),
+                tooltip: 'Feedback',
+                onPressed: () {
+                  BetterFeedback.of(context).show((feedback) {
+                    advisorProvider.submitFeedback(feedback.text, uiContext.currentView.name);
+                  });
+                },
+              )
+            else
+              TextButton.icon(
+                onPressed: () {
+                  BetterFeedback.of(context).show((feedback) {
+                    advisorProvider.submitFeedback(feedback.text, uiContext.currentView.name);
+                  });
+                },
+                icon: const Icon(Icons.feedback_outlined, size: 18),
+                label: const Text('FEEDBACK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                style: TextButton.styleFrom(foregroundColor: Colors.black),
+              ),
+            const SizedBox(width: 4),
             IconButton(
               icon: Icon(uiContext.sidebarMode == SidebarMode.settings && uiContext.isSidebarExpanded 
-                  ? Icons.settings : Icons.settings_outlined),
+                  ? Icons.settings : Icons.settings_outlined, size: 22),
               tooltip: 'Settings',
               onPressed: () => uiContext.setSidebarMode(SidebarMode.settings),
             ),
             if (isDesktop)
               IconButton(
                 icon: Icon(uiContext.sidebarMode == SidebarMode.ai && uiContext.isSidebarExpanded 
-                    ? Icons.auto_awesome : Icons.auto_awesome_outlined),
+                    ? Icons.auto_awesome : Icons.auto_awesome_outlined, size: 22),
                 tooltip: uiContext.isSidebarExpanded ? 'Hide Sidebar' : 'Show AI Sidebar',
                 onPressed: () => uiContext.setSidebarMode(SidebarMode.ai),
               ),
             if (!isDesktop)
                Builder(
                  builder: (context) => IconButton(
-                  icon: const Icon(Icons.auto_awesome_outlined),
+                  icon: const Icon(Icons.auto_awesome_outlined, size: 22),
                   onPressed: () {
                     uiContext.setSidebarMode(SidebarMode.ai);
                     Scaffold.of(context).openEndDrawer();
                   },
                 ),
                ),
+            const SizedBox(width: 8),
           ],
         ),
         body: Row(

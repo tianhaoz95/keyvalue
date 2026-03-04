@@ -14,14 +14,7 @@ class EmbeddedClientCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,13 +23,13 @@ class EmbeddedClientCard extends StatelessWidget {
             children: [
               const Icon(Icons.person_search_outlined, size: 20, color: Colors.black),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'CLIENT PREVIEW',
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 10,
                   letterSpacing: 1.5,
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black,
                 ),
               ),
             ],
@@ -66,18 +59,18 @@ class EmbeddedClientCard extends StatelessWidget {
               fontSize: 9,
               fontWeight: FontWeight.w900,
               color: Colors.grey,
-              letterSpacing: 0.5,
+              letterSpacing: 1.5,
             ),
           ),
           const SizedBox(height: 2),
           if (isMarkdown && content != null)
-             const Icon(Icons.check_circle, size: 14, color: Colors.green)
+             const Icon(Icons.check_circle, size: 14, color: Colors.black)
           else
             Text(
               value,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w900,
                 color: Colors.black,
               ),
             ),

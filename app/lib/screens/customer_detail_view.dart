@@ -82,8 +82,8 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             // Top Header Area
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-              child: _buildHeader(currentCustomer, l10n, provider),
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              child: _buildHeader(context, currentCustomer, l10n, provider),
             ),
             
             // Tab Bar
@@ -186,7 +186,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,18 +215,26 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                   child: MarkdownBody(data: proposed),
                 ),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: onApprove,
-                        child: const Text('APPROVE & UPDATE', style: TextStyle(fontSize: 11)),
+                    ElevatedButton(
+                      onPressed: onApprove,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(120, 36),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
+                      child: const Text('APPROVE & UPDATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                     ),
-                    const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: onDismiss,
-                      child: const Text('DISMISS', style: TextStyle(fontSize: 11)),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(100, 36),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(color: Colors.black, width: 1.5),
+                      ),
+                      child: const Text('DISMISS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                     ),
                   ],
                 ),
@@ -266,7 +274,78 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     );
   }
 
-  Widget _buildHeader(Customer customer, AppLocalizations l10n, AdvisorProvider provider) {
+  Widget _buildHeader(BuildContext context, Customer customer, AppLocalizations l10n, AdvisorProvider provider) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+
+    if (isCompact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
+                onPressed: () => context.read<UiContextProvider>().setView(AppView.dashboard),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+              Hero(
+                tag: 'avatar_${customer.customerId}',
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.black,
+                  child: Text(customer.name[0], style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(customer.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5), overflow: TextOverflow.ellipsis),
+                    Text(customer.occupation, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCompactInfoRow(Icons.email_outlined, customer.email),
+                    if (customer.phoneNumber.isNotEmpty)
+                      _buildCompactInfoRow(Icons.phone_outlined, customer.phoneNumber),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () => provider.generateManualDraft(customer),
+                icon: const Icon(Icons.auto_awesome_outlined, size: 12),
+                label: const Text('GENERATE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -307,7 +386,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                 elevation: 0,
                 minimumSize: const Size(0, 36),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             const SizedBox(height: 12),
@@ -328,7 +407,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
         children: [
           Icon(icon, size: 12, color: Colors.black38),
           const SizedBox(width: 6),
-          Text(text, style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500)),
+          Flexible(
+            child: Text(text, style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );

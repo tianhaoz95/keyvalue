@@ -182,15 +182,8 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,12 +194,12 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               const SizedBox(width: 8),
               const Text(
                 'AI DRAFT READY',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
               ),
               const Spacer(),
               const Text(
                 'EDITABLE',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8, color: Colors.grey, letterSpacing: 1),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8, color: Colors.grey, letterSpacing: 1.5),
               ),
             ],
           ),
@@ -222,13 +215,16 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
             ),
           ),
           const SizedBox(height: 24),
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              Expanded(
+              SizedBox(
+                width: 140,
                 child: ElevatedButton.icon(
                   onPressed: () => widget.provider.sendEngagement(widget.customer, engagement, controller.text.trim()),
                   icon: const Icon(Icons.send_outlined, size: 16),
-                  label: const Text('SEND', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                  label: const Text('SEND', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -238,7 +234,6 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
               OutlinedButton(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: controller.text.trim()));
@@ -248,18 +243,17 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                   minimumSize: const Size(44, 44),
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  side: const BorderSide(color: Colors.black12),
+                  side: const BorderSide(color: Colors.black12, width: 1.5),
                 ),
                 child: const Icon(Icons.copy_outlined, size: 18, color: Colors.black54),
               ),
-              const SizedBox(width: 12),
               OutlinedButton(
                 onPressed: () => Share.share(controller.text.trim()),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(44, 44),
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  side: const BorderSide(color: Colors.black12),
+                  side: const BorderSide(color: Colors.black12, width: 1.5),
                 ),
                 child: const Icon(Icons.share_outlined, size: 18, color: Colors.black54),
               ),
@@ -280,7 +274,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
             children: [
               Icon(icon, size: 12, color: Colors.grey),
               const SizedBox(width: 6),
-              Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
+              Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1.5)),
             ],
           ),
           const SizedBox(height: 8),
@@ -312,7 +306,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,9 +346,9 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF0F0F0),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(poi, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black87)),
+                    child: Text(poi, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black87)),
                   )).toList(),
                 ),
               ],
@@ -406,6 +400,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(100, 44),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(color: Colors.black, width: 1.5),
                       ),
                       onPressed: () {
                         setState(() {
@@ -436,7 +431,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
           minimumSize: const Size(180, 44),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         icon: const Icon(Icons.auto_awesome_outlined, size: 18),
         onPressed: () {
@@ -444,7 +439,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
             _expandedInsightEngagementId = engagement.engagementId;
           });
         },
-        label: const Text('VIEW AI INSIGHTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1)),
+        label: const Text('VIEW AI INSIGHTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
       );
     } else if (engagement.status == EngagementStatus.sent) {
       return OutlinedButton.icon(
@@ -452,11 +447,11 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
           minimumSize: const Size(180, 44),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           side: const BorderSide(color: Colors.black, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         icon: const Icon(Icons.add_comment_outlined, size: 18),
         onPressed: () => widget.onRespond(engagement),
-        label: const Text('ADD RESPONSE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1, color: Colors.black)),
+        label: const Text('ADD RESPONSE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.black)),
       );
     }
     return const SizedBox.shrink();
@@ -468,35 +463,30 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text('Delete Engagement?', style: TextStyle(fontWeight: FontWeight.w900)),
         content: const Text('Are you sure you want to delete this engagement record? This action cannot be undone.'),
         actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context), 
-                child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black, 
-                  foregroundColor: Colors.white, 
-                  elevation: 0,
-                  minimumSize: const Size(100, 44),
-                ),
-                onPressed: () async {
-                  await widget.provider.deleteEngagement(widget.customer, engagement);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Engagement deleted')));
-                  }
-                },
-                child: const Text('DELETE'),
-              ),
-            ],
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black, 
+              foregroundColor: Colors.white, 
+              elevation: 0,
+              minimumSize: const Size(100, 44),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () async {
+              await widget.provider.deleteEngagement(widget.customer, engagement);
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Engagement deleted')));
+              }
+            },
+            child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),
           ),
         ],
       ),

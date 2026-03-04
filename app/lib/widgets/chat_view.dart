@@ -29,7 +29,7 @@ class KeyValueChatView extends StatelessWidget {
                 children: [
                   Icon(Icons.auto_awesome_outlined, size: 16),
                   const SizedBox(width: 8),
-                  Text('INTELLIGENCE HUB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
+                  Text('INTELLIGENCE HUB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
                 ],
               ),
               TextButton(

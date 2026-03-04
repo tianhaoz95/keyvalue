@@ -174,6 +174,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
             occupation: occupation ?? customer.occupation,
           );
           await _advisorProvider.addCustomer(updated);
+          _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
       case 'generate_outreach':
@@ -181,6 +182,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         if (customerId != null) {
           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
           await _advisorProvider.generateManualDraft(customer);
+          _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
       case 'manage_schedules':
@@ -205,22 +207,35 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
             final updated = customer.copyWith(schedules: []);
             await _advisorProvider.addCustomer(updated);
           }
+          _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
       case 'update_profile':
+        final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         final updatedProfile = call.args['updated_profile'] as String?;
-        if (updatedProfile != null && _uiContext.activeCustomerId != null) {
-           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == _uiContext.activeCustomerId);
+        if (updatedProfile != null && customerId != null) {
+           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
            final updated = customer.copyWith(proposedDetails: updatedProfile);
            await _advisorProvider.addCustomer(updated);
+           _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
       case 'update_guidelines':
+        final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         final updatedGuidelines = call.args['updated_guidelines'] as String?;
-        if (updatedGuidelines != null && _uiContext.activeCustomerId != null) {
-           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == _uiContext.activeCustomerId);
+        if (updatedGuidelines != null && customerId != null) {
+           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
            final updated = customer.copyWith(proposedGuidelines: updatedGuidelines);
            await _advisorProvider.addCustomer(updated);
+           _uiContext.setView(AppView.customerDetail, customerId: customerId);
+        }
+        break;
+      case 'update_draft':
+        final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
+        final refinedDraft = call.args['refined_draft'] as String?;
+        if (refinedDraft != null && customerId != null) {
+          await _advisorProvider.updateDraft(customerId, refinedDraft);
+          _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
     }

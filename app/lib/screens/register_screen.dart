@@ -116,11 +116,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Create Account',
+                      'CREATE ACCOUNT',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
+                        letterSpacing: -2.0,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -131,24 +131,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 40),
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email (required)'),
+                      decoration: const InputDecoration(labelText: 'EMAIL (REQUIRED)'),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(labelText: 'Password (required)'),
+                      decoration: const InputDecoration(labelText: 'PASSWORD (REQUIRED)'),
                       obscureText: true,
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      decoration: const InputDecoration(labelText: 'FULL NAME'),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _firmController,
-                      decoration: const InputDecoration(labelText: 'Business Name'),
+                      decoration: const InputDecoration(labelText: 'BUSINESS NAME'),
                     ),
                     const SizedBox(height: 24),
                     Row(
@@ -167,10 +167,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
                                   child: GestureDetector(
-                                    onTap: () => _showLegalSidebar('User Agreement', LegalContent.userAgreement),
+                                    onTap: () => _showLegalSidebar('USER AGREEMENT', LegalContent.userAgreement),
                                     child: const Text(
-                                      'User Agreement',
-                                      style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                                      'USER AGREEMENT',
+                                      style: TextStyle(fontWeight: FontWeight.w900, decoration: TextDecoration.underline, fontSize: 11, letterSpacing: 0.5),
                                     ),
                                   ),
                                 ),
@@ -178,10 +178,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
                                   child: GestureDetector(
-                                    onTap: () => _showLegalSidebar('Privacy Policy', LegalContent.privacyPolicy),
+                                    onTap: () => _showLegalSidebar('PRIVACY POLICY', LegalContent.privacyPolicy),
                                     child: const Text(
-                                      'Privacy Policy',
-                                      style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                                      'PRIVACY POLICY',
+                                      style: TextStyle(fontWeight: FontWeight.w900, decoration: TextDecoration.underline, fontSize: 11, letterSpacing: 0.5),
                                     ),
                                   ),
                                 ),
@@ -198,7 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: ElevatedButton(
                         onPressed: (_isLoading || !_acceptedTerms) ? null : _register,
                         child: _isLoading 
-                          ? const CircularProgressIndicator(color: Colors.white) 
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
                           : const Text('CREATE ACCOUNT'),
                       ),
                     ),
@@ -213,20 +213,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Positioned.fill(
               child: GestureDetector(
                 onTap: () => setState(() => _isLegalSidebarOpen = false),
-                child: Container(color: Colors.black26),
+                child: Container(color: Colors.transparent),
               ),
             ),
           
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            right: _isLegalSidebarOpen ? 0 : -450,
+            right: _isLegalSidebarOpen ? 0 : -550,
             top: 0,
             bottom: 0,
             child: Container(
-              width: 450,
+              width: 550,
               decoration: const BoxDecoration(
                 color: Colors.white,
+                boxShadow: [],
                 border: Border(
                   left: BorderSide(color: Color(0xFFEEEEEE), width: 1),
                 ),
@@ -242,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Expanded(
                             child: Text(
                               _legalSidebarTitle ?? '',
-                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1),
+                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
                             ),
                           ),
                           IconButton(
@@ -252,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                     ),
-                    Expanded(
+                    const Divider(height: 1),                    Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24.0),
                         child: MarkdownBody(

@@ -5,6 +5,7 @@ class AppTheme {
   static const Color accentGrey = Color(0xFF757575);
   static const Color lightGrey = Color(0xFFEEEEEE);
   static const Color backgroundWhite = Color(0xFFFFFFFF);
+  static const Color surfaceGrey = Color(0xFFF9F9F9);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -21,16 +22,16 @@ class AppTheme {
       scaffoldBackgroundColor: backgroundWhite,
       appBarTheme: const AppBarTheme(
         backgroundColor: backgroundWhite,
-        scrolledUnderElevation: 1,
-        surfaceTintColor: lightGrey,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: primaryBlack,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontSize: 22,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           color: primaryBlack,
-          letterSpacing: -0.5,
+          letterSpacing: -1.0,
         ),
         iconTheme: IconThemeData(color: primaryBlack),
       ),
@@ -48,7 +49,11 @@ class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w900, 
+            fontSize: 14, 
+            letterSpacing: 1.0,
+          ),
           elevation: 0,
         ),
       ),
@@ -58,7 +63,11 @@ class AppTheme {
           side: const BorderSide(color: primaryBlack, width: 1.5),
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w900, 
+            fontSize: 14,
+            letterSpacing: 1.0,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -75,16 +84,23 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primaryBlack, width: 1.5),
+          borderSide: const BorderSide(color: primaryBlack, width: 2.0),
         ),
-        labelStyle: const TextStyle(color: accentGrey),
+        labelStyle: const TextStyle(
+          color: accentGrey, 
+          fontSize: 10, 
+          fontWeight: FontWeight.w900, 
+          letterSpacing: 1.5,
+        ),
       ),
       textTheme: const TextTheme(
-        headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: primaryBlack, letterSpacing: -1),
-        headlineMedium: TextStyle(fontWeight: FontWeight.w800, color: primaryBlack, letterSpacing: -0.5),
-        titleLarge: TextStyle(fontWeight: FontWeight.w700, color: primaryBlack),
-        bodyLarge: TextStyle(color: primaryBlack, fontSize: 16),
-        bodyMedium: TextStyle(color: accentGrey, fontSize: 14),
+        headlineLarge: TextStyle(fontWeight: FontWeight.w900, color: primaryBlack, letterSpacing: -2.0, fontSize: 32),
+        headlineMedium: TextStyle(fontWeight: FontWeight.w900, color: primaryBlack, letterSpacing: -1.5, fontSize: 24),
+        titleLarge: TextStyle(fontWeight: FontWeight.w900, color: primaryBlack, fontSize: 20, letterSpacing: -0.5),
+        titleMedium: TextStyle(fontWeight: FontWeight.w700, color: primaryBlack, fontSize: 16),
+        bodyLarge: TextStyle(color: primaryBlack, fontSize: 16, height: 1.5),
+        bodyMedium: TextStyle(color: primaryBlack, fontSize: 14, height: 1.5),
+        labelLarge: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10, color: accentGrey),
       ),
       iconTheme: const IconThemeData(color: primaryBlack),
       dividerTheme: const DividerThemeData(
@@ -97,7 +113,8 @@ class AppTheme {
         unselectedLabelColor: accentGrey,
         indicatorColor: primaryBlack,
         indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        labelStyle: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5),
+        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5),
       ),
       popupMenuTheme: const PopupMenuThemeData(
         color: backgroundWhite,
@@ -109,7 +126,7 @@ class AppTheme {
           return accentGrey;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return primaryBlack.withOpacity(0.5);
+          if (states.contains(WidgetState.selected)) return primaryBlack.withOpacity(0.12);
           return lightGrey;
         }),
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
@@ -117,3 +134,4 @@ class AppTheme {
     );
   }
 }
+

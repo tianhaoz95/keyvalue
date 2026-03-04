@@ -36,6 +36,7 @@ Guidelines:
 1. **Contextual Awareness**: You know what is currently on screen based on the UI Context.
 2. **Visual Context**: The Main Port is the "Live State." Your actions should update it when appropriate.
 3. **Tool Use**: Use functions to manipulate the Main Port or update client data.
+4. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
 '''),
     tools: [
       Tool.functionDeclarations([
@@ -65,6 +66,7 @@ Guidelines:
           'update_profile',
           'Call this once you have gathered enough information to provide a comprehensive, high-quality update to the client profile.',
           parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
             'updated_profile': Schema.string(description: 'The full, updated client profile in Markdown format.'),
           },
         ),
@@ -72,6 +74,7 @@ Guidelines:
           'update_guidelines',
           'Call this once you have gathered enough information to provide a comprehensive, high-quality update to the engagement guidelines.',
           parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
             'updated_guidelines': Schema.string(description: 'The full, updated engagement guidelines in Markdown format.'),
           },
         ),
@@ -79,6 +82,7 @@ Guidelines:
           'update_draft',
           'Call this when you have a refined version of the message draft based on the conversation.',
           parameters: {
+            'customerId': Schema.string(description: 'The unique ID of the client.'),
             'refined_draft': Schema.string(description: 'The full, refined message draft text.'),
           },
         ),
@@ -134,6 +138,10 @@ Guidelines:
 You are an expert advisor assistant. You can help the advisor manage their clients, navigate the app, and generate drafts.
 You have access to tools to navigate and update information.
 
+### Rules:
+1. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it.
+2. **Context**: Use the Current UI Context to understand what the user is looking at.
+
 Current UI Context:
 ${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
 
@@ -171,6 +179,7 @@ $previewInstruction
    - **CRITICAL**: The `details` and `guidelines` arguments must be professional, well-formatted Markdown summaries of everything discussed. Do NOT just pass the raw user input. 
    - **Details**: Organize the profile into logical sections (e.g., Business Background, Professional Goals).
    - **Guidelines**: Create a clear, actionable list of rules for how the advisor should interact with this specific client.
+   - **Notification**: When calling `create_client`, inform the user that you are creating the record and navigating them to the new client's detail view.
 
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
@@ -222,6 +231,9 @@ Assistant:''';
         String combined = "PREVIEW_DATA:" + jsonEncode(call.args);
         combined += "\n" + (text.isNotEmpty ? text : fallback);
         return combined;
+      }
+      if (call.name == 'create_client') {
+        return text.isNotEmpty ? text : "I've created the client record for you. Navigating to the detail view now.";
       }
       return "CONFERENCE_READY"; // Special token to signal UI to show review
     }
@@ -339,6 +351,9 @@ Your goal is to have a professional conversation with the advisor to gather more
 Once you have enough information to provide a solid update, call the `update_profile` function.
 Be concise, inquisitive, and professional.
 
+### Rule:
+- **Notification**: When you call `update_profile`, you MUST inform the user that you've updated the profile and they can see it in the Main Port.
+
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
@@ -360,13 +375,11 @@ Assistant:''';
     if (response == null) return "I'm having trouble assisting with the profile right now.";
     
     final text = response.text;
-    if (text != null && text.isNotEmpty) return text;
-    
     if (response.functionCalls.any((call) => call.name == 'update_profile')) {
-      return "CONFERENCE_READY";
+      return text ?? "I've updated the profile for you. You can see the changes in the Main Port.";
     }
     
-    return "Processing your input...";
+    return text ?? "Processing your input...";
   }
 
   Future<String> extractUpdatedProfile(Customer customer, List<AiChatMessage> history) async {
@@ -398,6 +411,9 @@ Gather details like: Communication style, proactive focus areas, preferred frequ
 Once you have enough information to provide a solid set of guidelines, call the `update_guidelines` function.
 Be concise, inquisitive, and professional.
 
+### Rule:
+- **Notification**: When you call `update_guidelines`, you MUST inform the user that you've updated the guidelines and they can see it in the Main Port.
+
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
@@ -419,13 +435,11 @@ Assistant:''';
     if (response == null) return "I'm having trouble assisting with the guidelines right now.";
     
     final text = response.text;
-    if (text != null && text.isNotEmpty) return text;
-    
     if (response.functionCalls.any((call) => call.name == 'update_guidelines')) {
-      return "CONFERENCE_READY";
+      return text ?? "I've updated the engagement guidelines. You can see the changes in the Main Port.";
     }
     
-    return "Processing your input...";
+    return text ?? "Processing your input...";
   }
 
   Future<String> extractUpdatedGuidelines(Customer customer, List<AiChatMessage> history) async {
@@ -462,6 +476,9 @@ Your goal is to have a professional conversation with the advisor to improve thi
 Ask for the advisor's feedback or suggest specific improvements.
 Once you have a refined draft ready, call the `update_draft` function with the full text.
 
+### Rule:
+- **Notification**: When you call `update_draft`, you MUST inform the user that you've updated the draft and they can see it in the Timeline.
+
 Conversation History:
 ${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
 
@@ -483,13 +500,11 @@ Assistant:''';
     if (response == null) return "I'm having trouble assisting with the draft refinement right now.";
     
     final text = response.text;
-    if (text != null && text.isNotEmpty) return text;
-    
     if (response.functionCalls.any((call) => call.name == 'update_draft')) {
-      return "CONFERENCE_READY";
+      return text ?? "I've updated the draft for you. You can see the changes in the Timeline.";
     }
     
-    return "Processing your input...";
+    return text ?? "Processing your input...";
   }
 
   Future<String> finalizeDraftRefinement(Customer customer, String currentDraft, List<AiChatMessage> history) async {
