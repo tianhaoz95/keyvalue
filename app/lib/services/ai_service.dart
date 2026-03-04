@@ -25,507 +25,211 @@ class AiService {
   GenerativeModel get model => _model ?? FirebaseAI.googleAI().generativeModel(
     model: modelName,
     systemInstruction: Content.system('''
-You are the primary interface for this advisor application. You are the "Intelligence Hub." 
-The application has a "Main Port" (center of the screen) and you reside in the "AI Sidebar."
-You can autonomously navigate the UI, update records, and generate drafts using your tools.
+Role: Expert "Intelligence Hub" assistant. 
+Context: You reside in the "AI Sidebar" and control the "Main Port" via tools.
+UI State: ${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
 
-Current UI Context:
-${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
-
-Guidelines:
-1. **Contextual Awareness**: You know what is currently on screen based on the UI Context.
-2. **Visual Context**: The Main Port is the "Live State." Your actions should update it when appropriate.
-3. **Tool Use**: Use functions to manipulate the Main Port or update client data.
-4. **Data Acquisition**: **CRITICAL**: If you are asked to "modify" or "update" a profile or guidelines and you do not have the full, current text in your history, you MUST first call `get_current_profile` to ensure your updates are additive and preserve existing high-quality information. Never overwrite a detailed profile with a shorter summary unless specifically asked to.
-5. **Synthesis & Proactivity**: When an advisor provides new information about a client, do not ask for the exact wording to update. Instead, proactively synthesize the new information with the existing profile (using `get_current_profile` if not already in history) and provide a comprehensive, high-quality rewrite using professional Markdown.
-6. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
+Mandatory Rules:
+1. **Notifications**: Explicitly tell the user what tool you called and what changed (e.g. "I've updated the profile; view it in the Main Port.").
+2. **Data Safety**: Before updating profile/guidelines, call `get_current_profile` if the text isn't in your history. 
+3. **Proactivity**: Synthesize info into high-quality Markdown. Don't ask for wording; suggest it.
 '''),
     tools: [
       Tool.functionDeclarations([
-        FunctionDeclaration(
-          'update_client_preview',
-          'Call this whenever you have new or updated information for the client being onboarded. This provides a real-time preview to the user.',
+        FunctionDeclaration('update_client_preview', 'Update real-time client onboarding preview.',
           parameters: {
-            'name': Schema.string(description: 'Full name of the client (if known)'),
-            'email': Schema.string(description: 'Email address (if known)'),
-            'occupation': Schema.string(description: 'Client occupation (if known)'),
-            'details': Schema.string(description: 'Background profile summary (if known)'),
-            'guidelines': Schema.string(description: 'Engagement guidelines summary (if known)'),
+            'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
+            'details': Schema.string(), 'guidelines': Schema.string(),
           },
         ),
-        FunctionDeclaration(
-          'create_client',
-          'Call this once you have gathered all required client information. Synthesize the gathered info into professional, high-quality Markdown.',
+        FunctionDeclaration('create_client', 'Save new client record.',
           parameters: {
-            'name': Schema.string(description: 'Full name of the client'),
-            'email': Schema.string(description: 'Email address'),
-            'occupation': Schema.string(description: 'Client occupation'),
-            'details': Schema.string(description: 'A comprehensive, structured background profile in professional Markdown. Summarize and organize all gathered insights.'),
-            'guidelines': Schema.string(description: 'Clear, bulleted engagement guidelines in professional Markdown. Synthesize the advisor\'s preferences into a formal ruleset.'),
+            'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
+            'details': Schema.string(description: 'Markdown background.'),
+            'guidelines': Schema.string(description: 'Markdown rules.'),
           },
         ),
-        FunctionDeclaration(
-          'update_profile',
-          'Call this once you have gathered enough information to provide a comprehensive, high-quality update to the client profile.',
+        FunctionDeclaration('update_profile', 'Update client background profile.',
           parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
-            'updated_profile': Schema.string(description: 'The full, updated client profile in Markdown format.'),
+            'customerId': Schema.string(),
+            'updated_profile': Schema.string(description: 'Full Markdown profile.'),
           },
         ),
-        FunctionDeclaration(
-          'update_guidelines',
-          'Call this once you have gathered enough information to provide a comprehensive, high-quality update to the engagement guidelines.',
+        FunctionDeclaration('update_guidelines', 'Update engagement guidelines.',
           parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
-            'updated_guidelines': Schema.string(description: 'The full, updated engagement guidelines in Markdown format.'),
+            'customerId': Schema.string(),
+            'updated_guidelines': Schema.string(description: 'Full Markdown guidelines.'),
           },
         ),
-        FunctionDeclaration(
-          'update_draft',
-          'Call this when you have a refined version of the message draft based on the conversation.',
+        FunctionDeclaration('update_draft', 'Refine message draft.',
           parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client.'),
-            'refined_draft': Schema.string(description: 'The full, refined message draft text.'),
+            'customerId': Schema.string(),
+            'refined_draft': Schema.string(),
           },
         ),
-        FunctionDeclaration(
-          'navigate_to_client',
-          'Navigates the Main Port to show a specific client\'s details and history.',
+        FunctionDeclaration('navigate_to_client', 'Show client detail view.',
+          parameters: {'customerId': Schema.string()},
+        ),
+        FunctionDeclaration('list_clients', 'Show dashboard with optional filter.',
+          parameters: {'filter': Schema.string()},
+        ),
+        FunctionDeclaration('update_client_info', 'Update primary contact info.',
           parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client to view.'),
+            'customerId': Schema.string(), 'name': Schema.string(),
+            'email': Schema.string(), 'occupation': Schema.string(),
           },
         ),
-        FunctionDeclaration(
-          'list_clients',
-          'Navigates to the Dashboard and optionally applies a search filter.',
-          parameters: {
-            'filter': Schema.string(description: 'Optional search text to filter the client list.'),
-          },
+        FunctionDeclaration('generate_outreach', 'Trigger new proactive draft.',
+          parameters: {'customerId': Schema.string()},
         ),
-        FunctionDeclaration(
-          'update_client_info',
-          'Updates a client\'s primary information in the database.',
-          parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client to update.'),
-            'name': Schema.string(description: 'Updated full name.'),
-            'email': Schema.string(description: 'Updated email address.'),
-            'occupation': Schema.string(description: 'Updated occupation.'),
-          },
+        FunctionDeclaration('get_current_profile', 'Fetch latest client data.',
+          parameters: {'customerId': Schema.string()},
         ),
-        FunctionDeclaration(
-          'generate_outreach',
-          'Triggers the AI to generate a new proactive outreach draft for a client.',
+        FunctionDeclaration('manage_schedules', 'Modify engagement schedules.',
           parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client.'),
-          },
-        ),
-        FunctionDeclaration(
-          'get_current_profile',
-          'Retrieves the current detailed profile and engagement guidelines for a specific client. Use this before suggesting modifications to ensure you have the latest data.',
-          parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client to fetch data for.'),
-          },
-        ),
-        FunctionDeclaration(
-          'manage_schedules',
-          'Adds or removes engagement schedules for a client to control how often proactive discovery triggers drafts.',
-          parameters: {
-            'customerId': Schema.string(description: 'The unique ID of the client.'),
-            'action': Schema.string(description: 'The action to perform: "ADD" or "REMOVE_ALL".'),
-            'cadenceValue': Schema.number(description: 'The numeric value of the cadence (e.g., 1, 3, 6). Only for "ADD".'),
-            'cadencePeriod': Schema.string(description: 'The period: "days", "weeks", "months", "years". Only for "ADD".'),
+            'customerId': Schema.string(), 'action': Schema.string(description: 'ADD/REMOVE_ALL'),
+            'cadenceValue': Schema.number(), 'cadencePeriod': Schema.string(),
           },
         ),
       ])
     ],
   );
 
+  String _formatHistory(List<AiChatMessage> history, {int limit = 8}) {
+    final start = history.length > limit ? history.length - limit : 0;
+    return history.skip(start).map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n');
+  }
+
   Future<GenerateContentResponse?> getGeneralResponseRaw(List<AiChatMessage> history) async {
     if (isDemo) return null;
     try {
-      final prompt = '''
-You are an expert advisor assistant. You can help the advisor manage their clients, navigate the app, and generate drafts.
-You have access to tools to navigate and update information.
-
-### Rules:
-1. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it.
-2. **Synthesis & Proactivity**: When an advisor provides new information about a client, do not ask for the exact wording to update. Instead, proactively synthesize the new information with the existing profile (fetching it via `get_current_profile` if needed) and provide a comprehensive, high-quality rewrite.
-3. **Context**: Use the Current UI Context to understand what the user is looking at.
-
-Current UI Context:
-${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
-
-Conversation History:
-${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
-
-Assistant:''';
-      final content = [Content.text(prompt)];
-      return await model.generateContent(content);
-    } catch (e) {
-      return null;
-    }
+      final prompt = 'Help advisor with clients/navigation.\nHistory:\n${_formatHistory(history)}\nAssistant:';
+      return await model.generateContent([Content.text(prompt)]);
+    } catch (e) { return null; }
   }
 
   Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) return null;
-
     try {
-      final previewInstruction = isExpressiveAiEnabled ? '''
-3. **Real-time Preview**: **CRITICAL**: Whenever the user provides a new piece of information (Name, Email, Occupation, Profile info, or Guidelines), you MUST immediately call the `update_client_preview` function with all the information you have gathered so far. This updates the live preview card on the screen.
-   - **IMPORTANT**: Even when calling a function, you MUST also provide a text response to the user. Acknowledge the info received and ask for the next missing piece (e.g., "Thanks! I've updated the preview with John's email. What is his occupation?"). Never send a function call alone.
-''' : '''
-3. **Internal State**: Keep track of the information you have gathered so far (Name, Email, Occupation, Profile info, or Guidelines). You do NOT need to provide a real-time preview card. Just continue the conversation naturally to gather the next missing piece.
-''';
-
+      final previewLogic = isExpressiveAiEnabled 
+          ? 'Call `update_client_preview` on every new detail. Always provide a text reply acknowledging the update.'
+          : 'Track details internally. No preview needed.';
       final prompt = '''
-You are an expert small business advisor onboarding assistant. Your goal is to help the user create a new client by gathering their Name, Email, Occupation, Detailed Profile (Background), and Engagement Guidelines.
-
-### Process:
-1. **Introduction**: Inform the user that you are here to help them create a new client through an interactive conversation.
-2. **Data Gathering**: Ask for the missing information one or two pieces at a time. Be professional and friendly.
-$previewInstruction
-4. **Clarification**: If the information provided is vague, ask clarification questions to ensure the Profile and Guidelines are high-quality.
-5. **Finalization**: Once you have all five pieces of information, call the `create_client` function.
-   - **CRITICAL**: The `details` and `guidelines` arguments must be professional, well-formatted Markdown summaries of everything discussed. Do NOT just pass the raw user input. 
-   - **Details**: Organize the profile into logical sections (e.g., Business Background, Professional Goals).
-   - **Guidelines**: Create a clear, actionable list of rules for how the advisor should interact with this specific client.
-   - **Notification**: When calling `create_client`, inform the user that you are creating the record and navigating them to the new client's detail view.
-
-Conversation History:
-${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
-
+Goal: Onboard client (Name, Email, Occupation, Profile, Guidelines).
+Logic: $previewLogic. Call `create_client` only when all 5 are gathered.
+History:
+${_formatHistory(history)}
 Assistant:''';
-
-      final content = [Content.text(prompt)];
-      return await model.generateContent(content);
-    } catch (e) {
-      return null;
-    }
+      return await model.generateContent([Content.text(prompt)]);
+    } catch (e) { return null; }
   }
 
   Future<String> generateOnboardingResponse(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) {
-      if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. I'll help you create a new client by gathering their details through a quick conversation. To start, what is the client's full name?";
-      
-      String responsePrefix = "";
-      if (isExpressiveAiEnabled) {
-         if (history.last.text.toLowerCase().contains('john')) {
-            responsePrefix = 'PREVIEW_DATA:{"name":"John Doe"}\n';
-         } else if (history.any((m) => m.text.contains('@'))) {
-            responsePrefix = 'PREVIEW_DATA:{"name":"John Doe","email":"john@example.com","occupation":"Software Engineer"}\n';
-         }
-      }
-
-      if (history.last.text.toLowerCase().contains('john')) {
-        return '${responsePrefix}Great, John Doe. What is his email address and occupation?';
-      }
-      if (history.any((m) => m.text.contains('@'))) {
-        return '${responsePrefix}I\'ve got those details. Now, could you provide some background details for his profile and any specific engagement guidelines I should follow?';
-      }
-      return "I'm ready to create the client profile for John Doe once you provide the background and guidelines.";
+      if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. To start, what is the client's full name?";
+      if (history.last.text.toLowerCase().contains('john')) return 'PREVIEW_DATA:{"name":"John"} Great. Email and occupation?';
+      return "I'm processing...";
     }
 
     final response = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-    if (response == null) return "I'm having trouble connecting to the AI service.";
+    if (response == null) return "Connection error.";
     
-    final functionCalls = response.functionCalls;
+    final calls = response.functionCalls;
     final text = response.text ?? "";
-    
-    if (functionCalls.isNotEmpty) {
-      final call = functionCalls.first;
-      if (call.name == 'update_client_preview') {
-        final fallback = "I've updated the preview with those details. What else can you tell me?";
-        if (!isExpressiveAiEnabled) {
-          return text.isNotEmpty ? text : fallback;
-        }
-        String combined = "PREVIEW_DATA:" + jsonEncode(call.args);
-        combined += "\n" + (text.isNotEmpty ? text : fallback);
-        return combined;
+    if (calls.isNotEmpty) {
+      final call = calls.first;
+      if (call.name == 'update_client_preview' && isExpressiveAiEnabled) {
+        return "PREVIEW_DATA:${jsonEncode(call.args)}\n${text.isNotEmpty ? text : 'Preview updated.'}";
       }
-      if (call.name == 'create_client') {
-        return text.isNotEmpty ? text : "I've created the client record for you. Navigating to the detail view now.";
-      }
-      return "CONFERENCE_READY"; // Special token to signal UI to show review
+      if (call.name == 'create_client') return text.isNotEmpty ? text : "Client created.";
+      return "CONFERENCE_READY";
     }
-    
-    if (text.isNotEmpty) return text;
-    
-    return "I'm processing your request...";
+    return text.isNotEmpty ? text : "Processing...";
   }
-
-  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
-    if (isDemo) {
-      return {
-        'name': 'John Doe (Demo)',
-        'email': 'john@example.com',
-        'occupation': 'Software Engineer',
-        'details': 'Extracted via demo conversation.',
-        'guidelines': 'Focus on R&D tax credits.',
-      };
-    }
-
-    final response = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-    if (response != null && response.functionCalls.isNotEmpty) {
-      return response.functionCalls.first.args;
-    }
-    return null;
-  }
-
 
   Future<String> generateDraftMessage(Customer customer) async {
-    if (isDemo) {
-      return "Hi ${customer.name}, hope your quarter is going well! I've been reviewing your latest details regarding ${customer.occupation} and wanted to see if we should schedule a quick touchpoint to discuss your business strategy.";
-    }
+    if (isDemo) return "Hi ${customer.name}, just checking in regarding ${customer.occupation}.";
     try {
-      final prompt = '''
-Draft a warm, professional check-in message for a small business advisor to send to their client, ${customer.name}.
-Context:
-Customer Details (Markdown):
-${customer.details}
-
-Advisor Engagement Guidelines (Markdown):
-${customer.guidelines}
-
-The message should align with the guidelines and reference recent details from the customer's profile.
-Return only the message text.
-''';
-      final content = [Content.text(prompt)];
-      final response = await model.generateContent(content);
-      return response.text ?? "Failed to generate draft message.";
-    } catch (e) {
-      return "Error: ${e.toString()}";
-    }
+      final prompt = 'Draft professional check-in for ${customer.name}.\nProfile: ${customer.details}\nRules: ${customer.guidelines}\nReturn message text only.';
+      final res = await model.generateContent([Content.text(prompt)]);
+      return res.text ?? "Draft failed.";
+    } catch (e) { return "Error: $e"; }
   }
 
   Future<List<String>> extractPointsOfInterest(String response, String guidelines) async {
-    if (isDemo) {
-      return [
-        "Client mentioned new growth initiatives",
-        "Expected revenue increase of 20%",
-        "Wants to schedule a follow-up meeting next week"
-      ];
-    }
+    if (isDemo) return ["Interest 1", "Interest 2", "Interest 3"];
     try {
-      final prompt = '''
-Based on these advisor guidelines, what are the 3 most important points in this customer response?
-Guidelines:
-$guidelines
-
-Customer Response:
-$response
-
-Return a bulleted list of the 3 most important points.
-''';
-      final content = [Content.text(prompt)];
-      final aiResponse = await model.generateContent(content);
-      final text = aiResponse.text ?? "";
-      return text.split('\n').where((line) => line.trim().isNotEmpty).toList();
-    } catch (e) {
-      return ["Error extracting points: ${e.toString()}"];
-    }
+      final prompt = 'Extract top 3 points from response based on guidelines.\nGuidelines: $guidelines\nResponse: $response\nReturn bulleted list.';
+      final res = await model.generateContent([Content.text(prompt)]);
+      return (res.text ?? "").split('\n').where((l) => l.trim().isNotEmpty).toList();
+    } catch (e) { return ["Error: $e"]; }
   }
 
   Future<String> updateCustomerDetails(String currentDetails, String response) async {
-    if (isDemo) {
-      return "$currentDetails\n\n- **Update (Demo)**: Client reported new growth and international activity in latest response.";
-    }
+    if (isDemo) return "$currentDetails\n- Update: Info added.";
     try {
-      final prompt = '''
-Update the following markdown customer profile with new information from this customer response.
-Preserve the markdown format.
-Current Details:
-$currentDetails
-
-Customer Response:
-$response
-
-Updated Details (Markdown):
-''';
-      final content = [Content.text(prompt)];
-      final aiResponse = await model.generateContent(content);
-      return aiResponse.text ?? currentDetails;
-    } catch (e) {
-      return currentDetails;
-    }
+      final prompt = 'Merge new info into profile. Preserve Markdown.\nProfile: $currentDetails\nResponse: $response\nUpdated Profile:';
+      final res = await model.generateContent([Content.text(prompt)]);
+      return res.text ?? currentDetails;
+    } catch (e) { return currentDetails; }
   }
 
-  Future<GenerateContentResponse?> getProfileRefinementRaw(Customer customer, List<AiChatMessage> history) async {
+  Future<GenerateContentResponse?> _getRefinementRaw(String type, String current, String target, List<AiChatMessage> history) async {
     if (isDemo) return null;
-    try {
-      final prompt = '''
-You are an expert advisor assistant. You are helping an advisor refine and expand the profile of their client, ${customer.name}.
-Current Profile:
-${customer.details}
-
-Your goal is to have a professional conversation with the advisor to gather more descriptive details. 
-**CRITICAL**: Do not ask the advisor for exact wording or confirmation before updating. Instead, use the details they provide to proactively rewrite and expand the profile into a professional, high-quality markdown summary, then call the `update_profile` function.
-Be concise, inquisitive, and professional.
-
-### Rule:
-- **Notification**: When you call `update_profile`, you MUST inform the user that you've updated the profile and they can see it in the Main Port.
-
-Conversation History:
-${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
-
-Assistant:''';
-      final content = [Content.text(prompt)];
-      return await model.generateContent(content);
-    } catch (e) {
-      return null;
-    }
+    final prompt = 'Refine $type "$target".\nCurrent: $current\nHistory:\n${_formatHistory(history)}\nAssistant:';
+    return await model.generateContent([Content.text(prompt)]);
   }
 
   Future<String> generateProfileRefinementResponse(Customer customer, List<AiChatMessage> history) async {
-    if (isDemo) {
-      if (history.isEmpty) return "I can help you build a more descriptive profile for ${customer.name}. What recent updates or background information should we add?";
-      return "Got it. I'll incorporate that into the profile. Anything else about their financial goals or recent business activities?";
-    }
-
-    final response = await getProfileRefinementRaw(customer, history);
-    if (response == null) return "I'm having trouble assisting with the profile right now.";
-    
-    final text = response.text;
-    if (response.functionCalls.any((call) => call.name == 'update_profile')) {
-      return text ?? "I've updated the profile for you. You can see the changes in the Main Port.";
-    }
-    
-    return text ?? "Processing your input...";
+    if (isDemo) return "Tell me more about ${customer.name}.";
+    final res = await _getRefinementRaw('profile', customer.details, customer.name, history);
+    return res?.text ?? "Processing...";
   }
 
   Future<String> extractUpdatedProfile(Customer customer, List<AiChatMessage> history) async {
-    if (isDemo) return "${customer.details}\n\n### Business & Strategy (Updated via AI)\n- New tech venture launched in Q1.\n- Focus on scaling international operations.\n- Seeking R&D tax credit optimization.";
-    
-    final response = await getProfileRefinementRaw(customer, history);
-    if (response != null && response.functionCalls.isNotEmpty) {
-      final call = response.functionCalls.firstWhere((c) => c.name == 'update_profile', orElse: () => response.functionCalls.first);
-      final updated = call.args['updated_profile'] as String?;
-      return updated ?? customer.details;
+    final res = await _getRefinementRaw('profile', customer.details, customer.name, history);
+    if (res != null && res.functionCalls.isNotEmpty) {
+      final call = res.functionCalls.firstWhere((c) => c.name == 'update_profile', orElse: () => res.functionCalls.first);
+      return call.args['updated_profile'] as String? ?? customer.details;
     }
     return customer.details;
   }
 
-  Future<String> finalizeProfileRefinement(Customer customer, List<AiChatMessage> history) async {
-    return await extractUpdatedProfile(customer, history);
-  }
-
-  Future<GenerateContentResponse?> getGuidelinesRefinementRaw(Customer customer, List<AiChatMessage> history) async {
-    if (isDemo) return null;
-    try {
-      final prompt = '''
-You are an expert advisor assistant. You are helping an advisor define "Engagement Guidelines" for their client, ${customer.name}.
-Current Guidelines:
-${customer.guidelines}
-
-Your goal is to have a professional conversation with the advisor to define how they should proactively engage with this client.
-Gather details like: Communication style, proactive focus areas, preferred frequency, and tone.
-**CRITICAL**: Do not ask the advisor for exact wording or confirmation before updating. Instead, use the details they provide to proactively rewrite and expand the guidelines into a professional, actionable markdown summary, then call the `update_guidelines` function.
-Be concise, inquisitive, and professional.
-
-### Rule:
-- **Notification**: When you call `update_guidelines`, you MUST inform the user that you've updated the guidelines and they can see it in the Main Port.
-
-Conversation History:
-${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
-
-Assistant:''';
-      final content = [Content.text(prompt)];
-      return await model.generateContent(content);
-    } catch (e) {
-      return null;
-    }
-  }
-
   Future<String> generateGuidelinesRefinementResponse(Customer customer, List<AiChatMessage> history) async {
-    if (isDemo) {
-      if (history.isEmpty) return "I can help you craft personalized engagement guidelines for ${customer.name}. What is your primary focus for this client? (e.g., proactive tax planning, monthly check-ins, or R&D focus?)";
-      return "Understood. I'll include that. Should we also set specific rules for communication frequency or document request styles?";
-    }
-
-    final response = await getGuidelinesRefinementRaw(customer, history);
-    if (response == null) return "I'm having trouble assisting with the guidelines right now.";
-    
-    final text = response.text;
-    if (response.functionCalls.any((call) => call.name == 'update_guidelines')) {
-      return text ?? "I've updated the engagement guidelines. You can see the changes in the Main Port.";
-    }
-    
-    return text ?? "Processing your input...";
+    if (isDemo) return "Let's refine guidelines.";
+    final res = await _getRefinementRaw('guidelines', customer.guidelines, customer.name, history);
+    return res?.text ?? "Processing...";
   }
 
   Future<String> extractUpdatedGuidelines(Customer customer, List<AiChatMessage> history) async {
-    if (isDemo) return "${customer.guidelines}\n\n- **Focus**: Strategic tax planning.\n- **Tone**: Professional and direct.\n- **Frequency**: Monthly touchpoints for R&D review.";
-    
-    final response = await getGuidelinesRefinementRaw(customer, history);
-    if (response != null && response.functionCalls.isNotEmpty) {
-      final call = response.functionCalls.firstWhere((c) => c.name == 'update_guidelines', orElse: () => response.functionCalls.first);
-      final updated = call.args['updated_guidelines'] as String?;
-      return updated ?? customer.guidelines;
+    final res = await _getRefinementRaw('guidelines', customer.guidelines, customer.name, history);
+    if (res != null && res.functionCalls.isNotEmpty) {
+      final call = res.functionCalls.firstWhere((c) => c.name == 'update_guidelines', orElse: () => res.functionCalls.first);
+      return call.args['updated_guidelines'] as String? ?? customer.guidelines;
     }
     return customer.guidelines;
   }
 
-  Future<String> finalizeGuidelinesRefinement(Customer customer, List<AiChatMessage> history) async {
-    return await extractUpdatedGuidelines(customer, history);
-  }
-
-  Future<GenerateContentResponse?> getDraftRefinementRaw(Customer customer, String currentDraft, List<AiChatMessage> history) async {
-    if (isDemo) return null;
-    try {
-      final prompt = '''
-You are an expert advisor assistant. You are helping an advisor refine a message draft for their client, ${customer.name}.
-Initial Draft:
-$currentDraft
-
-Client Context:
-${customer.details}
-
-Engagement Rules:
-${customer.guidelines}
-
-Your goal is to have a professional conversation with the advisor to improve this draft. 
-Ask for the advisor's feedback or suggest specific improvements.
-Once you have a refined draft ready, call the `update_draft` function with the full text.
-
-### Rule:
-- **Notification**: When you call `update_draft`, you MUST inform the user that you've updated the draft and they can see it in the Timeline.
-
-Conversation History:
-${history.map((m) => "${m.isUser ? 'Advisor' : 'Assistant'}: ${m.text}").join('\n')}
-
-Assistant:''';
-      final content = [Content.text(prompt)];
-      return await model.generateContent(content);
-    } catch (e) {
-      return null;
-    }
-  }
-
   Future<String> generateDraftRefinementResponse(Customer customer, String currentDraft, List<AiChatMessage> history) async {
-    if (isDemo) {
-      if (history.isEmpty) return "I can help you improve this draft for ${customer.name}. What would you like to change? I can make it more formal, focus more on a specific detail, or shorten it.";
-      return "That sounds like a good adjustment. I'll prepare a new version of the draft for you. Anything else?";
-    }
-
-    final response = await getDraftRefinementRaw(customer, currentDraft, history);
-    if (response == null) return "I'm having trouble assisting with the draft refinement right now.";
-    
-    final text = response.text;
-    if (response.functionCalls.any((call) => call.name == 'update_draft')) {
-      return text ?? "I've updated the draft for you. You can see the changes in the Timeline.";
-    }
-    
-    return text ?? "Processing your input...";
+    if (isDemo) return "How should we adjust the draft?";
+    final res = await _getRefinementRaw('draft', currentDraft, customer.name, history);
+    return res?.text ?? "Processing...";
   }
 
   Future<String> finalizeDraftRefinement(Customer customer, String currentDraft, List<AiChatMessage> history) async {
-    if (isDemo) return "$currentDraft\n\n(Refined via AI conversation to be more professional)";
-    
-    final response = await getDraftRefinementRaw(customer, currentDraft, history);
-    if (response != null && response.functionCalls.isNotEmpty) {
-      final call = response.functionCalls.firstWhere((c) => c.name == 'update_draft', orElse: () => response.functionCalls.first);
-      final refined = call.args['refined_draft'] as String?;
-      return refined ?? currentDraft;
+    if (isDemo) return currentDraft;
+    final res = await _getRefinementRaw('draft', currentDraft, customer.name, history);
+    if (res != null && res.functionCalls.isNotEmpty) {
+      return res.functionCalls.first.args['refined_draft'] as String? ?? currentDraft;
     }
     return currentDraft;
+  }
+
+  // Support methods for backwards compatibility
+  Future<String> finalizeProfileRefinement(Customer customer, List<AiChatMessage> history) => extractUpdatedProfile(customer, history);
+  Future<String> finalizeGuidelinesRefinement(Customer customer, List<AiChatMessage> history) => extractUpdatedGuidelines(customer, history);
+  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
+    final res = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
+    return res?.functionCalls.isNotEmpty == true ? res!.functionCalls.first.args : null;
   }
 }
