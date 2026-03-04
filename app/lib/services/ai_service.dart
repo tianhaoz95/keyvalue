@@ -37,7 +37,8 @@ Guidelines:
 2. **Visual Context**: The Main Port is the "Live State." Your actions should update it when appropriate.
 3. **Tool Use**: Use functions to manipulate the Main Port or update client data.
 4. **Data Acquisition**: **CRITICAL**: If you are asked to "modify" or "update" a profile or guidelines and you do not have the full, current text in your history, you MUST first call `get_current_profile` to ensure your updates are additive and preserve existing high-quality information. Never overwrite a detailed profile with a shorter summary unless specifically asked to.
-5. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
+5. **Synthesis & Proactivity**: When an advisor provides new information about a client, do not ask for the exact wording to update. Instead, proactively synthesize the new information with the existing profile (using `get_current_profile` if not already in history) and provide a comprehensive, high-quality rewrite using professional Markdown.
+6. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it (e.g., "I've updated John's profile; I'm moving you to his detail view now.").
 '''),
     tools: [
       Tool.functionDeclarations([
@@ -148,7 +149,8 @@ You have access to tools to navigate and update information.
 
 ### Rules:
 1. **Notifications**: Whenever you call a function that modifies state or navigates the UI, you MUST explicitly tell the user what you did and where they can see it.
-2. **Context**: Use the Current UI Context to understand what the user is looking at.
+2. **Synthesis & Proactivity**: When an advisor provides new information about a client, do not ask for the exact wording to update. Instead, proactively synthesize the new information with the existing profile (fetching it via `get_current_profile` if needed) and provide a comprehensive, high-quality rewrite.
+3. **Context**: Use the Current UI Context to understand what the user is looking at.
 
 Current UI Context:
 ${uiContext != null ? jsonEncode(uiContext) : 'Unknown'}
@@ -355,8 +357,8 @@ You are an expert advisor assistant. You are helping an advisor refine and expan
 Current Profile:
 ${customer.details}
 
-Your goal is to have a professional conversation with the advisor to gather more descriptive details and then summarize them into a high-quality markdown profile.
-Once you have enough information to provide a solid update, call the `update_profile` function.
+Your goal is to have a professional conversation with the advisor to gather more descriptive details. 
+**CRITICAL**: Do not ask the advisor for exact wording or confirmation before updating. Instead, use the details they provide to proactively rewrite and expand the profile into a professional, high-quality markdown summary, then call the `update_profile` function.
 Be concise, inquisitive, and professional.
 
 ### Rule:
@@ -416,7 +418,7 @@ ${customer.guidelines}
 
 Your goal is to have a professional conversation with the advisor to define how they should proactively engage with this client.
 Gather details like: Communication style, proactive focus areas, preferred frequency, and tone.
-Once you have enough information to provide a solid set of guidelines, call the `update_guidelines` function.
+**CRITICAL**: Do not ask the advisor for exact wording or confirmation before updating. Instead, use the details they provide to proactively rewrite and expand the guidelines into a professional, actionable markdown summary, then call the `update_guidelines` function.
 Be concise, inquisitive, and professional.
 
 ### Rule:
