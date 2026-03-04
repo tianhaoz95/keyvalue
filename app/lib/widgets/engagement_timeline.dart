@@ -64,6 +64,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
         final isLast = index == widget.engagements.length - 1;
 
         return IntrinsicHeight(
+          key: ValueKey(engagement.engagementId),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -154,7 +155,8 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                         if (engagement.customerResponse.isNotEmpty)
                           _buildModernSnippet('INBOUND', engagement.customerResponse, Icons.move_to_inbox_outlined, isDark: true),
                         
-                        if (_expandedInsightEngagementId == engagement.engagementId)
+                        if (_expandedInsightEngagementId == engagement.engagementId && 
+                            engagement.status == EngagementStatus.received)
                           Padding(
                             padding: const EdgeInsets.only(top: 12.0),
                             child: _buildAiInsightsSection(context, engagement),
@@ -391,7 +393,12 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                           minimumSize: const Size(0, 44),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () => widget.provider.approveResponse(widget.customer, engagement),
+                        onPressed: () {
+                          widget.provider.approveResponse(widget.customer, engagement);
+                          setState(() {
+                            _expandedInsightEngagementId = null;
+                          });
+                        },
                         child: const Text('APPROVE UPDATE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                       ),
                     ),
@@ -403,6 +410,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                         side: const BorderSide(color: Colors.black, width: 1.5),
                       ),
                       onPressed: () {
+                        widget.provider.dismissResponse(widget.customer, engagement);
                         setState(() {
                           _expandedInsightEngagementId = null;
                         });

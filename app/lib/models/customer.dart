@@ -198,8 +198,8 @@ class Customer {
     int? cadenceValue,
     String? cadencePeriod,
     List<EngagementSchedule>? schedules,
-    String? proposedDetails,
-    String? proposedGuidelines,
+    Object? proposedDetails = _sentinel,
+    Object? proposedGuidelines = _sentinel,
   }) {
     return Customer(
       customerId: customerId,
@@ -218,10 +218,12 @@ class Customer {
       cadenceValue: cadenceValue ?? this.cadenceValue,
       cadencePeriod: cadencePeriod ?? this.cadencePeriod,
       schedules: schedules ?? this.schedules,
-      proposedDetails: proposedDetails ?? this.proposedDetails,
-      proposedGuidelines: proposedGuidelines ?? this.proposedGuidelines,
+      proposedDetails: proposedDetails == _sentinel ? this.proposedDetails : proposedDetails as String?,
+      proposedGuidelines: proposedGuidelines == _sentinel ? this.proposedGuidelines : proposedGuidelines as String?,
     );
   }
+
+  static const _sentinel = Object();
 
   DateTime calculateNextEngagementDate(DateTime fromDate) {
     if (schedules.isEmpty) {

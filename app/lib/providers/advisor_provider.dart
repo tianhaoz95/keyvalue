@@ -471,6 +471,7 @@ class AdvisorProvider with ChangeNotifier {
     } else {
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     }
+    notifyListeners();
   }
 
   Future<void> deleteEngagement(Customer customer, Engagement engagement) async {
