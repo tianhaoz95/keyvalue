@@ -35,6 +35,10 @@ class AdminProvider with ChangeNotifier {
     await _auth.signOut();
   }
 
+  Future<void> deleteFeedback(String feedbackId) async {
+    await _db.collection('feedbacks').doc(feedbackId).delete();
+  }
+
   Stream<List<FeedbackItem>> getFeedbacks() {
     return _db
         .collection('feedbacks')
