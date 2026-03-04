@@ -21,13 +21,16 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       name: fields[1] as String,
       firmName: fields[2] as String,
       email: fields[3] as String,
+      aiCapability: fields[4] as String,
+      isExpressiveAiEnabled: fields[5] as bool,
+      isMultimodalAiEnabled: fields[6] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Advisor obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.uid)
       ..writeByte(1)
@@ -35,7 +38,13 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       ..writeByte(2)
       ..write(obj.firmName)
       ..writeByte(3)
-      ..write(obj.email);
+      ..write(obj.email)
+      ..writeByte(4)
+      ..write(obj.aiCapability)
+      ..writeByte(5)
+      ..write(obj.isExpressiveAiEnabled)
+      ..writeByte(6)
+      ..write(obj.isMultimodalAiEnabled);
   }
 
   @override

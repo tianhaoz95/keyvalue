@@ -337,7 +337,6 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
               ],
             ),
           ),
-          const Divider(),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(32),

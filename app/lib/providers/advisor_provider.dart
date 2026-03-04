@@ -30,14 +30,11 @@ class AdvisorProvider with ChangeNotifier {
   Advisor? _currentAdvisor;
   Advisor? get currentAdvisor => _currentAdvisor;
 
-  String _aiCapability = 'pro'; // 'pro' or 'fast'
-  String get aiCapability => _aiCapability;
+  String get aiCapability => _currentAdvisor?.aiCapability ?? 'pro';
 
-  bool _isExpressiveAiEnabled = true;
-  bool get isExpressiveAiEnabled => _isExpressiveAiEnabled;
+  bool get isExpressiveAiEnabled => _currentAdvisor?.isExpressiveAiEnabled ?? true;
 
-  bool _isMultimodalAiEnabled = false;
-  bool get isMultimodalAiEnabled => _isMultimodalAiEnabled;
+  bool get isMultimodalAiEnabled => _currentAdvisor?.isMultimodalAiEnabled ?? false;
 
   Locale _locale = const Locale('en');
   Locale get locale => _locale;
@@ -69,49 +66,33 @@ class AdvisorProvider with ChangeNotifier {
         _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance {
     _checkRememberedUser();
     _loadLocale();
-    _loadAiCapability();
-    _loadExpressiveAiPreference();
-  }
-
-  Future<void> _loadExpressiveAiPreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isExpressiveAiEnabled = prefs.getBool('isExpressiveAiEnabled') ?? true;
-    _isMultimodalAiEnabled = prefs.getBool('isMultimodalAiEnabled') ?? false;
-    notifyListeners();
   }
 
   Future<void> setExpressiveAiEnabled(bool enabled) async {
-    _isExpressiveAiEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isExpressiveAiEnabled', enabled);
-    notifyListeners();
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(isExpressiveAiEnabled: enabled);
+      await updateProfile(updated);
+    }
   }
 
   Future<void> setMultimodalAiEnabled(bool enabled) async {
-    _isMultimodalAiEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isMultimodalAiEnabled', enabled);
-    notifyListeners();
-  }
-
-  Future<void> _loadAiCapability() async {
-    final prefs = await SharedPreferences.getInstance();
-    _aiCapability = prefs.getString('aiCapability') ?? 'pro';
-    _updateAiService();
-    notifyListeners();
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(isMultimodalAiEnabled: enabled);
+      await updateProfile(updated);
+    }
   }
 
   void _updateAiService() {
-    final modelName = _aiCapability == 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+    final modelName = aiCapability == 'fast' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
     _aiService = AiService(modelName: modelName, isDemo: isGuestMode);
   }
 
   Future<void> setAiCapability(String capability) async {
-    _aiCapability = capability;
-    _updateAiService();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('aiCapability', capability);
-    notifyListeners();
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(aiCapability: capability);
+      await updateProfile(updated);
+      _updateAiService();
+    }
   }
 
   Future<void> _loadLocale() async {
@@ -469,11 +450,11 @@ class AdvisorProvider with ChangeNotifier {
   }
 
   Future<String> getOnboardingResponse(List<AiChatMessage> history) async {
-    return _aiService.generateOnboardingResponse(history, isExpressiveAiEnabled: _isExpressiveAiEnabled);
+    return _aiService.generateOnboardingResponse(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
   }
 
   Future<Customer?> extractCustomerFromOnboarding(List<AiChatMessage> history) async {
-    final data = await _aiService.extractClientFromFunctionCall(history, isExpressiveAiEnabled: _isExpressiveAiEnabled);
+    final data = await _aiService.extractClientFromFunctionCall(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
     if (data == null) return null;
 
     return Customer(

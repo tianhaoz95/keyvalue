@@ -501,7 +501,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Divider(height: 1),
             Expanded(
               child: _onboardingChatProvider == null || _isAiOnboardingLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.black12))
@@ -538,7 +537,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Divider(height: 1),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24),
@@ -636,7 +634,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Divider(height: 1),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(24),

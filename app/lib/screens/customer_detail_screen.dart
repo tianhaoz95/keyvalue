@@ -1274,6 +1274,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(120, 52),
+                      ),
                       onPressed: () => provider.dismissResponse(customer, engagement),
                       child: const Text('DISMISS'),
                     ),
@@ -1332,16 +1335,19 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         children: [
           const Icon(Icons.circle, size: 6, color: Colors.black26),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(
-                value.isEmpty ? 'Not provided' : value, 
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black)
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? 'Not provided' : value, 
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black)
+                ),
+              ],
+            ),
           ),
         ],
       ),

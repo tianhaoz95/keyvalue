@@ -252,7 +252,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                     ),
-                    const Divider(height: 1),
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24.0),

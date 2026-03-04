@@ -41,7 +41,6 @@ class FeedbackDetailSidebar extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(32),
