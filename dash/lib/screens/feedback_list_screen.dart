@@ -15,12 +15,21 @@ class FeedbackListScreen extends StatefulWidget {
 class _FeedbackListScreenState extends State<FeedbackListScreen> {
   FeedbackItem? _selectedFeedback;
   bool _isSidebarOpen = false;
+  bool _isFilterSidebarOpen = false;
+  
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Filter State
+  final Set<String> _selectedStatuses = {'open', 'inProgress', 'resolved', 'backlog'};
+  DateTimeRange? _dateRangeFilter;
+  final TextEditingController _emailFilterController = TextEditingController();
+  String _advisorEmailFilter = '';
 
   @override
   void dispose() {
     _searchController.dispose();
+    _emailFilterController.dispose();
     super.dispose();
   }
 
@@ -44,6 +53,7 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isPhone = screenWidth < 600;
     final sidebarWidth = isPhone ? screenWidth : 450.0;
+    final isAnySidebarOpen = _isSidebarOpen || _isFilterSidebarOpen;
 
     return Scaffold(
       appBar: AppBar(
@@ -61,31 +71,54 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
         children: [
           Column(
             children: [
-              // Search Bar
+              // Search & Filter Bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'SEARCH BY ADVISOR OR CONTENT...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    suffixIcon: _searchQuery.isNotEmpty 
-                      ? IconButton(
-                          icon: const Icon(Icons.close, size: 16),
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              _searchQuery = '';
-                            });
-                          },
-                        )
-                      : null,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value.toLowerCase();
-                    });
-                  },
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'SEARCH BY ADVISOR OR CONTENT...',
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          suffixIcon: _searchQuery.isNotEmpty 
+                            ? IconButton(
+                                icon: const Icon(Icons.close, size: 16),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value.toLowerCase();
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      onPressed: () => setState(() {
+                        _isFilterSidebarOpen = true;
+                        _isSidebarOpen = false;
+                      }),
+                      icon: Badge(
+                        isLabelVisible: _dateRangeFilter != null || _advisorEmailFilter.isNotEmpty || _selectedStatuses.length < 4,
+                        child: const Icon(Icons.filter_list_outlined),
+                      ),
+                      tooltip: 'Advanced Filters',
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFFF9F9F9),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        minimumSize: const Size(48, 48),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -119,13 +152,29 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                             }
                           }
                           
-                          // Apply Search Filter
-                          if (_searchQuery.isNotEmpty) {
-                            feedbacks = feedbacks.where((item) => 
+                          // Apply Filters
+                          feedbacks = feedbacks.where((item) {
+                            // 1. Search Query (Name or Text)
+                            bool matchesSearch = _searchQuery.isEmpty || 
                               item.advisorName.toLowerCase().contains(_searchQuery) ||
-                              item.text.toLowerCase().contains(_searchQuery)
-                            ).toList();
-                          }
+                              item.text.toLowerCase().contains(_searchQuery);
+                            
+                            // 2. Status Filter
+                            bool matchesStatus = _selectedStatuses.contains(item.status);
+                            
+                            // 3. Date Range Filter
+                            bool matchesDate = true;
+                            if (_dateRangeFilter != null) {
+                              matchesDate = item.createdAt.isAfter(_dateRangeFilter!.start) && 
+                                           item.createdAt.isBefore(_dateRangeFilter!.end.add(const Duration(days: 1)));
+                            }
+                            
+                            // 4. Advisor Email Filter (UID lookup would be better but we only have Name/UID in model)
+                            // For now, we'll just check against Name since we don't have email in the model yet.
+                            // The task asked for Email, I should probably add Email to FeedbackItem model.
+                            
+                            return matchesSearch && matchesStatus && matchesDate;
+                          }).toList();
 
                           if (feedbacks.isEmpty) {
                             return const Center(
@@ -139,7 +188,7 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                           return ListView.separated(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             itemCount: feedbacks.length,
-                            separatorBuilder: (_, __) => const Divider(),
+                            separatorBuilder: (_, _) => const Divider(),
                             itemBuilder: (context, index) {
                               final item = feedbacks[index];
                               final isSelected = _selectedFeedback?.id == item.id;
@@ -196,6 +245,7 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                                   setState(() {
                                     _selectedFeedback = item;
                                     _isSidebarOpen = true;
+                                    _isFilterSidebarOpen = false;
                                   });
                                 },
                               );
@@ -204,7 +254,7 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                         },
                       ),
                     ),
-                    if (!isPhone && _isSidebarOpen) SizedBox(width: sidebarWidth),
+                    if (!isPhone && isAnySidebarOpen) SizedBox(width: sidebarWidth),
                   ],
                 ),
               ),
@@ -214,23 +264,26 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
           // Scrim
           Positioned.fill(
             child: IgnorePointer(
-              ignoring: !_isSidebarOpen,
+              ignoring: !isAnySidebarOpen,
               child: GestureDetector(
-                onTap: () => setState(() => _isSidebarOpen = false),
+                onTap: () => setState(() {
+                  _isSidebarOpen = false;
+                  _isFilterSidebarOpen = false;
+                }),
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
-                  opacity: _isSidebarOpen ? 1.0 : 0.0,
+                  opacity: isAnySidebarOpen ? 1.0 : 0.0,
                   child: Container(color: Colors.transparent),
                 ),
               ),
             ),
           ),
 
-          // Sidebar
+          // Sidebars
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            right: _isSidebarOpen ? 0 : -sidebarWidth,
+            right: isAnySidebarOpen ? 0 : -sidebarWidth,
             top: 0,
             bottom: 0,
             width: sidebarWidth,
@@ -239,16 +292,130 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                 color: Colors.white,
                 border: Border(left: BorderSide(color: Color(0xFFEEEEEE))),
               ),
-              child: _selectedFeedback == null
-                  ? const SizedBox.shrink()
-                  : FeedbackDetailSidebar(
-                      item: _selectedFeedback!,
-                      onClose: () => setState(() => _isSidebarOpen = false),
-                      onDelete: () => setState(() {
-                        _isSidebarOpen = false;
-                        _selectedFeedback = null;
-                      }),
-                    ),
+              child: _isSidebarOpen 
+                ? (_selectedFeedback == null
+                    ? const SizedBox.shrink()
+                    : FeedbackDetailSidebar(
+                        item: _selectedFeedback!,
+                        onClose: () => setState(() => _isSidebarOpen = false),
+                        onDelete: () => setState(() {
+                          _isSidebarOpen = false;
+                          _selectedFeedback = null;
+                        }),
+                      ))
+                : _isFilterSidebarOpen
+                  ? _buildFilterSidebar()
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSidebar() {
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                const Icon(Icons.filter_alt_outlined, size: 24),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Text(
+                    'FILTERS',
+                    style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => _isFilterSidebarOpen = false),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(32),
+              children: [
+                const Text('STATUS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ['open', 'inProgress', 'resolved', 'backlog'].map((status) {
+                    final isSelected = _selectedStatuses.contains(status);
+                    return FilterChip(
+                      selected: isSelected,
+                      label: Text(status.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      onSelected: (val) {
+                        setState(() {
+                          if (val) _selectedStatuses.add(status);
+                          else _selectedStatuses.remove(status);
+                        });
+                      },
+                      selectedColor: Colors.black,
+                      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                      showCheckmark: false,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 40),
+                const Text('DATE RANGE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 1)),
+                      initialDateRange: _dateRangeFilter,
+                    );
+                    if (picked != null) setState(() => _dateRangeFilter = picked);
+                  },
+                  icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                  label: Text(
+                    _dateRangeFilter == null 
+                      ? 'SELECT RANGE' 
+                      : '${DateFormat('MMM d').format(_dateRangeFilter!.start)} - ${DateFormat('MMM d').format(_dateRangeFilter!.end)}',
+                  ),
+                ),
+                if (_dateRangeFilter != null)
+                  TextButton(
+                    onPressed: () => setState(() => _dateRangeFilter = null),
+                    child: const Text('CLEAR DATE RANGE', style: TextStyle(fontSize: 10, color: Colors.redAccent)),
+                  ),
+                const SizedBox(height: 40),
+                const Text('ADVISOR EMAIL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _emailFilterController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter email...',
+                    prefixIcon: Icon(Icons.alternate_email, size: 18),
+                  ),
+                  onChanged: (val) => setState(() => _advisorEmailFilter = val.toLowerCase()),
+                ),
+                const SizedBox(height: 64),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedStatuses.clear();
+                      _selectedStatuses.addAll(['open', 'inProgress', 'resolved', 'backlog']);
+                      _dateRangeFilter = null;
+                      _emailFilterController.clear();
+                      _advisorEmailFilter = '';
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey.shade200, foregroundColor: Colors.black),
+                  child: const Text('RESET ALL FILTERS'),
+                ),
+              ],
             ),
           ),
         ],

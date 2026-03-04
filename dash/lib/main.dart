@@ -1,4 +1,4 @@
-import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +7,9 @@ import 'providers/admin_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/feedback_list_screen.dart';
 import 'theme.dart';
+
+// Conditional import for web reload
+import 'stub_html.dart' if (dart.library.html) 'dart:html' as html;
 
 void main() async {
   try {
@@ -80,10 +83,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
               if (_tookTooLong) ...[
                 const SizedBox(height: 24),
                 const Text('Connecting to services...', style: TextStyle(color: Colors.grey)),
-                TextButton(
-                  onPressed: () => html.window.location.reload(),
-                  child: const Text('RELOAD PAGE'),
-                ),
+                if (kIsWeb)
+                  TextButton(
+                    onPressed: () => html.window.location.reload(),
+                    child: const Text('RELOAD PAGE'),
+                  ),
               ],
             ],
           ),

@@ -74,6 +74,11 @@ class AdminProvider with ChangeNotifier {
     });
   }
 
+  Future<String?> getEmailByUid(String uid) async {
+    final doc = await _db.collection('advisors').doc(uid).get();
+    return doc.data()?['email'] as String?;
+  }
+
   Stream<List<FeedbackItem>> getFeedbacks() {
     return _db
         .collection('feedbacks')

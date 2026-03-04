@@ -79,6 +79,9 @@ python3 scripts/manage_admins.py add admin@example.com
 
 # Remove an administrator by email
 python3 scripts/manage_admins.py remove admin@example.com
+
+# Generate a Markdown task list from unresolved feedback
+python3 scripts/fetch_feedback_tasks.py
 ```
 
 ## 🌐 Web Deployment
