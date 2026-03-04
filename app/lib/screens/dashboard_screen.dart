@@ -235,7 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {
               BetterFeedback.of(context).show((feedback) {
                 // Here you would send the feedback to your backend or a service
-                debugPrint('Feedback text: ${feedback.text}');
+                context.read<AdvisorProvider>().submitFeedback(feedback.text);
                 debugPrint('Feedback screenshot: ${feedback.screenshot.length} bytes');
               });
             },

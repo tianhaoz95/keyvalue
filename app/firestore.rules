@@ -16,5 +16,11 @@ service cloud.firestore {
         }
       }
     }
+
+    // Feedbacks collection
+    match /feedbacks/{feedbackId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+    }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/advisor.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
@@ -262,6 +263,18 @@ class AdvisorProvider with ChangeNotifier {
       _currentAdvisor = updatedAdvisor;
       notifyListeners();
     }
+  }
+
+  Future<void> submitFeedback(String text) async {
+    if (_currentAdvisor == null) return;
+    
+    final db = FirebaseFirestore.instance;
+    await db.collection('feedbacks').add({
+      'advisorUid': _currentAdvisor!.uid,
+      'advisorName': _currentAdvisor!.name,
+      'text': text,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   void _setupCustomerListener() {
