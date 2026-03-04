@@ -31,11 +31,9 @@ def fetch_feedback_tasks():
         status = data.get('status', 'open')
         
         if status != 'resolved':
-            advisor_name = data.get('advisorName', 'Unknown')
-            text = data.get('text', 'No content').replace('
-', ' ')
+            text = data.get('text', 'No content').replace('\n', ' ')
             screen = data.get('screenName', 'UNKNOWN')
-            tasks.append(f"- [ ] {advisor_name}: {text} (Status: {status}, Screen: {screen})")
+            tasks.append(f"- [ ] {text} (Screen: {screen})")
 
     if not tasks:
         print("No unresolved feedback found.")
@@ -44,13 +42,9 @@ def fetch_feedback_tasks():
     # Write to feedback_tasks.md
     output_path = 'feedback_tasks.md'
     with open(output_path, 'w') as f:
-        f.write("# Pending Feedback Tasks
-
-")
-        f.write("
-".join(tasks))
-        f.write("
-")
+        f.write("# Pending Feedback Tasks\n\n")
+        f.write("\n".join(tasks))
+        f.write("\n")
 
     print(f"Successfully generated {len(tasks)} tasks in {output_path}")
 
