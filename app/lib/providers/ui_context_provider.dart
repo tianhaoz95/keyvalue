@@ -52,6 +52,13 @@ class UiContextProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setAiEditMode(AiEditContext context) {
+    _activeEditContext = context;
+    _sidebarMode = SidebarMode.ai;
+    _isSidebarExpanded = true;
+    notifyListeners();
+  }
+
   void clearEditContext() {
     _activeEditContext = null;
     notifyListeners();

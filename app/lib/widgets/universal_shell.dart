@@ -120,7 +120,12 @@ class UniversalShell extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: _buildMainPort(uiContext, advisorProvider),
+              child: Selector<UiContextProvider, (AppView, String?)>(
+                selector: (_, ui) => (ui.currentView, ui.activeCustomerId),
+                builder: (context, data, _) {
+                  return _buildMainPort(uiContext, advisorProvider);
+                },
+              ),
             ),
             if (isDesktop && uiContext.isSidebarExpanded) ...[
               const VerticalDivider(width: 1),

@@ -432,12 +432,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                 TextButton.icon(
                   onPressed: () {
                     final uiContext = context.read<UiContextProvider>();
-                    uiContext.setEditContext(AiEditContext(
+                    uiContext.setAiEditMode(AiEditContext(
                       type: AiEditContextType.profile,
                       content: customer.details,
                     ));
-                    uiContext.setSidebarMode(SidebarMode.ai);
-                    uiContext.setSidebarExpanded(true);
                   },
                   icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
                   label: const Text(
@@ -499,12 +497,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                 TextButton.icon(
                   onPressed: () {
                     final uiContext = context.read<UiContextProvider>();
-                    uiContext.setEditContext(AiEditContext(
+                    uiContext.setAiEditMode(AiEditContext(
                       type: AiEditContextType.guidelines,
                       content: customer.guidelines,
                     ));
-                    uiContext.setSidebarMode(SidebarMode.ai);
-                    uiContext.setSidebarExpanded(true);
                   },
                   icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
                   label: const Text(

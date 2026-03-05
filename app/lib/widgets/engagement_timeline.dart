@@ -206,9 +206,11 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               TextButton.icon(
                 onPressed: () {
                   final uiContext = context.read<UiContextProvider>();
-                  uiContext.setDraftContext(controller.text.trim(), engagement.engagementId);
-                  uiContext.setSidebarMode(SidebarMode.ai);
-                  uiContext.setSidebarExpanded(true);
+                  uiContext.setAiEditMode(AiEditContext(
+                    type: AiEditContextType.draft,
+                    content: controller.text.trim(),
+                    engagementId: engagement.engagementId,
+                  ));
                 },
                 icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
                 label: const Text(
