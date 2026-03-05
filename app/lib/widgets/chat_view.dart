@@ -35,9 +35,19 @@ class KeyValueChatView extends StatelessWidget {
                   Text('INTELLIGENCE HUB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
                 ],
               ),
-              TextButton(
-                onPressed: () => chatProvider.clearHistory(),
-                child: const Text('CLEAR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => chatProvider.clearHistory(),
+                    child: const Text('CLEAR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                    onPressed: () => uiContext.setSidebarExpanded(false),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ],
           ),

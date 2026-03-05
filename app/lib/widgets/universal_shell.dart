@@ -27,15 +27,18 @@ class UniversalShell extends StatelessWidget {
     }
 
     return PopScope(
-      canPop: uiContext.currentView == AppView.dashboard,
+      canPop: uiContext.currentView == AppView.dashboard && !uiContext.isSidebarExpanded,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (uiContext.isSidebarExpanded) {
+          uiContext.setSidebarExpanded(false);
+          return;
+        }
         if (uiContext.currentView != AppView.dashboard) {
           uiContext.setView(AppView.dashboard);
         }
       },
       child: Scaffold(
-        drawerScrimColor: Colors.transparent,
         appBar: AppBar(
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1.0),
@@ -45,7 +48,10 @@ class UniversalShell extends StatelessWidget {
             ),
           ),
           title: GestureDetector(
-            onTap: () => uiContext.setView(AppView.dashboard),
+            onTap: () {
+              uiContext.setSidebarExpanded(false);
+              uiContext.setView(AppView.dashboard);
+            },
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: Row(
@@ -96,50 +102,67 @@ class UniversalShell extends StatelessWidget {
               tooltip: 'Settings',
               onPressed: () => uiContext.setSidebarMode(SidebarMode.settings),
             ),
-            if (isDesktop)
-              IconButton(
-                icon: Icon(uiContext.sidebarMode == SidebarMode.ai && uiContext.isSidebarExpanded 
-                    ? Icons.auto_awesome : Icons.auto_awesome_outlined, size: 22),
-                tooltip: uiContext.isSidebarExpanded ? 'Hide Sidebar' : 'Show AI Sidebar',
-                onPressed: () => uiContext.setSidebarMode(SidebarMode.ai),
-              ),
-            if (!isDesktop)
-               Builder(
-                 builder: (context) => IconButton(
-                  icon: const Icon(Icons.auto_awesome_outlined, size: 22),
-                  onPressed: () {
-                    uiContext.setSidebarMode(SidebarMode.ai);
-                    Scaffold.of(context).openEndDrawer();
-                  },
-                ),
-               ),
+            IconButton(
+              icon: Icon(uiContext.sidebarMode == SidebarMode.ai && uiContext.isSidebarExpanded 
+                  ? Icons.auto_awesome : Icons.auto_awesome_outlined, size: 22),
+              tooltip: uiContext.isSidebarExpanded ? 'Hide Sidebar' : 'Show AI Sidebar',
+              onPressed: () => uiContext.setSidebarMode(SidebarMode.ai),
+            ),
             const SizedBox(width: 8),
           ],
         ),
-        body: Row(
+        body: Stack(
           children: [
-            Expanded(
-              flex: 3,
-              child: Selector<UiContextProvider, (AppView, String?)>(
-                selector: (_, ui) => (ui.currentView, ui.activeCustomerId),
-                builder: (context, data, _) {
-                  return _buildMainPort(uiContext, advisorProvider);
-                },
-              ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Selector<UiContextProvider, (AppView, String?)>(
+                    selector: (_, ui) => (ui.currentView, ui.activeCustomerId),
+                    builder: (context, data, _) {
+                      return _buildMainPort(uiContext, advisorProvider);
+                    },
+                  ),
+                ),
+                if (isDesktop && uiContext.isSidebarExpanded) ...[
+                  const VerticalDivider(width: 1),
+                  SizedBox(
+                    width: 400,
+                    child: _buildSidebar(uiContext, chatProvider),
+                  ),
+                ],
+              ],
             ),
-            if (isDesktop && uiContext.isSidebarExpanded) ...[
-              const VerticalDivider(width: 1),
-              SizedBox(
-                width: 400,
-                child: _buildSidebar(uiContext, chatProvider),
+            // Mobile Sidebar Overlay
+            if (!isDesktop && uiContext.isSidebarExpanded) ...[
+              GestureDetector(
+                onTap: () => uiContext.setSidebarExpanded(false),
+                child: Container(
+                  color: Colors.black.withOpacity(0.3),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 0,
+                width: isMobile ? screenWidth * 0.85 : 400,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(-2, 0),
+                      ),
+                    ],
+                  ),
+                  child: _buildSidebar(uiContext, chatProvider),
+                ),
               ),
             ],
           ],
         ),
-        endDrawer: !isDesktop ? Drawer(
-          width: MediaQuery.of(context).size.width * 0.85,
-          child: _buildSidebar(uiContext, chatProvider),
-        ) : null,
       ),
     );
   }
