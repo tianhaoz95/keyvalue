@@ -11,20 +11,32 @@ enum SidebarMode {
   settings,
 }
 
+enum AiEditContextType {
+  draft,
+  profile,
+  guidelines,
+}
+
+class AiEditContext {
+  final AiEditContextType type;
+  final String content;
+  final String? engagementId; // For draft type
+
+  AiEditContext({required this.type, required this.content, this.engagementId});
+}
+
 class UiContextProvider with ChangeNotifier {
   AppView _currentView = AppView.dashboard;
   String? _activeCustomerId;
   Map<String, dynamic>? _draftClientData;
-  String? _activeDraftContext;
-  String? _activeDraftEngagementId;
+  AiEditContext? _activeEditContext;
   bool _isSidebarExpanded = true;
   SidebarMode _sidebarMode = SidebarMode.ai;
 
   AppView get currentView => _currentView;
   String? get activeCustomerId => _activeCustomerId;
   Map<String, dynamic>? get draftClientData => _draftClientData;
-  String? get activeDraftContext => _activeDraftContext;
-  String? get activeDraftEngagementId => _activeDraftEngagementId;
+  AiEditContext? get activeEditContext => _activeEditContext;
   bool get isSidebarExpanded => _isSidebarExpanded;
   SidebarMode get sidebarMode => _sidebarMode;
 
@@ -35,17 +47,29 @@ class UiContextProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setDraftContext(String? context, String? engagementId) {
-    _activeDraftContext = context;
-    _activeDraftEngagementId = engagementId;
+  void setEditContext(AiEditContext? context) {
+    _activeEditContext = context;
     notifyListeners();
   }
 
-  void clearDraftContext() {
-    _activeDraftContext = null;
-    _activeDraftEngagementId = null;
+  void clearEditContext() {
+    _activeEditContext = null;
     notifyListeners();
   }
+
+  // Backwards compatibility
+  String? get activeDraftContext => _activeEditContext?.type == AiEditContextType.draft ? _activeEditContext?.content : null;
+  String? get activeDraftEngagementId => _activeEditContext?.type == AiEditContextType.draft ? _activeEditContext?.engagementId : null;
+  
+  void setDraftContext(String? context, String? engagementId) {
+    if (context == null) {
+      clearEditContext();
+    } else {
+      setEditContext(AiEditContext(type: AiEditContextType.draft, content: context, engagementId: engagementId));
+    }
+  }
+
+  void clearDraftContext() => clearEditContext();
 
   void clearDraftData() {
     _draftClientData = null;

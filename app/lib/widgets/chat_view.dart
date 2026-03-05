@@ -43,7 +43,7 @@ class KeyValueChatView extends StatelessWidget {
           ),
         ),
         const Divider(height: 1),
-        if (uiContext.activeDraftContext != null)
+        if (uiContext.activeEditContext != null)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -59,9 +59,9 @@ class KeyValueChatView extends StatelessWidget {
                   children: [
                     const Icon(Icons.description_outlined, size: 14, color: Colors.indigo),
                     const SizedBox(width: 8),
-                    const Text(
-                      'EDITING DRAFT CONTEXT',
-                      style: TextStyle(
+                    Text(
+                      'EDITING ${_getLabel(uiContext.activeEditContext!.type)} CONTEXT',
+                      style: const TextStyle(
                         color: Colors.indigo,
                         fontWeight: FontWeight.w900,
                         fontSize: 9,
@@ -70,14 +70,14 @@ class KeyValueChatView extends StatelessWidget {
                     ),
                     const Spacer(),
                     InkWell(
-                      onTap: () => uiContext.clearDraftContext(),
+                      onTap: () => uiContext.clearEditContext(),
                       child: const Icon(Icons.close, size: 14, color: Colors.indigo),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  uiContext.activeDraftContext!,
+                  uiContext.activeEditContext!.content,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -180,5 +180,16 @@ class KeyValueChatView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _getLabel(AiEditContextType type) {
+    switch (type) {
+      case AiEditContextType.draft:
+        return 'DRAFT';
+      case AiEditContextType.profile:
+        return 'PROFILE';
+      case AiEditContextType.guidelines:
+        return 'GUIDELINES';
+    }
   }
 }

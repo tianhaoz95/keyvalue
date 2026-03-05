@@ -48,8 +48,9 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
     
     // 1. Prepare effective prompt with context if available
     String effectivePrompt = prompt;
-    if (_uiContext.activeDraftContext != null) {
-      effectivePrompt = "CONTEXT: Editing draft message: \"${_uiContext.activeDraftContext}\"\n\nUSER REQUEST: $prompt";
+    if (_uiContext.activeEditContext != null) {
+      final contextType = _uiContext.activeEditContext!.type.toString().split('.').last.toUpperCase();
+      effectivePrompt = "CONTEXT: Editing $contextType: \"${_uiContext.activeEditContext!.content}\"\n\nUSER REQUEST: $prompt";
     }
 
     // 2. Add user message to history (original prompt for UI, but maybe effective for AI)
@@ -101,7 +102,12 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
           
           // Clear draft context if update_draft was called successfully
           if (call.name == 'update_draft' && result == null) {
-            _uiContext.clearDraftContext();
+            _uiContext.clearEditContext();
+          }
+          
+          // Clear edit context if profile or guidelines were updated
+          if ((call.name == 'update_profile' || call.name == 'update_guidelines') && result == null) {
+            _uiContext.clearEditContext();
           }
 
           if (result != null) {
