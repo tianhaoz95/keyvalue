@@ -14,17 +14,25 @@ enum SidebarMode {
 class UiContextProvider with ChangeNotifier {
   AppView _currentView = AppView.dashboard;
   String? _activeCustomerId;
+  Map<String, dynamic>? _draftClientData;
   bool _isSidebarExpanded = true;
   SidebarMode _sidebarMode = SidebarMode.ai;
 
   AppView get currentView => _currentView;
   String? get activeCustomerId => _activeCustomerId;
+  Map<String, dynamic>? get draftClientData => _draftClientData;
   bool get isSidebarExpanded => _isSidebarExpanded;
   SidebarMode get sidebarMode => _sidebarMode;
 
-  void setView(AppView view, {String? customerId}) {
+  void setView(AppView view, {String? customerId, Map<String, dynamic>? draftData}) {
     _currentView = view;
     _activeCustomerId = customerId;
+    _draftClientData = draftData;
+    notifyListeners();
+  }
+
+  void clearDraftData() {
+    _draftClientData = null;
     notifyListeners();
   }
 

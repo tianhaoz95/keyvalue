@@ -42,11 +42,9 @@ Mandatory Rules:
             'details': Schema.string(), 'guidelines': Schema.string(),
           },
         ),
-        FunctionDeclaration('create_client', 'Save new client record.',
+        FunctionDeclaration('create_client', 'Open the "Add Client" registration form. Call this immediately to help the user fill it out.',
           parameters: {
             'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
-            'details': Schema.string(description: 'Markdown background.'),
-            'guidelines': Schema.string(description: 'Markdown rules.'),
           },
         ),
         FunctionDeclaration('update_profile', 'Update client background profile.',
@@ -111,12 +109,9 @@ Mandatory Rules:
   Future<GenerateContentResponse?> getOnboardingResponseRaw(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
     if (isDemo) return null;
     try {
-      final previewLogic = isExpressiveAiEnabled 
-          ? 'Call `update_client_preview` on every new detail. Always provide a text reply acknowledging the update.'
-          : 'Track details internally. No preview needed.';
       final prompt = '''
-Goal: Onboard client (Name, Email, Occupation, Profile, Guidelines).
-Logic: $previewLogic. Call `create_client` only when all 5 are gathered.
+Goal: Onboard client (Name, Email, Occupation). 
+Logic: Call `create_client` IMMEDIATELY to open the form, then help the user fill it.
 History:
 ${_formatHistory(history)}
 Assistant:''';
@@ -141,7 +136,7 @@ Assistant:''';
       if (call.name == 'update_client_preview' && isExpressiveAiEnabled) {
         return "PREVIEW_DATA:${jsonEncode(call.args)}\n${text.isNotEmpty ? text : 'Preview updated.'}";
       }
-      if (call.name == 'create_client') return text.isNotEmpty ? text : "Client created.";
+      if (call.name == 'create_client') return text.isNotEmpty ? text : "I've opened the registration form with the details we discussed.";
       return "CONFERENCE_READY";
     }
     return text.isNotEmpty ? text : "Processing...";

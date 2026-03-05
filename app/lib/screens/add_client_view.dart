@@ -19,6 +19,23 @@ class _AddClientViewState extends State<AddClientView> {
   final _occupationController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _prefillFromProvider();
+  }
+
+  void _prefillFromProvider() {
+    final uiContext = Provider.of<UiContextProvider>(context, listen: false);
+    final draft = uiContext.draftClientData;
+    if (draft == null) return;
+
+    if (draft.containsKey('name')) _nameController.text = draft['name'] as String? ?? '';
+    if (draft.containsKey('email')) _emailController.text = draft['email'] as String? ?? '';
+    if (draft.containsKey('phone')) _phoneController.text = draft['phone'] as String? ?? '';
+    if (draft.containsKey('occupation')) _occupationController.text = draft['occupation'] as String? ?? '';
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
@@ -29,8 +46,19 @@ class _AddClientViewState extends State<AddClientView> {
 
   @override
   Widget build(BuildContext context) {
-    final uiContext = Provider.of<UiContextProvider>(context, listen: false);
+    final uiContext = Provider.of<UiContextProvider>(context);
     final advisorProvider = Provider.of<AdvisorProvider>(context, listen: false);
+    
+    // Listen for updates while on screen
+    if (uiContext.draftClientData != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _prefillFromProvider();
+          uiContext.clearDraftData();
+        });
+      });
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isCompact = screenWidth < 600;
 

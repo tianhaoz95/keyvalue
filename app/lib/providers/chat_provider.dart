@@ -179,24 +179,16 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         final name = call.args['name'] as String?;
         final email = call.args['email'] as String?;
         final occupation = call.args['occupation'] as String?;
-        final details = call.args['details'] as String?;
-        final guidelines = call.args['guidelines'] as String?;
         
-        if (name != null && email != null) {
-          final newCustomer = Customer(
-            customerId: DateTime.now().millisecondsSinceEpoch.toString(),
-            name: name,
-            email: email,
-            occupation: occupation ?? '',
-            details: details ?? '',
-            guidelines: guidelines ?? '',
-            engagementFrequencyDays: 30,
-            nextEngagementDate: DateTime.now(),
-            lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
-          );
-          await _advisorProvider.addCustomer(newCustomer);
-          _uiContext.setView(AppView.customerDetail, customerId: newCustomer.customerId);
-        }
+        // Instead of direct creation, navigate to the form with draft data
+        _uiContext.setView(
+          AppView.addClient, 
+          draftData: {
+            'name': name,
+            'email': email,
+            'occupation': occupation,
+          },
+        );
         break;
       case 'update_client_info':
         final customerId = call.args['customerId'] as String?;
