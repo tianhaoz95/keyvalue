@@ -17,8 +17,10 @@ class KeyValueChatView extends StatelessWidget {
   Widget build(BuildContext context) {
     final advisorProvider = Provider.of<AdvisorProvider>(context);
     final chatProvider = provider as GlobalChatProvider;
-
     final uiContext = Provider.of<UiContextProvider>(context);
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Column(
       children: [
@@ -28,11 +30,19 @@ class KeyValueChatView extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.auto_awesome_outlined, size: 16),
+                  if (isMobile)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 20, color: Colors.black),
+                      onPressed: () => uiContext.setSidebarExpanded(false),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  if (isMobile) const SizedBox(width: 12),
+                  const Icon(Icons.auto_awesome_outlined, size: 16),
                   const SizedBox(width: 8),
-                  Text('INTELLIGENCE HUB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
+                  const Text('INTELLIGENCE HUB', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5)),
                 ],
               ),
               Row(
@@ -41,12 +51,13 @@ class KeyValueChatView extends StatelessWidget {
                     onPressed: () => chatProvider.clearHistory(),
                     child: const Text('CLEAR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-                    onPressed: () => uiContext.setSidebarExpanded(false),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
+                  if (!isMobile)
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                      onPressed: () => uiContext.setSidebarExpanded(false),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
                 ],
               ),
             ],

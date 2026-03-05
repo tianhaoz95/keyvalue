@@ -128,36 +128,17 @@ class UniversalShell extends StatelessWidget {
                   const VerticalDivider(width: 1),
                   SizedBox(
                     width: 400,
-                    child: _buildSidebar(uiContext, chatProvider),
+                    child: _buildSidebar(uiContext, chatProvider, false),
                   ),
                 ],
               ],
             ),
             // Mobile Sidebar Overlay
             if (!isDesktop && uiContext.isSidebarExpanded) ...[
-              GestureDetector(
-                onTap: () => uiContext.setSidebarExpanded(false),
+              Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.3),
-                ),
-              ),
-              Positioned(
-                top: 0,
-                bottom: 0,
-                right: 0,
-                width: isMobile ? screenWidth * 0.85 : 400,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(-2, 0),
-                      ),
-                    ],
-                  ),
-                  child: _buildSidebar(uiContext, chatProvider),
+                  color: Colors.white,
+                  child: _buildSidebar(uiContext, chatProvider, isMobile),
                 ),
               ),
             ],
@@ -167,7 +148,7 @@ class UniversalShell extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar(UiContextProvider uiContext, GlobalChatProvider chatProvider) {
+  Widget _buildSidebar(UiContextProvider uiContext, GlobalChatProvider chatProvider, bool isMobile) {
     if (uiContext.sidebarMode == SidebarMode.settings) {
       return Column(
         children: [
@@ -177,17 +158,26 @@ class UniversalShell extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.settings_outlined, size: 16),
-                    SizedBox(width: 8),
-                    Text('SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
+                    if (isMobile)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, size: 20, color: Colors.black),
+                        onPressed: () => uiContext.setSidebarExpanded(false),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    if (isMobile) const SizedBox(width: 12),
+                    const Icon(Icons.settings_outlined, size: 16),
+                    const SizedBox(width: 8),
+                    const Text('SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 16, color: Colors.grey),
-                  onPressed: () => uiContext.setSidebarExpanded(false),
-                ),
+                if (!isMobile)
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                    onPressed: () => uiContext.setSidebarExpanded(false),
+                  ),
               ],
             ),
           ),
