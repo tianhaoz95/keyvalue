@@ -439,25 +439,27 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                     uiContext.setSidebarMode(SidebarMode.ai);
                     uiContext.setSidebarExpanded(true);
                   },
-                  icon: const Icon(Icons.auto_awesome_outlined, size: 12, color: Colors.indigo),
+                  icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.indigo),
                   label: const Text(
                     'AI EDIT',
                     style: TextStyle(
                       fontWeight: FontWeight.w900, 
-                      fontSize: 8, 
+                      fontSize: 10, 
                       color: Colors.indigo, 
                       letterSpacing: 1.5,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 16),
+                  icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
                   onPressed: () async {
                     if (_isEditingProfile) {
                       final updated = customer.copyWith(details: _profileController.text.trim());
@@ -504,25 +506,27 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                     uiContext.setSidebarMode(SidebarMode.ai);
                     uiContext.setSidebarExpanded(true);
                   },
-                  icon: const Icon(Icons.auto_awesome_outlined, size: 12, color: Colors.indigo),
+                  icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.indigo),
                   label: const Text(
                     'AI EDIT',
                     style: TextStyle(
                       fontWeight: FontWeight.w900, 
-                      fontSize: 8, 
+                      fontSize: 10, 
                       color: Colors.indigo, 
                       letterSpacing: 1.5,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: 16),
+                  icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
                   onPressed: () async {
                     if (_isEditingRules) {
                       final updated = customer.copyWith(guidelines: _guidelinesController.text.trim());

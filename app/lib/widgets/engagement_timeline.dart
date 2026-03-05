@@ -210,23 +210,23 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                   uiContext.setSidebarMode(SidebarMode.ai);
                   uiContext.setSidebarExpanded(true);
                 },
-                icon: const Icon(Icons.auto_awesome_outlined, size: 12, color: Colors.indigo),
+                icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.indigo),
                 label: const Text(
                   'AI EDIT',
                   style: TextStyle(
                     fontWeight: FontWeight.w900, 
-                    fontSize: 8, 
+                    fontSize: 10, 
                     color: Colors.indigo, 
                     letterSpacing: 1.5,
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () {
                   setState(() {
@@ -245,18 +245,18 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                     }
                   });
                 },
-                icon: Icon(isEditing ? Icons.check : Icons.edit_outlined, size: 12, color: isEditing ? Colors.green : Colors.grey),
+                icon: Icon(isEditing ? Icons.check : Icons.edit_outlined, size: 14, color: isEditing ? Colors.green : Colors.grey),
                 label: Text(
                   isEditing ? 'DONE' : 'EDIT',
                   style: TextStyle(
                     fontWeight: FontWeight.w900, 
-                    fontSize: 8, 
+                    fontSize: 10, 
                     color: isEditing ? Colors.green : Colors.grey, 
                     letterSpacing: 1.5,
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
