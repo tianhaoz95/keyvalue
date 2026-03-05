@@ -27,6 +27,7 @@ class EngagementTimeline extends StatefulWidget {
 
 class _EngagementTimelineState extends State<EngagementTimeline> {
   String? _expandedInsightEngagementId;
+  String? _editingDraftId;
   final Map<String, TextEditingController> _draftControllers = {};
 
   @override
@@ -178,6 +179,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
 
   Widget _buildDraftSection(BuildContext context, Engagement engagement) {
     final controller = _getDraftController(engagement);
+    final isEditing = _editingDraftId == engagement.engagementId;
     
     return Container(
       width: double.infinity,
@@ -199,9 +201,35 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.5),
               ),
               const Spacer(),
-              const Text(
-                'EDITABLE',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 8, color: Colors.grey, letterSpacing: 1.5),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    if (isEditing) {
+                      _editingDraftId = null;
+                      // Update draft in database when finishing edit
+                      if (controller.text.trim() != engagement.draftMessage) {
+                        widget.provider.updateDraft(widget.customer.customerId, controller.text.trim());
+                      }
+                    } else {
+                      _editingDraftId = engagement.engagementId;
+                    }
+                  });
+                },
+                icon: Icon(isEditing ? Icons.check : Icons.edit_outlined, size: 12, color: isEditing ? Colors.green : Colors.grey),
+                label: Text(
+                  isEditing ? 'DONE' : 'EDIT',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900, 
+                    fontSize: 8, 
+                    color: isEditing ? Colors.green : Colors.grey, 
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),
@@ -209,11 +237,17 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
           TextField(
             controller: controller,
             maxLines: null,
-            style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
-            decoration: const InputDecoration(
+            enabled: isEditing,
+            style: TextStyle(
+              fontSize: 14, 
+              height: 1.6, 
+              color: isEditing ? Colors.black87 : Colors.black54,
+            ),
+            decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Edit draft...',
               contentPadding: EdgeInsets.zero,
+              disabledBorder: InputBorder.none,
             ),
           ),
           const SizedBox(height: 24),
@@ -224,7 +258,14 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               SizedBox(
                 width: 140,
                 child: ElevatedButton.icon(
-                  onPressed: () => widget.provider.sendEngagement(widget.customer, engagement, controller.text.trim()),
+                  onPressed: () async {
+                    final message = controller.text.trim();
+                    // If edited, ensure the draft is updated in backend before sending
+                    if (message != engagement.draftMessage) {
+                      await widget.provider.updateDraft(widget.customer.customerId, message);
+                    }
+                    widget.provider.sendEngagement(widget.customer, engagement, message);
+                  },
                   icon: const Icon(Icons.send_outlined, size: 16),
                   label: const Text('SEND', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5)),
                   style: ElevatedButton.styleFrom(
@@ -468,7 +509,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
   void _showDeleteConfirmation(BuildContext context, Engagement engagement) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -476,7 +517,7 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
         content: const Text('Are you sure you want to delete this engagement record? This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
+            onPressed: () => Navigator.pop(dialogContext), 
             child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),
           ),
           ElevatedButton(
@@ -488,10 +529,19 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () async {
+              // Unfocus to prevent SelectionContainer errors
+              FocusManager.instance.primaryFocus?.unfocus();
+              // Allow one frame for the focus change to propagate
+              await Future.delayed(Duration.zero);
+              
+              if (!context.mounted) return;
+              
               await widget.provider.deleteEngagement(widget.customer, engagement);
+              
               if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Engagement deleted')));
+                final messenger = ScaffoldMessenger.of(context);
+                Navigator.pop(dialogContext);
+                messenger.showSnackBar(const SnackBar(content: Text('Engagement deleted')));
               }
             },
             child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),

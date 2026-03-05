@@ -75,7 +75,10 @@ class _AddClientViewState extends State<AddClientView> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    onPressed: () => uiContext.setView(AppView.dashboard),
+                    onPressed: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      uiContext.setView(AppView.dashboard);
+                    },
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -98,6 +101,7 @@ class _AddClientViewState extends State<AddClientView> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
+                      FocusManager.instance.primaryFocus?.unfocus();
                       final newCustomer = Customer(
                         customerId: DateTime.now().millisecondsSinceEpoch.toString(),
                         name: _nameController.text.trim(),

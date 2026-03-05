@@ -98,6 +98,9 @@ class AdvisorProvider with ChangeNotifier {
       case 'fast':
         modelName = 'gemini-2.5-flash-lite';
         break;
+      case 'lite-preview':
+        modelName = 'gemini-3.1-flash-lite-preview';
+        break;
       case 'preview':
         modelName = 'gemini-3-flash-preview';
         break;
@@ -499,27 +502,6 @@ class AdvisorProvider with ChangeNotifier {
     return isGuestMode 
         ? _localEngagementRepo.getEngagements(_currentAdvisor!.uid, customerId)
         : _engagementRepo.getEngagements(_currentAdvisor!.uid, customerId);
-  }
-
-  Future<String> getOnboardingResponse(List<AiChatMessage> history) async {
-    return _aiService.generateOnboardingResponse(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-  }
-
-  Future<Customer?> extractCustomerFromOnboarding(List<AiChatMessage> history) async {
-    final data = await _aiService.extractClientFromFunctionCall(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-    if (data == null) return null;
-
-    return Customer(
-      customerId: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: data['name'] ?? '',
-      email: data['email'] ?? '',
-      occupation: data['occupation'] ?? '',
-      details: data['details'] ?? '',
-      guidelines: data['guidelines'] ?? '',
-      engagementFrequencyDays: 30,
-      nextEngagementDate: DateTime.now(),
-      lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
-    );
   }
 
   Future<String> getProfileRefinementResponse(Customer customer, List<AiChatMessage> history) async {

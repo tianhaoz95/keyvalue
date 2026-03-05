@@ -250,7 +250,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Record Customer Response'),
         content: TextField(
           controller: controller,
@@ -258,12 +258,13 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           decoration: const InputDecoration(hintText: 'Enter what the customer said...'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
               final response = controller.text.trim();
               if (response.isNotEmpty) {
-                Navigator.pop(context);
+                FocusManager.instance.primaryFocus?.unfocus();
+                Navigator.pop(dialogContext);
                 await provider.receiveResponse(customer, engagement, response);
               }
             },
@@ -328,7 +329,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: () => provider.generateManualDraft(customer),
+                onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  provider.generateManualDraft(customer);
+                },
                 icon: const Icon(Icons.auto_awesome_outlined, size: 12),
                 label: const Text('GENERATE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                 style: ElevatedButton.styleFrom(
@@ -377,7 +381,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             ElevatedButton.icon(
-              onPressed: () => provider.generateManualDraft(customer),
+              onPressed: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                provider.generateManualDraft(customer);
+              },
               icon: const Icon(Icons.auto_awesome_outlined, size: 14),
               label: const Text('GENERATE OUTREACH', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               style: ElevatedButton.styleFrom(
@@ -607,7 +614,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     _tagController.clear();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Add Tag'),
         content: TextField(
           controller: _tagController,
@@ -615,14 +622,14 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           decoration: const InputDecoration(hintText: 'e.g. High Priority'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
               final tag = _tagController.text.trim();
               if (tag.isNotEmpty) {
                 final updatedTags = [...customer.tags, tag];
                 await provider.addCustomer(customer.copyWith(tags: updatedTags));
-                if (mounted) Navigator.pop(context);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
               }
             },
             child: const Text('ADD'),
@@ -635,17 +642,19 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
   void _showDeleteCustomerDialog(Customer customer, AdvisorProvider provider) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Client?', style: TextStyle(fontWeight: FontWeight.w900)),
         content: Text('Are you sure you want to delete ${customer.name}? This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
               await provider.deleteCustomer(customer.customerId);
-              if (context.mounted) {
-                Navigator.pop(context);
-                context.read<UiContextProvider>().setView(AppView.dashboard);
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                if (mounted) {
+                  context.read<UiContextProvider>().setView(AppView.dashboard);
+                }
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -716,7 +725,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Add Engagement Schedule', style: TextStyle(fontWeight: FontWeight.w900)),
           content: Column(
@@ -757,7 +766,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
             ElevatedButton(
               onPressed: () async {
                 final schedule = EngagementSchedule(
@@ -770,7 +779,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                 final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)..add(schedule);
                 final updated = customer.copyWith(schedules: updatedSchedules);
                 await provider.addCustomer(updated);
-                if (context.mounted) Navigator.pop(context);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
               child: const Text('ADD SCHEDULE'),
             ),

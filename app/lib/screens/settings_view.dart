@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
-import '../providers/ui_context_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'login_screen.dart';
 
@@ -279,6 +278,9 @@ class _SettingsViewState extends State<SettingsView> {
       case 'fast':
         capabilityText = 'Fast (Gemini Flash Lite)';
         break;
+      case 'lite-preview':
+        capabilityText = 'Lite Preview (Gemini 3.1 Flash Lite)';
+        break;
       case 'preview':
         capabilityText = 'Preview (Gemini 3 Flash)';
         break;
@@ -304,6 +306,7 @@ class _SettingsViewState extends State<SettingsView> {
               onSelected: provider.setAiCapability,
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'fast', child: Text('Fast')),
+                const PopupMenuItem(value: 'lite-preview', child: Text('Lite Preview')),
                 const PopupMenuItem(value: 'pro', child: Text('Pro')),
                 const PopupMenuItem(value: 'preview', child: Text('Preview')),
               ],

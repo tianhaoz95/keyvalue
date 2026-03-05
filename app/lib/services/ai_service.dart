@@ -1,5 +1,6 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../models/customer.dart';
 
 class AiChatMessage {
@@ -33,6 +34,7 @@ Mandatory Rules:
 1. **Notifications**: Explicitly tell the user what tool you called and what changed (e.g. "I've updated the profile; view it in the Main Port.").
 2. **Data Safety**: Before updating profile/guidelines, call `get_current_profile` if the text isn't in your history. 
 3. **Proactivity**: Synthesize info into high-quality Markdown. Don't ask for wording; suggest it.
+4. **Onboarding**: Once you have gathered the name, email, and basic background, call `create_client` to automatically register the client and navigate to their new profile.
 '''),
     tools: [
       Tool.functionDeclarations([
@@ -42,9 +44,11 @@ Mandatory Rules:
             'details': Schema.string(), 'guidelines': Schema.string(),
           },
         ),
-        FunctionDeclaration('create_client', 'Open the "Add Client" registration form. Call this immediately to help the user fill it out.',
+        FunctionDeclaration('create_client', 'Register a new client and navigate to their profile. Call this once name, email, and background are gathered.',
           parameters: {
             'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
+            'details': Schema.string(description: 'Initial background profile in Markdown.'),
+            'guidelines': Schema.string(description: 'Initial engagement guidelines in Markdown.'),
           },
         ),
         FunctionDeclaration('update_profile', 'Update client background profile.',
@@ -110,8 +114,10 @@ Mandatory Rules:
     if (isDemo) return null;
     try {
       final prompt = '''
-Goal: Onboard client (Name, Email, Occupation). 
-Logic: Call `create_client` IMMEDIATELY to open the form, then help the user fill it.
+Goal: Onboard client (Name, Email, Occupation, Background). 
+Logic: 
+1. Use `update_client_preview` to show the advisor what you've gathered so far.
+2. Once you have Name, Email, and a basic understanding of their occupation/background, call `create_client` to finalize registration and navigate the advisor to the new profile.
 History:
 ${_formatHistory(history)}
 Assistant:''';
@@ -119,36 +125,42 @@ Assistant:''';
     } catch (e) { return null; }
   }
 
-  Future<String> generateOnboardingResponse(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
-    if (isDemo) {
-      if (history.isEmpty) return "Hello! I'm your AI onboarding assistant. To start, what is the client's full name?";
-      if (history.last.text.toLowerCase().contains('john')) return 'PREVIEW_DATA:{"name":"John"} Great. Email and occupation?';
-      return "I'm processing...";
-    }
-
-    final response = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-    if (response == null) return "Connection error.";
-    
-    final calls = response.functionCalls;
-    final text = response.text ?? "";
-    if (calls.isNotEmpty) {
-      final call = calls.first;
-      if (call.name == 'update_client_preview' && isExpressiveAiEnabled) {
-        return "PREVIEW_DATA:${jsonEncode(call.args)}\n${text.isNotEmpty ? text : 'Preview updated.'}";
-      }
-      if (call.name == 'create_client') return text.isNotEmpty ? text : "I've opened the registration form with the details we discussed.";
-      return "CONFERENCE_READY";
-    }
-    return text.isNotEmpty ? text : "Processing...";
-  }
-
   Future<String> generateDraftMessage(Customer customer) async {
     if (isDemo) return "Hi ${customer.name}, just checking in regarding ${customer.occupation}.";
     try {
-      final prompt = 'Draft professional check-in for ${customer.name}.\nProfile: ${customer.details}\nRules: ${customer.guidelines}\nReturn message text only.';
+      final prompt = '''
+Draft a professional check-in message for ${customer.name}.
+Customer Background: ${customer.details.isNotEmpty ? customer.details : 'No background info available.'}
+Engagement Guidelines: ${customer.guidelines.isNotEmpty ? customer.guidelines : 'No specific rules.'}
+
+Return ONLY the message text. Do not include any other text or call any tools.
+''';
       final res = await model.generateContent([Content.text(prompt)]);
-      return res.text ?? "Draft failed.";
-    } catch (e) { return "Error: $e"; }
+      
+      if (res.text != null && res.text!.trim().isNotEmpty) return res.text!.trim();
+      
+      // If model called a tool instead of returning text (happens due to systemInstruction)
+      if (res.functionCalls.isNotEmpty) {
+        final call = res.functionCalls.first;
+        if (call.name == 'update_draft' && call.args['refined_draft'] != null) {
+          return call.args['refined_draft'] as String;
+        }
+      }
+      
+      // If text is null, investigate why
+      if (res.candidates.isNotEmpty) {
+        final candidate = res.candidates.first;
+        if (candidate.finishReason == FinishReason.safety) {
+          return "Draft failed: Blocked by safety filters.";
+        }
+        return "Draft failed: Finish reason: ${candidate.finishReason}";
+      }
+      
+      return "Draft failed: Empty response from AI.";
+    } catch (e) { 
+      debugPrint('AI Draft Error: $e');
+      return "Error: $e"; 
+    }
   }
 
   Future<List<String>> extractPointsOfInterest(String response, String guidelines) async {
@@ -223,8 +235,4 @@ Assistant:''';
   // Support methods for backwards compatibility
   Future<String> finalizeProfileRefinement(Customer customer, List<AiChatMessage> history) => extractUpdatedProfile(customer, history);
   Future<String> finalizeGuidelinesRefinement(Customer customer, List<AiChatMessage> history) => extractUpdatedGuidelines(customer, history);
-  Future<Map<String, dynamic>?> extractClientFromFunctionCall(List<AiChatMessage> history, {bool isExpressiveAiEnabled = true}) async {
-    final res = await getOnboardingResponseRaw(history, isExpressiveAiEnabled: isExpressiveAiEnabled);
-    return res?.functionCalls.isNotEmpty == true ? res!.functionCalls.first.args : null;
-  }
 }

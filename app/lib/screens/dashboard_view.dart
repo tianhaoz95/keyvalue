@@ -236,6 +236,7 @@ class _DashboardViewState extends State<DashboardView> {
                           icon: const Icon(Icons.person_add_alt_1_outlined, size: 20, color: Colors.black54),
                           tooltip: 'Add New Client',
                           onPressed: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
                             context.read<UiContextProvider>().setView(AppView.addClient);
                           },
                           padding: EdgeInsets.zero,
@@ -288,6 +289,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildCustomerTile(BuildContext context, Customer customer, bool isCompact) {
     return InkWell(
       onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
         context.read<UiContextProvider>().setView(
           AppView.customerDetail,
           customerId: customer.customerId,
