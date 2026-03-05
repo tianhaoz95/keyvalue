@@ -69,6 +69,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
       orElse: () => widget.customer,
     );
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
+
     return LoadingOverlay(
       isLoading: provider.isProcessingResponse || provider.isGeneratingDraft,
       message: provider.isProcessingResponse ? 'AI Analyzing Response...' : 'AI Generating Draft...',
@@ -79,16 +83,18 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             // Top Header Area
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              padding: EdgeInsets.fromLTRB(horizontalPadding, 24, horizontalPadding, 12),
               child: _buildHeader(context, currentCustomer, l10n, provider),
             ),
             
             // Tab Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              padding: EdgeInsets.symmetric(horizontal: isCompact ? 8.0 : 12.0),
               child: TabBar(
                 isScrollable: true,
                 dividerColor: Colors.transparent,
+                labelStyle: TextStyle(fontSize: isCompact ? 10 : 12, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                unselectedLabelStyle: TextStyle(fontSize: isCompact ? 10 : 12, fontWeight: FontWeight.w700, letterSpacing: 1.0),
                 tabs: const [
                   Tab(text: 'TIMELINE'),
                   Tab(text: 'PROFILE'),
@@ -121,7 +127,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                   
                   // Tab 2: Profile
                   ListView(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(horizontalPadding),
                     children: [
                       if (currentCustomer.proposedDetails != null)
                         _buildProposedUpdateCard(
@@ -130,14 +136,15 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                           proposed: currentCustomer.proposedDetails!,
                           onApprove: () => provider.approveProposedDetails(currentCustomer),
                           onDismiss: () => provider.dismissProposedDetails(currentCustomer),
+                          isCompact: isCompact,
                         ),
-                      _buildProfileSection(currentCustomer, provider, l10n),
+                      _buildProfileSection(currentCustomer, provider, l10n, isCompact),
                     ],
                   ),
                   
                   // Tab 3: Guidelines
                   ListView(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(horizontalPadding),
                     children: [
                       if (currentCustomer.proposedGuidelines != null)
                         _buildProposedUpdateCard(
@@ -146,20 +153,21 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                           proposed: currentCustomer.proposedGuidelines!,
                           onApprove: () => provider.approveProposedGuidelines(currentCustomer),
                           onDismiss: () => provider.dismissProposedGuidelines(currentCustomer),
+                          isCompact: isCompact,
                         ),
-                      _buildGuidelinesSection(currentCustomer, provider, l10n),
+                      _buildGuidelinesSection(currentCustomer, provider, l10n, isCompact),
                       const SizedBox(height: 48),
-                      _buildSchedulesSection(currentCustomer, provider),
+                      _buildSchedulesSection(currentCustomer, provider, isCompact),
                     ],
                   ),
 
                   // Tab 4: Client Info & Settings
                   ListView(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(horizontalPadding),
                     children: [
-                      _buildInfoSection(currentCustomer, provider, l10n),
+                      _buildInfoSection(currentCustomer, provider, l10n, isCompact),
                       const SizedBox(height: 48),
-                      _buildDangerZone(currentCustomer, provider, l10n),
+                      _buildDangerZone(currentCustomer, provider, l10n, isCompact),
                     ],
                   ),
                 ],
@@ -177,6 +185,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     required String proposed,
     required VoidCallback onApprove,
     required VoidCallback onDismiss,
+    bool isCompact = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 32),
@@ -189,27 +198,32 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(isCompact ? 12.0 : 16.0),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome_outlined, size: 16),
+                Icon(Icons.auto_awesome_outlined, size: isCompact ? 14 : 16),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10)),
+                Text(title, style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: isCompact ? 9 : 10)),
               ],
             ),
           ),
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(isCompact ? 12.0 : 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('AI SUGGESTION:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey)),
+                Text('AI SUGGESTION:', style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, color: Colors.grey)),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(8)),
-                  child: MarkdownBody(data: proposed),
+                  child: MarkdownBody(
+                    data: proposed,
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(fontSize: isCompact ? 12 : 13),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -219,19 +233,21 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                     ElevatedButton(
                       onPressed: onApprove,
                       style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(120, 36),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        minimumSize: Size(isCompact ? 100 : 120, 36),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('APPROVE & UPDATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                      child: Text('APPROVE & UPDATE', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900)),
                     ),
                     OutlinedButton(
                       onPressed: onDismiss,
                       style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(100, 36),
+                        minimumSize: Size(isCompact ? 80 : 100, 36),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         side: const BorderSide(color: Colors.black, width: 1.5),
                       ),
-                      child: const Text('DISMISS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                      child: Text('DISMISS', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900)),
                     ),
                   ],
                 ),
@@ -419,14 +435,14 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     );
   }
 
-  Widget _buildProfileSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildProfileSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.profile.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+            Text(l10n.profile.toUpperCase(), style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
             Row(
               children: [
                 TextButton.icon(
@@ -437,12 +453,12 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                       content: customer.details,
                     ));
                   },
-                  icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
-                  label: const Text(
+                  icon: Icon(Icons.auto_awesome_outlined, size: isCompact ? 12 : 14, color: Colors.black),
+                  label: Text(
                     'AI EDIT',
                     style: TextStyle(
                       fontWeight: FontWeight.w900, 
-                      fontSize: 10, 
+                      fontSize: isCompact ? 9 : 10, 
                       color: Colors.black, 
                       letterSpacing: 1.5,
                     ),
@@ -453,9 +469,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
-                  icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 20),
+                  icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: isCompact ? 18 : 20),
                   padding: const EdgeInsets.all(8),
                   constraints: const BoxConstraints(),
                   onPressed: () async {
@@ -475,23 +491,28 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           TextField(
             controller: _profileController,
             maxLines: null,
-            style: const TextStyle(fontSize: 13, height: 1.6),
+            style: TextStyle(fontSize: isCompact ? 12 : 13, height: 1.6),
             decoration: const InputDecoration(border: OutlineInputBorder()),
           )
         else
-          MarkdownBody(data: customer.details),
+          MarkdownBody(
+            data: customer.details,
+            styleSheet: MarkdownStyleSheet(
+              p: TextStyle(fontSize: isCompact ? 12 : 13, height: 1.6),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildGuidelinesSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildGuidelinesSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('GUIDELINES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+            Text('GUIDELINES', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
             Row(
               children: [
                 TextButton.icon(
@@ -502,12 +523,12 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                       content: customer.guidelines,
                     ));
                   },
-                  icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
-                  label: const Text(
+                  icon: Icon(Icons.auto_awesome_outlined, size: isCompact ? 12 : 14, color: Colors.black),
+                  label: Text(
                     'AI EDIT',
                     style: TextStyle(
                       fontWeight: FontWeight.w900, 
-                      fontSize: 10, 
+                      fontSize: isCompact ? 9 : 10, 
                       color: Colors.black, 
                       letterSpacing: 1.5,
                     ),
@@ -518,9 +539,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
-                  icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: 20),
+                  icon: Icon(_isEditingRules ? Icons.check_circle_outline : Icons.edit_outlined, size: isCompact ? 18 : 20),
                   padding: const EdgeInsets.all(8),
                   constraints: const BoxConstraints(),
                   onPressed: () async {
@@ -540,25 +561,30 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           TextField(
             controller: _guidelinesController,
             maxLines: null,
-            style: const TextStyle(fontSize: 13, height: 1.6),
+            style: TextStyle(fontSize: isCompact ? 12 : 13, height: 1.6),
             decoration: const InputDecoration(border: OutlineInputBorder()),
           )
         else
-          MarkdownBody(data: customer.guidelines),
+          MarkdownBody(
+            data: customer.guidelines,
+            styleSheet: MarkdownStyleSheet(
+              p: TextStyle(fontSize: isCompact ? 12 : 13, height: 1.6),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildInfoSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildInfoSection(Customer customer, AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('PRIMARY CONTACT & INFO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+            Text('PRIMARY CONTACT & INFO', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
             IconButton(
-              icon: Icon(_isEditingInfo ? Icons.check_circle_outline : Icons.edit_outlined, size: 16),
+              icon: Icon(_isEditingInfo ? Icons.check_circle_outline : Icons.edit_outlined, size: isCompact ? 16 : 18),
               onPressed: () async {
                 if (_isEditingInfo) {
                   final updated = customer.copyWith(
@@ -576,35 +602,35 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
           ],
         ),
         const SizedBox(height: 16),
-        _buildInfoField('FULL NAME', _nameController, _isEditingInfo),
-        _buildInfoField('EMAIL ADDRESS', _emailController, _isEditingInfo),
-        _buildInfoField('PHONE NUMBER', _phoneController, _isEditingInfo),
-        _buildInfoField('OCCUPATION', _occupationController, _isEditingInfo),
-        _buildInfoField('ADDRESS', _addressController, _isEditingInfo, maxLines: 2),
+        _buildInfoField('FULL NAME', _nameController, _isEditingInfo, isCompact: isCompact),
+        _buildInfoField('EMAIL ADDRESS', _emailController, _isEditingInfo, isCompact: isCompact),
+        _buildInfoField('PHONE NUMBER', _phoneController, _isEditingInfo, isCompact: isCompact),
+        _buildInfoField('OCCUPATION', _occupationController, _isEditingInfo, isCompact: isCompact),
+        _buildInfoField('ADDRESS', _addressController, _isEditingInfo, isCompact: isCompact, maxLines: 2),
       ],
     );
   }
 
-  Widget _buildInfoField(String label, TextEditingController controller, bool isEditing, {int maxLines = 1}) {
+  Widget _buildInfoField(String label, TextEditingController controller, bool isEditing, {int maxLines = 1, bool isCompact = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 0.5)),
           const SizedBox(height: 4),
           if (isEditing)
             TextField(
               controller: controller,
               maxLines: maxLines,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: isCompact ? 13 : 14, fontWeight: FontWeight.w600),
               decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 8)),
             )
           else
             Text(
               controller.text.isEmpty ? 'Not set' : controller.text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: isCompact ? 13 : 14, 
                 fontWeight: FontWeight.w600, 
                 color: controller.text.isEmpty ? Colors.black26 : Colors.black
               ),
@@ -614,9 +640,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     );
   }
 
-  Widget _buildDangerZone(Customer customer, AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildDangerZone(Customer customer, AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isCompact ? 16 : 24),
       decoration: BoxDecoration(
         color: Colors.red.withOpacity(0.02),
         borderRadius: BorderRadius.circular(12),
@@ -625,9 +651,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('DANGER ZONE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.red)),
+          Text('DANGER ZONE', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.red)),
           const SizedBox(height: 16),
-          const Text('Deleting a client will permanently remove all their history, profile, and engagement schedules.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Deleting a client will permanently remove all their history, profile, and engagement schedules.', style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54)),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => _showDeleteCustomerDialog(customer, provider),
@@ -636,8 +662,9 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
               foregroundColor: Colors.red,
               elevation: 0,
               side: const BorderSide(color: Colors.red),
+              minimumSize: Size(0, isCompact ? 36 : 40),
             ),
-            child: const Text('DELETE CLIENT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+            child: Text('DELETE CLIENT', style: TextStyle(fontSize: isCompact ? 10 : 11, fontWeight: FontWeight.w900, letterSpacing: 1)),
           ),
         ],
       ),
@@ -670,23 +697,23 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     );
   }
 
-  Widget _buildSchedulesSection(Customer customer, AdvisorProvider provider) {
+  Widget _buildSchedulesSection(Customer customer, AdvisorProvider provider, bool isCompact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+            Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, size: 18),
+              icon: Icon(Icons.add_circle_outline, size: isCompact ? 16 : 18),
               onPressed: () => _showAddScheduleDialog(context, customer, provider),
             ),
           ],
         ),
         const SizedBox(height: 8),
         if (customer.schedules.isEmpty)
-          const Text('No active schedules. Proactive discovery will use the default 30-day cadence.', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic))
+          Text('No active schedules. Proactive discovery will use the default 30-day cadence.', style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.grey, fontStyle: FontStyle.italic))
         else
           ListView.builder(
             shrinkWrap: true,
@@ -704,10 +731,13 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                 ),
                 child: ListTile(
                   dense: true,
-                  title: Text('Every ${schedule.cadenceValue} ${schedule.cadencePeriod}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' | Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}'),
+                  title: Text('Every ${schedule.cadenceValue} ${schedule.cadencePeriod}', style: TextStyle(fontSize: isCompact ? 13 : 14, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    'Starts: ${DateFormat('MMM d, y').format(schedule.startDate)}${schedule.endDate != null ? ' | Ends: ${DateFormat('MMM d, y').format(schedule.endDate!)}' : ''}',
+                    style: TextStyle(fontSize: isCompact ? 11 : 12),
+                  ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                    icon: Icon(Icons.delete_outline, size: isCompact ? 14 : 16, color: Colors.red),
                     onPressed: () async {
                       final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)..removeAt(index);
                       final updated = customer.copyWith(schedules: updatedSchedules);

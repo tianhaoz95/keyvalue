@@ -37,49 +37,52 @@ class _SettingsViewState extends State<SettingsView> {
     final provider = Provider.of<AdvisorProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final advisor = provider.currentAdvisor;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
 
     if (advisor == null) return const Center(child: CircularProgressIndicator());
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(horizontalPadding),
       children: [
         // Advisor Profile Section
-        _buildSectionHeader(l10n.profile.toUpperCase()),
+        _buildSectionHeader(l10n.profile.toUpperCase(), isCompact),
         const SizedBox(height: 12),
-        _buildProfileCard(provider, l10n),
+        _buildProfileCard(provider, l10n, isCompact),
 
         const SizedBox(height: 32),
 
         // Subscription Section
-        _buildSectionHeader('SUBSCRIPTION PLAN'),
+        _buildSectionHeader('SUBSCRIPTION PLAN', isCompact),
         const SizedBox(height: 12),
-        _buildPlanSelector(),
+        _buildPlanSelector(isCompact),
 
         const SizedBox(height: 32),
 
         // Billing Section
-        _buildSectionHeader('BILLING INFORMATION'),
+        _buildSectionHeader('BILLING INFORMATION', isCompact),
         const SizedBox(height: 12),
-        _buildBillingInfoCard(),
+        _buildBillingInfoCard(isCompact),
 
         const SizedBox(height: 32),
 
         // AI Settings Section
-        _buildSectionHeader('AI CAPABILITIES'),
+        _buildSectionHeader('AI CAPABILITIES', isCompact),
         const SizedBox(height: 12),
-        _buildAiSettingsCard(provider, l10n),
+        _buildAiSettingsCard(provider, l10n, isCompact),
 
         const SizedBox(height: 32),
 
         // Preferences Section
-        _buildSectionHeader('PREFERENCES'),
+        _buildSectionHeader('PREFERENCES', isCompact),
         const SizedBox(height: 12),
-        _buildPreferencesCard(provider, l10n),
+        _buildPreferencesCard(provider, l10n, isCompact),
 
         const SizedBox(height: 40),
 
         // Danger Zone
-        _buildSectionHeader('ACCOUNT'),
+        _buildSectionHeader('ACCOUNT', isCompact),
         const SizedBox(height: 12),
         ElevatedButton(
           onPressed: () async {
@@ -98,13 +101,13 @@ class _SettingsViewState extends State<SettingsView> {
             side: const BorderSide(color: Colors.red),
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
-          child: const Text('LOGOUT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: 12)),
+          child: Text('LOGOUT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: isCompact ? 11 : 12)),
         ),
         const SizedBox(height: 12),
         Center(
           child: TextButton(
             onPressed: () => _showDeleteAccountDialog(context, provider),
-            child: const Text('DELETE ACCOUNT', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
+            child: Text('DELETE ACCOUNT', style: TextStyle(color: Colors.red, fontSize: isCompact ? 10 : 11, fontWeight: FontWeight.bold)),
           ),
         ),
         const SizedBox(height: 24),
@@ -112,11 +115,11 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, bool isCompact) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 9,
+      style: TextStyle(
+        fontSize: isCompact ? 8 : 9,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.5,
         color: Colors.grey,
@@ -124,10 +127,10 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildProfileCard(AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildProfileCard(AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     final advisor = provider.currentAdvisor!;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
         color: const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(12),
@@ -139,13 +142,13 @@ class _SettingsViewState extends State<SettingsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const CircleAvatar(
-                radius: 20,
+              CircleAvatar(
+                radius: isCompact ? 18 : 20,
                 backgroundColor: Colors.black,
-                child: Icon(Icons.person, color: Colors.white, size: 20),
+                child: Icon(Icons.person, color: Colors.white, size: isCompact ? 18 : 20),
               ),
               IconButton(
-                icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: 18),
+                icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: isCompact ? 16 : 18),
                 onPressed: () async {
                   if (_isEditingProfile) {
                     final updated = advisor.copyWith(
@@ -163,28 +166,28 @@ class _SettingsViewState extends State<SettingsView> {
           if (_isEditingProfile) ...[
             TextField(
               controller: _nameController,
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(fontSize: isCompact ? 12 : 13),
               decoration: const InputDecoration(labelText: 'NAME', isDense: true),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _firmController,
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(fontSize: isCompact ? 12 : 13),
               decoration: const InputDecoration(labelText: 'FIRM NAME', isDense: true),
             ),
           ] else ...[
-            Text(advisor.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
+            Text(advisor.name, style: TextStyle(fontSize: isCompact ? 15 : 16, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
-            Text(advisor.firmName, style: const TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+            Text(advisor.firmName, style: TextStyle(fontSize: isCompact ? 12 : 13, color: Colors.black54, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             const SizedBox(height: 12),
-            Text(advisor.email, style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis),
+            Text(advisor.email, style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.grey), overflow: TextOverflow.ellipsis),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildPlanSelector() {
+  Widget _buildPlanSelector(bool isCompact) {
     final plans = [
       {'name': 'Starter', 'price': '\$29/mo', 'features': 'Up to 10 clients'},
       {'name': 'Pro', 'price': '\$99/mo', 'features': 'Unlimited clients, AI features'},
@@ -198,7 +201,7 @@ class _SettingsViewState extends State<SettingsView> {
           onTap: () => setState(() => _selectedPlan = plan['name']!),
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(isCompact ? 10 : 12),
             decoration: BoxDecoration(
               color: isSelected ? Colors.black.withValues(alpha: 0.02) : Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -213,13 +216,13 @@ class _SettingsViewState extends State<SettingsView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(plan['name']!.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                      Text(plan['name']!.toUpperCase(), style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 10 : 11, letterSpacing: 1)),
                       const SizedBox(height: 2),
-                      Text(plan['features']!, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                      Text(plan['features']!, style: TextStyle(fontSize: isCompact ? 9 : 10, color: Colors.grey)),
                     ],
                   ),
                 ),
-                Text(plan['price']!, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                Text(plan['price']!, style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 12 : 13)),
               ],
             ),
           ),
@@ -228,9 +231,9 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildBillingInfoCard() {
+  Widget _buildBillingInfoCard(bool isCompact) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
         color: const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(12),
@@ -240,29 +243,29 @@ class _SettingsViewState extends State<SettingsView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.credit_card, size: 18, color: Colors.black54),
+              Icon(Icons.credit_card, size: isCompact ? 16 : 18, color: Colors.black54),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Visa ending in 4242',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13),
                 ),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('EDIT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900)),
+                child: Text('EDIT', style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
               ),
             ],
           ),
-          const Divider(height: 16),
+          Divider(height: isCompact ? 12 : 16),
           Row(
             children: [
-              const Icon(Icons.history, size: 18, color: Colors.black54),
+              Icon(Icons.history, size: isCompact ? 16 : 18, color: Colors.black54),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Next billing on April 1, 2026',
-                  style: TextStyle(fontSize: 12, color: Colors.black87),
+                  style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black87),
                 ),
               ),
             ],
@@ -272,7 +275,7 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildAiSettingsCard(AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildAiSettingsCard(AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     String capabilityText;
     switch (provider.aiCapability) {
       case 'fast':
@@ -300,8 +303,8 @@ class _SettingsViewState extends State<SettingsView> {
         children: [
           ListTile(
             dense: true,
-            title: const Text('Model Capability', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: Text(capabilityText, style: const TextStyle(fontSize: 11)),
+            title: Text('Model Capability', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+            subtitle: Text(capabilityText, style: TextStyle(fontSize: isCompact ? 10 : 11)),
             trailing: PopupMenuButton<String>(
               onSelected: provider.setAiCapability,
               itemBuilder: (context) => [
@@ -310,14 +313,14 @@ class _SettingsViewState extends State<SettingsView> {
                 const PopupMenuItem(value: 'pro', child: Text('Pro')),
                 const PopupMenuItem(value: 'preview', child: Text('Preview')),
               ],
-              child: const Icon(Icons.tune, size: 18),
+              child: Icon(Icons.tune, size: isCompact ? 16 : 18),
             ),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           SwitchListTile(
             dense: true,
-            title: const Text('Expressive AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: const Text('Visual feedback', style: TextStyle(fontSize: 11)),
+            title: Text('Expressive AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+            subtitle: Text('Visual feedback', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isExpressiveAiEnabled,
             activeColor: Colors.black,
             onChanged: provider.isGuestMode ? null : (val) => provider.setExpressiveAiEnabled(val),
@@ -325,8 +328,8 @@ class _SettingsViewState extends State<SettingsView> {
           const Divider(height: 1, indent: 16, endIndent: 16),
           SwitchListTile(
             dense: true,
-            title: const Text('Multimodal AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: const Text('Voice & images', style: TextStyle(fontSize: 11)),
+            title: Text('Multimodal AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+            subtitle: Text('Voice & images', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isMultimodalAiEnabled,
             activeColor: Colors.black,
             onChanged: provider.isGuestMode ? null : (val) => provider.setMultimodalAiEnabled(val),
@@ -336,7 +339,7 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildPreferencesCard(AdvisorProvider provider, AppLocalizations l10n) {
+  Widget _buildPreferencesCard(AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF9F9F9),
@@ -347,15 +350,15 @@ class _SettingsViewState extends State<SettingsView> {
         children: [
           ListTile(
             dense: true,
-            title: const Text('Language', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: Text(provider.locale.languageCode == 'en' ? 'English' : 'Chinese', style: const TextStyle(fontSize: 11)),
+            title: Text('Language', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+            subtitle: Text(provider.locale.languageCode == 'en' ? 'English' : 'Chinese', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             trailing: PopupMenuButton<Locale>(
               onSelected: provider.setLocale,
               itemBuilder: (context) => [
                 const PopupMenuItem(value: Locale('en'), child: Text('English')),
                 const PopupMenuItem(value: Locale('zh'), child: Text('中文 (Chinese)')),
               ],
-              child: const Icon(Icons.language, size: 18),
+              child: Icon(Icons.language, size: isCompact ? 16 : 18),
             ),
           ),
         ],
