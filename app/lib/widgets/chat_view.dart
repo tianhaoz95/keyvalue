@@ -46,10 +46,10 @@ class KeyValueChatView extends StatelessWidget {
         if (uiContext.activeEditContext != null)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.05),
-              border: const Border(bottom: BorderSide(color: Colors.indigo, width: 0.5)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9F9F9),
+              border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,33 +57,55 @@ class KeyValueChatView extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.description_outlined, size: 14, color: Colors.indigo),
-                    const SizedBox(width: 8),
-                    Text(
-                      'EDITING ${_getLabel(uiContext.activeEditContext!.type)} CONTEXT',
-                      style: const TextStyle(
-                        color: Colors.indigo,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 9,
-                        letterSpacing: 1,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.auto_awesome_outlined, size: 10, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_getLabel(uiContext.activeEditContext!.type)} CONTEXT',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 8,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const Spacer(),
-                    InkWell(
-                      onTap: () => uiContext.clearEditContext(),
-                      child: const Icon(Icons.close, size: 14, color: Colors.indigo),
+                    IconButton(
+                      onPressed: () => uiContext.clearEditContext(),
+                      icon: const Icon(Icons.close, size: 14, color: Colors.black54),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  uiContext.activeEditContext!.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.indigo.withOpacity(0.7),
-                    fontSize: 11,
-                    fontStyle: FontStyle.italic,
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFEEEEEE)),
+                  ),
+                  child: Text(
+                    uiContext.activeEditContext!.content,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 12,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               ],

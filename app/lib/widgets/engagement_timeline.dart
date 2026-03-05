@@ -210,13 +210,13 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                   uiContext.setSidebarMode(SidebarMode.ai);
                   uiContext.setSidebarExpanded(true);
                 },
-                icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.indigo),
+                icon: const Icon(Icons.auto_awesome_outlined, size: 14, color: Colors.black),
                 label: const Text(
                   'AI EDIT',
                   style: TextStyle(
                     fontWeight: FontWeight.w900, 
                     fontSize: 10, 
-                    color: Colors.indigo, 
+                    color: Colors.black, 
                     letterSpacing: 1.5,
                   ),
                 ),
