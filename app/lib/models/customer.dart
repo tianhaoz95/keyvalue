@@ -99,8 +99,6 @@ class Customer {
   final String phoneNumber;
   @HiveField(11)
   final String address;
-  @HiveField(12)
-  final List<String> tags;
   @HiveField(13)
   final int cadenceValue; // Legacy
   @HiveField(14)
@@ -125,7 +123,6 @@ class Customer {
     this.occupation = '',
     this.phoneNumber = '',
     this.address = '',
-    this.tags = const [],
     this.cadenceValue = 30,
     this.cadencePeriod = 'days',
     this.schedules = const [],
@@ -147,7 +144,6 @@ class Customer {
       occupation: map['occupation'] as String? ?? '',
       phoneNumber: map['phoneNumber'] as String? ?? '',
       address: map['address'] as String? ?? '',
-      tags: (map['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       cadenceValue: map['cadenceValue'] as int? ?? map['engagementFrequencyDays'] as int? ?? 30,
       cadencePeriod: map['cadencePeriod'] as String? ?? 'days',
       schedules: (map['schedules'] as List<dynamic>?)
@@ -173,7 +169,6 @@ class Customer {
       'occupation': occupation,
       'phoneNumber': phoneNumber,
       'address': address,
-      'tags': tags,
       'cadenceValue': cadenceValue,
       'cadencePeriod': cadencePeriod,
       'schedules': schedules.map((e) => e.toMap()).toList(),
@@ -194,7 +189,6 @@ class Customer {
     String? occupation,
     String? phoneNumber,
     String? address,
-    List<String>? tags,
     int? cadenceValue,
     String? cadencePeriod,
     List<EngagementSchedule>? schedules,
@@ -214,7 +208,6 @@ class Customer {
       occupation: occupation ?? this.occupation,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
-      tags: tags ?? this.tags,
       cadenceValue: cadenceValue ?? this.cadenceValue,
       cadencePeriod: cadencePeriod ?? this.cadencePeriod,
       schedules: schedules ?? this.schedules,

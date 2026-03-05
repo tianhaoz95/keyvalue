@@ -5,6 +5,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'dart:convert';
 import '../providers/advisor_provider.dart';
 import '../providers/chat_provider.dart';
+import '../providers/ui_context_provider.dart';
 import 'ai/embedded_client_card.dart';
 
 class KeyValueChatView extends StatelessWidget {
@@ -16,6 +17,8 @@ class KeyValueChatView extends StatelessWidget {
   Widget build(BuildContext context) {
     final advisorProvider = Provider.of<AdvisorProvider>(context);
     final chatProvider = provider as GlobalChatProvider;
+
+    final uiContext = Provider.of<UiContextProvider>(context);
 
     return Column(
       children: [
@@ -40,6 +43,52 @@ class KeyValueChatView extends StatelessWidget {
           ),
         ),
         const Divider(height: 1),
+        if (uiContext.activeDraftContext != null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withOpacity(0.05),
+              border: const Border(bottom: BorderSide(color: Colors.indigo, width: 0.5)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.description_outlined, size: 14, color: Colors.indigo),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'EDITING DRAFT CONTEXT',
+                      style: TextStyle(
+                        color: Colors.indigo,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 9,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      onTap: () => uiContext.clearDraftContext(),
+                      child: const Icon(Icons.close, size: 14, color: Colors.indigo),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  uiContext.activeDraftContext!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.indigo.withOpacity(0.7),
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Expanded(
           child: LlmChatView(
             provider: provider,

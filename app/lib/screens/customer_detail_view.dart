@@ -34,7 +34,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
   late TextEditingController _phoneController;
   late TextEditingController _occupationController;
   late TextEditingController _addressController;
-  late TextEditingController _tagController;
 
   @override
   void initState() {
@@ -47,7 +46,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     _phoneController = TextEditingController(text: widget.customer.phoneNumber);
     _occupationController = TextEditingController(text: widget.customer.occupation);
     _addressController = TextEditingController(text: widget.customer.address);
-    _tagController = TextEditingController();
   }
 
   @override
@@ -59,7 +57,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     _phoneController.dispose();
     _occupationController.dispose();
     _addressController.dispose();
-    _tagController.dispose();
     super.dispose();
   }
 
@@ -522,31 +519,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
         _buildInfoField('PHONE NUMBER', _phoneController, _isEditingInfo),
         _buildInfoField('OCCUPATION', _occupationController, _isEditingInfo),
         _buildInfoField('ADDRESS', _addressController, _isEditingInfo, maxLines: 2),
-        
-        const SizedBox(height: 32),
-        const Text('TAGS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ...customer.tags.map((tag) => Chip(
-              label: Text(tag, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              onDeleted: () async {
-                final updatedTags = List<String>.from(customer.tags)..remove(tag);
-                await provider.addCustomer(customer.copyWith(tags: updatedTags));
-              },
-              backgroundColor: const Color(0xFFF9F9F9),
-              side: const BorderSide(color: Color(0xFFEEEEEE)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            )),
-            ActionChip(
-              label: const Text('ADD TAG', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              onPressed: () => _showAddTagDialog(customer, provider),
-              avatar: const Icon(Icons.add, size: 14),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -604,35 +576,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
               side: const BorderSide(color: Colors.red),
             ),
             child: const Text('DELETE CLIENT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddTagDialog(Customer customer, AdvisorProvider provider) {
-    _tagController.clear();
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Add Tag'),
-        content: TextField(
-          controller: _tagController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'e.g. High Priority'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              final tag = _tagController.text.trim();
-              if (tag.isNotEmpty) {
-                final updatedTags = [...customer.tags, tag];
-                await provider.addCustomer(customer.copyWith(tags: updatedTags));
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-              }
-            },
-            child: const Text('ADD'),
           ),
         ],
       ),

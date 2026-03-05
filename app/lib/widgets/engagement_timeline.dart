@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/customer.dart';
 import '../models/engagement.dart';
 import '../providers/advisor_provider.dart';
+import '../providers/ui_context_provider.dart';
 import '../l10n/app_localizations.dart';
 
 class EngagementTimeline extends StatefulWidget {
@@ -203,12 +205,40 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
               const Spacer(),
               TextButton.icon(
                 onPressed: () {
+                  final uiContext = context.read<UiContextProvider>();
+                  uiContext.setDraftContext(controller.text.trim(), engagement.engagementId);
+                  uiContext.setSidebarMode(SidebarMode.ai);
+                  uiContext.setSidebarExpanded(true);
+                },
+                icon: const Icon(Icons.auto_awesome_outlined, size: 12, color: Colors.indigo),
+                label: const Text(
+                  'AI EDIT',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900, 
+                    fontSize: 8, 
+                    color: Colors.indigo, 
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 4),
+              TextButton.icon(
+                onPressed: () {
                   setState(() {
                     if (isEditing) {
                       _editingDraftId = null;
                       // Update draft in database when finishing edit
                       if (controller.text.trim() != engagement.draftMessage) {
-                        widget.provider.updateDraft(widget.customer.customerId, controller.text.trim());
+                        widget.provider.updateDraft(
+                          widget.customer.customerId, 
+                          controller.text.trim(),
+                          engagementId: engagement.engagementId,
+                        );
                       }
                     } else {
                       _editingDraftId = engagement.engagementId;
@@ -262,7 +292,11 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                     final message = controller.text.trim();
                     // If edited, ensure the draft is updated in backend before sending
                     if (message != engagement.draftMessage) {
-                      await widget.provider.updateDraft(widget.customer.customerId, message);
+                      await widget.provider.updateDraft(
+                        widget.customer.customerId, 
+                        message,
+                        engagementId: engagement.engagementId,
+                      );
                     }
                     widget.provider.sendEngagement(widget.customer, engagement, message);
                   },

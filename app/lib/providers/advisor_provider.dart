@@ -528,15 +528,21 @@ class AdvisorProvider with ChangeNotifier {
     return _aiService.finalizeDraftRefinement(customer, currentDraft, history);
   }
 
-  Future<void> updateDraft(String customerId, String refinedDraft) async {
+  Future<void> updateDraft(String customerId, String refinedDraft, {String? engagementId}) async {
     if (_currentAdvisor == null) return;
     
     // 1. Get engagements for this customer
     final stream = getCustomerEngagements(customerId);
     final engagements = await stream.first;
     
-    // 2. Find the latest draft
-    final draftIndex = engagements.indexWhere((e) => e.status == EngagementStatus.draft);
+    // 2. Find the target draft
+    int draftIndex;
+    if (engagementId != null) {
+      draftIndex = engagements.indexWhere((e) => e.engagementId == engagementId);
+    } else {
+      draftIndex = engagements.indexWhere((e) => e.status == EngagementStatus.draft);
+    }
+
     if (draftIndex != -1) {
       final updatedDraft = engagements[draftIndex].copyWith(draftMessage: refinedDraft);
       if (isGuestMode) {

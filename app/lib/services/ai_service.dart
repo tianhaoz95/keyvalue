@@ -35,6 +35,7 @@ Mandatory Rules:
 2. **Data Safety**: Before updating profile/guidelines, call `get_current_profile` if the text isn't in your history. 
 3. **Proactivity**: Synthesize info into high-quality Markdown. Don't ask for wording; suggest it.
 4. **Onboarding**: Once you have gathered the name, email, and basic background, call `create_client` to automatically register the client and navigate to their new profile.
+5. **Draft Editing**: If the user prompt starts with "CONTEXT: Editing draft message", prioritize refining that specific draft using the `update_draft` tool based on the user's request.
 '''),
     tools: [
       Tool.functionDeclarations([

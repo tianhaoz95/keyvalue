@@ -15,12 +15,16 @@ class UiContextProvider with ChangeNotifier {
   AppView _currentView = AppView.dashboard;
   String? _activeCustomerId;
   Map<String, dynamic>? _draftClientData;
+  String? _activeDraftContext;
+  String? _activeDraftEngagementId;
   bool _isSidebarExpanded = true;
   SidebarMode _sidebarMode = SidebarMode.ai;
 
   AppView get currentView => _currentView;
   String? get activeCustomerId => _activeCustomerId;
   Map<String, dynamic>? get draftClientData => _draftClientData;
+  String? get activeDraftContext => _activeDraftContext;
+  String? get activeDraftEngagementId => _activeDraftEngagementId;
   bool get isSidebarExpanded => _isSidebarExpanded;
   SidebarMode get sidebarMode => _sidebarMode;
 
@@ -28,6 +32,18 @@ class UiContextProvider with ChangeNotifier {
     _currentView = view;
     _activeCustomerId = customerId;
     _draftClientData = draftData;
+    notifyListeners();
+  }
+
+  void setDraftContext(String? context, String? engagementId) {
+    _activeDraftContext = context;
+    _activeDraftEngagementId = engagementId;
+    notifyListeners();
+  }
+
+  void clearDraftContext() {
+    _activeDraftContext = null;
+    _activeDraftEngagementId = null;
     notifyListeners();
   }
 

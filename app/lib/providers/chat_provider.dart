@@ -33,6 +33,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
   void clearHistory() {
     _history = [];
+    _uiContext.clearDraftContext();
     notifyListeners();
   }
 
@@ -45,7 +46,13 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
   Stream<String> sendMessageStream(String prompt, {Iterable<Attachment> attachments = const []}) async* {
     final aiService = _advisorProvider.aiService;
     
-    // 1. Add user message to history
+    // 1. Prepare effective prompt with context if available
+    String effectivePrompt = prompt;
+    if (_uiContext.activeDraftContext != null) {
+      effectivePrompt = "CONTEXT: Editing draft message: \"${_uiContext.activeDraftContext}\"\n\nUSER REQUEST: $prompt";
+    }
+
+    // 2. Add user message to history (original prompt for UI, but maybe effective for AI)
     final userMsg = ChatMessage(
       text: prompt,
       origin: MessageOrigin.user,
@@ -54,7 +61,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
     _history.add(userMsg);
     notifyListeners();
 
-    // 2. Prepare history for AI service
+    // 3. Prepare history for AI service
     final List<ai.AiChatMessage> aiHistory = _history.map((m) {
       String text = m.text ?? "";
       if (text.startsWith('PREVIEW_DATA:')) {
@@ -67,7 +74,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
       );
     }).where((m) => m.text.isNotEmpty).toList();
 
-    // 3. Get AI response based on current UI context
+    // 4. Get AI response based on current UI context
     String response = "";
     try {
       _isLoading = true;
@@ -81,7 +88,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
           : [];
 
       final chat = aiService.model.startChat(history: chatHistory);
-      var aiResponse = await chat.sendMessage(Content.text(prompt));
+      var aiResponse = await chat.sendMessage(Content.text(effectivePrompt));
 
       // Execution Loop for Tool Calling
       int loopCount = 0;
@@ -91,6 +98,12 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         
         for (final call in aiResponse.functionCalls) {
           final result = await _executeAiTool(call);
+          
+          // Clear draft context if update_draft was called successfully
+          if (call.name == 'update_draft' && result == null) {
+            _uiContext.clearDraftContext();
+          }
+
           if (result != null) {
             toolResponses.add(result);
           } else {
@@ -111,7 +124,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
       notifyListeners();
     }
 
-    // 4. Handle response tokens
+    // 5. Handle response tokens
     if (response == 'CONFERENCE_READY') {
       final llmMsg = ChatMessage(
         text: "I've gathered all the information. Ready to proceed!",
@@ -274,7 +287,11 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         final refinedDraft = call.args['refined_draft'] as String?;
         if (refinedDraft != null && customerId != null) {
-          await _advisorProvider.updateDraft(customerId, refinedDraft);
+          await _advisorProvider.updateDraft(
+            customerId, 
+            refinedDraft, 
+            engagementId: _uiContext.activeDraftEngagementId,
+          );
           _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }
         break;
