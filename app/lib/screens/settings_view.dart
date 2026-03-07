@@ -259,13 +259,15 @@ class _SettingsViewState extends State<SettingsView> {
         }),
         if (showSlider) ...[
           const SizedBox(height: 16),
-          if (isCompact)
+          if (isCompact) ...[
             ConfirmSlider(
               text: 'Slide to confirm ${_pendingPlan}',
               isCompact: isCompact,
               onConfirm: () => _handlePlanChange(provider),
-            )
-          else
+            ),
+            const SizedBox(height: 12),
+            _buildBillingNote(isCompact),
+          ] else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -284,30 +286,38 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, size: 16, color: Colors.blue),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Note: Plan changes take effect immediately. Pro-rated charges or credits will be applied to your next billing cycle on April 1, 2026.',
-                          style: TextStyle(fontSize: 11, color: Colors.blue.shade800, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildBillingNote(isCompact),
               ],
             ),
         ],
       ],
+    );
+  }
+
+  Widget _buildBillingNote(bool isCompact) {
+    return Container(
+      padding: EdgeInsets.all(isCompact ? 10 : 12),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: isCompact ? 14 : 16, color: Colors.blue),
+          SizedBox(width: isCompact ? 8 : 12),
+          Expanded(
+            child: Text(
+              'Note: Plan changes take effect immediately. Pro-rated charges or credits will be applied to your next billing cycle on April 1, 2026.',
+              style: TextStyle(
+                fontSize: isCompact ? 10 : 11,
+                color: Colors.blue.shade800,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
