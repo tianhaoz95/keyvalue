@@ -259,31 +259,75 @@ class _SettingsViewState extends State<SettingsView> {
         }),
         if (showSlider) ...[
           const SizedBox(height: 16),
-          ConfirmSlider(
-            text: 'Slide to confirm ${_pendingPlan}',
-            isCompact: isCompact,
-            onConfirm: () async {
-              if (_pendingPlan != null) {
-                await provider.setSubscriptionPlan(_pendingPlan!);
-                setState(() {
-                  _selectedPlan = _pendingPlan!;
-                  _pendingPlan = null;
-                });
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Plan updated to $_selectedPlan'),
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 2),
+          if (isCompact)
+            ConfirmSlider(
+              text: 'Slide to confirm ${_pendingPlan}',
+              isCompact: isCompact,
+              onConfirm: () => _handlePlanChange(provider),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _handlePlanChange(provider),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  );
-                }
-              }
-            },
-          ),
+                    child: Text('CONFIRM PLAN CHANGE TO ${_pendingPlan?.toUpperCase()}',
+                        style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Note: Plan changes take effect immediately. Pro-rated charges or credits will be applied to your next billing cycle on April 1, 2026.',
+                          style: TextStyle(fontSize: 11, color: Colors.blue.shade800, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ],
     );
+  }
+
+  Future<void> _handlePlanChange(AdvisorProvider provider) async {
+    if (_pendingPlan != null) {
+      await provider.setSubscriptionPlan(_pendingPlan!);
+      setState(() {
+        _selectedPlan = _pendingPlan!;
+        _pendingPlan = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Plan updated to $_selectedPlan'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildBillingInfoCard(bool isCompact) {
