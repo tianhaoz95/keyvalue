@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
@@ -13,6 +14,7 @@ import '../repositories/local_advisor_repository.dart';
 import '../repositories/local_customer_repository.dart';
 import '../repositories/local_engagement_repository.dart';
 import '../services/ai_service.dart';
+import '../services/sms_service.dart';
 import 'ui_context_provider.dart';
 
 class AdvisorProvider with ChangeNotifier {
@@ -27,6 +29,9 @@ class AdvisorProvider with ChangeNotifier {
   final auth.FirebaseAuth _firebaseAuth;
   AiService _aiService;
   AiService get aiService => _aiService;
+
+  final SmsService _smsService;
+  SmsService get smsService => _smsService;
 
   UiContextProvider? _uiContext;
 
@@ -61,12 +66,14 @@ class AdvisorProvider with ChangeNotifier {
     CustomerRepository? customerRepo,
     EngagementRepository? engagementRepo,
     AiService? aiService,
+    SmsService? smsService,
     auth.FirebaseAuth? firebaseAuth,
     UiContextProvider? uiContext,
   })  : _advisorRepo = advisorRepo ?? AdvisorRepository(),
         _customerRepo = customerRepo ?? CustomerRepository(),
         _engagementRepo = engagementRepo ?? EngagementRepository(),
         _aiService = aiService ?? AiService(),
+        _smsService = smsService ?? FakeSmsService(),
         _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance,
         _uiContext = uiContext {
     _checkRememberedUser();
@@ -127,9 +134,31 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> setSubscriptionPlan(String plan) async {
     if (_currentAdvisor != null) {
-      final updated = _currentAdvisor!.copyWith(subscriptionPlan: plan);
+      String firmPhone = _currentAdvisor!.firmPhoneNumber;
+      
+      // If upgrading to Pro/Enterprise and no number exists, generate one
+      if ((plan == 'Pro' || plan == 'Enterprise') && firmPhone.isEmpty) {
+        firmPhone = _generateRandomPhoneNumber();
+      } 
+      // If downgrading to Starter, remove the number
+      else if (plan == 'Starter') {
+        firmPhone = '';
+      }
+
+      final updated = _currentAdvisor!.copyWith(
+        subscriptionPlan: plan,
+        firmPhoneNumber: firmPhone,
+      );
       await updateProfile(updated);
     }
+  }
+
+  String _generateRandomPhoneNumber() {
+    final random = math.Random();
+    final areaCode = 200 + random.nextInt(700);
+    final prefix = 200 + random.nextInt(700);
+    final line = 1000 + random.nextInt(8999);
+    return '$areaCode-$prefix-$line';
   }
 
   Future<void> updateBillingInfo({
@@ -147,6 +176,13 @@ class AdvisorProvider with ChangeNotifier {
         cvv: cvv,
         zipCode: zipCode,
       );
+      await updateProfile(updated);
+    }
+  }
+
+  Future<void> setFirmPhoneNumber(String phoneNumber) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(firmPhoneNumber: phoneNumber);
       await updateProfile(updated);
     }
   }
@@ -398,6 +434,10 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> sendEngagement(Customer customer, Engagement engagement, String message) async {
     if (_currentAdvisor == null) return;
+
+    // Send the actual SMS via the service
+    await _smsService.sendSms(to: customer.phoneNumber, message: message);
+
     final updatedEngagement = engagement.copyWith(
       status: EngagementStatus.sent,
       sentMessage: message,

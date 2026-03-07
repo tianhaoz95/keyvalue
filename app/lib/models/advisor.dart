@@ -32,6 +32,8 @@ class Advisor {
   final String zipCode;
   @HiveField(13)
   final DateTime? nextBillingDate;
+  @HiveField(14)
+  final String firmPhoneNumber;
 
   const Advisor({
     required this.uid,
@@ -48,6 +50,7 @@ class Advisor {
     this.cvv = '',
     this.zipCode = '',
     this.nextBillingDate,
+    this.firmPhoneNumber = '',
   });
 
   Advisor copyWith({
@@ -65,6 +68,7 @@ class Advisor {
     String? cvv,
     String? zipCode,
     DateTime? nextBillingDate,
+    String? firmPhoneNumber,
   }) {
     return Advisor(
       uid: uid ?? this.uid,
@@ -81,6 +85,7 @@ class Advisor {
       cvv: cvv ?? this.cvv,
       zipCode: zipCode ?? this.zipCode,
       nextBillingDate: nextBillingDate ?? this.nextBillingDate,
+      firmPhoneNumber: firmPhoneNumber ?? this.firmPhoneNumber,
     );
   }
 
@@ -100,6 +105,7 @@ class Advisor {
       'cvv': cvv,
       'zipCode': zipCode,
       'nextBillingDate': nextBillingDate?.toIso8601String(),
+      'firmPhoneNumber': firmPhoneNumber,
     };
   }
 
@@ -121,6 +127,7 @@ class Advisor {
       nextBillingDate: map['nextBillingDate'] != null 
           ? DateTime.tryParse(map['nextBillingDate']) 
           : null,
+      firmPhoneNumber: map['firmPhoneNumber'] ?? '',
     );
   }
 }

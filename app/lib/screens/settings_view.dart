@@ -149,6 +149,8 @@ class _SettingsViewState extends State<SettingsView> {
 
   Widget _buildProfileCard(AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     final advisor = provider.currentAdvisor!;
+    final isPro = advisor.subscriptionPlan == 'Pro' || advisor.subscriptionPlan == 'Enterprise';
+
     return Container(
       padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
@@ -201,6 +203,56 @@ class _SettingsViewState extends State<SettingsView> {
             Text(advisor.firmName, style: TextStyle(fontSize: isCompact ? 12 : 13, color: Colors.black54, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
             const SizedBox(height: 12),
             Text(advisor.email, style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.grey), overflow: TextOverflow.ellipsis),
+          ],
+          const Divider(height: 32),
+          Text(
+            'VIRTUAL PHONE NUMBER',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 8 : 9, color: Colors.grey, letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 8),
+          if (isPro) ...[
+            Row(
+              children: [
+                Icon(Icons.phone_android, size: isCompact ? 16 : 18, color: Colors.black),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    advisor.firmPhoneNumber.isEmpty ? 'Generating...' : advisor.firmPhoneNumber,
+                    style: TextStyle(
+                      fontSize: isCompact ? 13 : 14, 
+                      fontWeight: FontWeight.w900, 
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.lock_outline, size: 14, color: Colors.amber),
+                      const SizedBox(width: 8),
+                      Text('PRO FEATURE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.amber.shade900)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Upgrade to PRO for a virtual phone number. STARTER plan requires manual message send and receive.',
+                    style: TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
           ],
         ],
       ),

@@ -25,13 +25,20 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       isExpressiveAiEnabled: fields[5] as bool,
       isMultimodalAiEnabled: fields[6] as bool,
       subscriptionPlan: fields[7] as String,
+      cardHolderName: fields[8] as String,
+      cardNumber: fields[9] as String,
+      expiryDate: fields[10] as String,
+      cvv: fields[11] as String,
+      zipCode: fields[12] as String,
+      nextBillingDate: fields[13] as DateTime?,
+      firmPhoneNumber: fields[14] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Advisor obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.uid)
       ..writeByte(1)
@@ -47,7 +54,21 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       ..writeByte(6)
       ..write(obj.isMultimodalAiEnabled)
       ..writeByte(7)
-      ..write(obj.subscriptionPlan);
+      ..write(obj.subscriptionPlan)
+      ..writeByte(8)
+      ..write(obj.cardHolderName)
+      ..writeByte(9)
+      ..write(obj.cardNumber)
+      ..writeByte(10)
+      ..write(obj.expiryDate)
+      ..writeByte(11)
+      ..write(obj.cvv)
+      ..writeByte(12)
+      ..write(obj.zipCode)
+      ..writeByte(13)
+      ..write(obj.nextBillingDate)
+      ..writeByte(14)
+      ..write(obj.firmPhoneNumber);
   }
 
   @override

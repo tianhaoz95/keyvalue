@@ -57,6 +57,28 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 - **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
 
+## 📱 SMS Testing & Simulation
+
+The app is currently configured with a `FakeSmsService` to avoid Twilio costs during development.
+
+### 1. Fake Twilio SMS API
+Outgoing messages sent via `AdvisorProvider.sendEngagement` will be logged to the console using `developer.log`. You will see `SIMULATED SMS to [phone]: [message]` in your debug console.
+
+### 2. Simulating Inbound Responses
+To test the "Intelligence Hub" and profile update flow, use the Python simulation script to mimic a client response being written to Firestore (as a Cloud Function would do). The script identifies the correct record using both the advisor's Twilio number and the client's phone number.
+
+**Usage:**
+```bash
+# 1. Set an "ADVISOR PHONE NUMBER" in the app's Billing settings (e.g., +15550001111)
+# 2. Ensure your client has a phone number set (e.g., +15559998888)
+# 3. Run the script:
+python3 scripts/simulate_sms_response.py --to <ADVISOR_TWILIO_NUMBER> --from <CLIENT_PHONE_NUMBER> --msg "I'm interested in the new policy!"
+```
+
+**Requirements:**
+- `admin-sdk.json` in the root directory.
+- `firebase-admin` python package.
+
 ## 🛡️ Admin Management
 
 Administrators have global access to review and delete user feedback via the Admin Dashboard (`dash/`).
