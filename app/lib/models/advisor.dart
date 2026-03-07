@@ -18,6 +18,8 @@ class Advisor {
   final bool isExpressiveAiEnabled;
   @HiveField(6)
   final bool isMultimodalAiEnabled;
+  @HiveField(7)
+  final String subscriptionPlan;
 
   const Advisor({
     required this.uid,
@@ -27,6 +29,7 @@ class Advisor {
     this.aiCapability = 'pro',
     this.isExpressiveAiEnabled = true,
     this.isMultimodalAiEnabled = false,
+    this.subscriptionPlan = 'Starter',
   });
 
   Advisor copyWith({
@@ -37,6 +40,7 @@ class Advisor {
     String? aiCapability,
     bool? isExpressiveAiEnabled,
     bool? isMultimodalAiEnabled,
+    String? subscriptionPlan,
   }) {
     return Advisor(
       uid: uid ?? this.uid,
@@ -46,6 +50,7 @@ class Advisor {
       aiCapability: aiCapability ?? this.aiCapability,
       isExpressiveAiEnabled: isExpressiveAiEnabled ?? this.isExpressiveAiEnabled,
       isMultimodalAiEnabled: isMultimodalAiEnabled ?? this.isMultimodalAiEnabled,
+      subscriptionPlan: subscriptionPlan ?? this.subscriptionPlan,
     );
   }
 
@@ -58,6 +63,7 @@ class Advisor {
       'aiCapability': aiCapability,
       'isExpressiveAiEnabled': isExpressiveAiEnabled,
       'isMultimodalAiEnabled': isMultimodalAiEnabled,
+      'subscriptionPlan': subscriptionPlan,
     };
   }
 
@@ -70,6 +76,7 @@ class Advisor {
       aiCapability: map['aiCapability'] ?? 'pro',
       isExpressiveAiEnabled: map['isExpressiveAiEnabled'] ?? true,
       isMultimodalAiEnabled: map['isMultimodalAiEnabled'] ?? false,
+      subscriptionPlan: map['subscriptionPlan'] ?? 'Starter',
     );
   }
 }

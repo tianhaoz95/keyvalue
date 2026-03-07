@@ -125,6 +125,13 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
+  Future<void> setSubscriptionPlan(String plan) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(subscriptionPlan: plan);
+      await updateProfile(updated);
+    }
+  }
+
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('languageCode') ?? 'en';

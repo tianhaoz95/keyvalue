@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/confirm_slider.dart';
 import 'login_screen.dart';
 
 class SettingsView extends StatefulWidget {
@@ -15,7 +16,8 @@ class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _nameController;
   late TextEditingController _firmController;
   bool _isEditingProfile = false;
-  String _selectedPlan = 'Pro';
+  String _selectedPlan = 'Starter';
+  String? _pendingPlan;
 
   @override
   void initState() {
@@ -23,6 +25,7 @@ class _SettingsViewState extends State<SettingsView> {
     final advisor = context.read<AdvisorProvider>().currentAdvisor;
     _nameController = TextEditingController(text: advisor?.name ?? '');
     _firmController = TextEditingController(text: advisor?.firmName ?? '');
+    _selectedPlan = advisor?.subscriptionPlan ?? 'Starter';
   }
 
   @override
@@ -56,7 +59,7 @@ class _SettingsViewState extends State<SettingsView> {
         // Subscription Section
         _buildSectionHeader('SUBSCRIPTION PLAN', isCompact),
         const SizedBox(height: 12),
-        _buildPlanSelector(isCompact),
+        _buildPlanSelector(provider, isCompact),
 
         const SizedBox(height: 32),
 
@@ -187,47 +190,99 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildPlanSelector(bool isCompact) {
+  Widget _buildPlanSelector(AdvisorProvider provider, bool isCompact) {
     final plans = [
       {'name': 'Starter', 'price': '\$29/mo', 'features': 'Up to 10 clients'},
       {'name': 'Pro', 'price': '\$99/mo', 'features': 'Unlimited clients, AI features'},
       {'name': 'Enterprise', 'price': 'Custom', 'features': 'Dedicated support'},
     ];
 
+    final showSlider = _pendingPlan != null && _pendingPlan != _selectedPlan;
+
     return Column(
-      children: plans.map((plan) {
-        final isSelected = _selectedPlan == plan['name'];
-        return GestureDetector(
-          onTap: () => setState(() => _selectedPlan = plan['name']!),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: EdgeInsets.all(isCompact ? 10 : 12),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.black.withValues(alpha: 0.02) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected ? Colors.black : const Color(0xFFEEEEEE),
-                width: isSelected ? 2 : 1,
+      children: [
+        ...plans.map((plan) {
+          final isSelected = (_pendingPlan ?? _selectedPlan) == plan['name'];
+          final isActualSelected = _selectedPlan == plan['name'];
+
+          return GestureDetector(
+            onTap: () {
+              if (plan['name'] != _selectedPlan) {
+                setState(() => _pendingPlan = plan['name']);
+              } else {
+                setState(() => _pendingPlan = null);
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.all(isCompact ? 10 : 12),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.black.withValues(alpha: 0.02) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? Colors.black : const Color(0xFFEEEEEE),
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(plan['name']!.toUpperCase(), style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 10 : 11, letterSpacing: 1)),
+                            if (isActualSelected) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text('CURRENT', style: TextStyle(color: Colors.green, fontSize: 8, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(plan['features']!, style: TextStyle(fontSize: isCompact ? 9 : 10, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  Text(plan['price']!, style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 12 : 13)),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(plan['name']!.toUpperCase(), style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 10 : 11, letterSpacing: 1)),
-                      const SizedBox(height: 2),
-                      Text(plan['features']!, style: TextStyle(fontSize: isCompact ? 9 : 10, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-                Text(plan['price']!, style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 12 : 13)),
-              ],
-            ),
+          );
+        }),
+        if (showSlider) ...[
+          const SizedBox(height: 16),
+          ConfirmSlider(
+            text: 'Slide to confirm ${_pendingPlan}',
+            isCompact: isCompact,
+            onConfirm: () async {
+              if (_pendingPlan != null) {
+                await provider.setSubscriptionPlan(_pendingPlan!);
+                setState(() {
+                  _selectedPlan = _pendingPlan!;
+                  _pendingPlan = null;
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Plan updated to $_selectedPlan'),
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }
+            },
           ),
-        );
-      }).toList(),
+        ],
+      ],
     );
   }
 
