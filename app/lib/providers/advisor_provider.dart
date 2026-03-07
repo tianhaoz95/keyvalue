@@ -132,6 +132,25 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateBillingInfo({
+    required String cardHolderName,
+    required String cardNumber,
+    required String expiryDate,
+    required String cvv,
+    required String zipCode,
+  }) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(
+        cardHolderName: cardHolderName,
+        cardNumber: cardNumber,
+        expiryDate: expiryDate,
+        cvv: cvv,
+        zipCode: zipCode,
+      );
+      await updateProfile(updated);
+    }
+  }
+
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('languageCode') ?? 'en';

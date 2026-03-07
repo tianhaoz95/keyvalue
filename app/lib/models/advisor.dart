@@ -20,6 +20,18 @@ class Advisor {
   final bool isMultimodalAiEnabled;
   @HiveField(7)
   final String subscriptionPlan;
+  @HiveField(8)
+  final String cardHolderName;
+  @HiveField(9)
+  final String cardNumber;
+  @HiveField(10)
+  final String expiryDate;
+  @HiveField(11)
+  final String cvv;
+  @HiveField(12)
+  final String zipCode;
+  @HiveField(13)
+  final DateTime? nextBillingDate;
 
   const Advisor({
     required this.uid,
@@ -30,6 +42,12 @@ class Advisor {
     this.isExpressiveAiEnabled = true,
     this.isMultimodalAiEnabled = false,
     this.subscriptionPlan = 'Starter',
+    this.cardHolderName = '',
+    this.cardNumber = '',
+    this.expiryDate = '',
+    this.cvv = '',
+    this.zipCode = '',
+    this.nextBillingDate,
   });
 
   Advisor copyWith({
@@ -41,6 +59,12 @@ class Advisor {
     bool? isExpressiveAiEnabled,
     bool? isMultimodalAiEnabled,
     String? subscriptionPlan,
+    String? cardHolderName,
+    String? cardNumber,
+    String? expiryDate,
+    String? cvv,
+    String? zipCode,
+    DateTime? nextBillingDate,
   }) {
     return Advisor(
       uid: uid ?? this.uid,
@@ -51,6 +75,12 @@ class Advisor {
       isExpressiveAiEnabled: isExpressiveAiEnabled ?? this.isExpressiveAiEnabled,
       isMultimodalAiEnabled: isMultimodalAiEnabled ?? this.isMultimodalAiEnabled,
       subscriptionPlan: subscriptionPlan ?? this.subscriptionPlan,
+      cardHolderName: cardHolderName ?? this.cardHolderName,
+      cardNumber: cardNumber ?? this.cardNumber,
+      expiryDate: expiryDate ?? this.expiryDate,
+      cvv: cvv ?? this.cvv,
+      zipCode: zipCode ?? this.zipCode,
+      nextBillingDate: nextBillingDate ?? this.nextBillingDate,
     );
   }
 
@@ -64,6 +94,12 @@ class Advisor {
       'isExpressiveAiEnabled': isExpressiveAiEnabled,
       'isMultimodalAiEnabled': isMultimodalAiEnabled,
       'subscriptionPlan': subscriptionPlan,
+      'cardHolderName': cardHolderName,
+      'cardNumber': cardNumber,
+      'expiryDate': expiryDate,
+      'cvv': cvv,
+      'zipCode': zipCode,
+      'nextBillingDate': nextBillingDate?.toIso8601String(),
     };
   }
 
@@ -77,6 +113,14 @@ class Advisor {
       isExpressiveAiEnabled: map['isExpressiveAiEnabled'] ?? true,
       isMultimodalAiEnabled: map['isMultimodalAiEnabled'] ?? false,
       subscriptionPlan: map['subscriptionPlan'] ?? 'Starter',
+      cardHolderName: map['cardHolderName'] ?? '',
+      cardNumber: map['cardNumber'] ?? '',
+      expiryDate: map['expiryDate'] ?? '',
+      cvv: map['cvv'] ?? '',
+      zipCode: map['zipCode'] ?? '',
+      nextBillingDate: map['nextBillingDate'] != null 
+          ? DateTime.tryParse(map['nextBillingDate']) 
+          : null,
     );
   }
 }

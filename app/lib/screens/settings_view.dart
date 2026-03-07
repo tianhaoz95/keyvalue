@@ -15,7 +15,14 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _nameController;
   late TextEditingController _firmController;
+  late TextEditingController _cardHolderController;
+  late TextEditingController _cardNumberController;
+  late TextEditingController _expiryController;
+  late TextEditingController _cvvController;
+  late TextEditingController _zipController;
+
   bool _isEditingProfile = false;
+  bool _isEditingBilling = false;
   String _selectedPlan = 'Starter';
   String? _pendingPlan;
 
@@ -25,6 +32,11 @@ class _SettingsViewState extends State<SettingsView> {
     final advisor = context.read<AdvisorProvider>().currentAdvisor;
     _nameController = TextEditingController(text: advisor?.name ?? '');
     _firmController = TextEditingController(text: advisor?.firmName ?? '');
+    _cardHolderController = TextEditingController(text: advisor?.cardHolderName ?? '');
+    _cardNumberController = TextEditingController(text: advisor?.cardNumber ?? '');
+    _expiryController = TextEditingController(text: advisor?.expiryDate ?? '');
+    _cvvController = TextEditingController(text: advisor?.cvv ?? '');
+    _zipController = TextEditingController(text: advisor?.zipCode ?? '');
     _selectedPlan = advisor?.subscriptionPlan ?? 'Starter';
   }
 
@@ -32,6 +44,11 @@ class _SettingsViewState extends State<SettingsView> {
   void dispose() {
     _nameController.dispose();
     _firmController.dispose();
+    _cardHolderController.dispose();
+    _cardNumberController.dispose();
+    _expiryController.dispose();
+    _cvvController.dispose();
+    _zipController.dispose();
     super.dispose();
   }
 
@@ -341,6 +358,12 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Widget _buildBillingInfoCard(bool isCompact) {
+    final provider = context.watch<AdvisorProvider>();
+    final advisor = provider.currentAdvisor!;
+    final last4 = advisor.cardNumber.length >= 4 
+        ? advisor.cardNumber.substring(advisor.cardNumber.length - 4) 
+        : '****';
+    
     return Container(
       padding: EdgeInsets.all(isCompact ? 12 : 16),
       decoration: BoxDecoration(
@@ -349,24 +372,67 @@ class _SettingsViewState extends State<SettingsView> {
         border: Border.all(color: const Color(0xFFEEEEEE)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.credit_card, size: isCompact ? 16 : 18, color: Colors.black54),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Visa ending in 4242',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13),
-                ),
+              Row(
+                children: [
+                  Icon(Icons.credit_card, size: isCompact ? 16 : 18, color: Colors.black54),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isEditingBilling ? 'EDIT BILLING' : 'PAYMENT METHOD',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 0.5),
+                  ),
+                ],
               ),
               TextButton(
-                onPressed: () {},
-                child: Text('EDIT', style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
+                onPressed: () async {
+                  if (_isEditingBilling) {
+                    await provider.updateBillingInfo(
+                      cardHolderName: _cardHolderController.text.trim(),
+                      cardNumber: _cardNumberController.text.trim(),
+                      expiryDate: _expiryController.text.trim(),
+                      cvv: _cvvController.text.trim(),
+                      zipCode: _zipController.text.trim(),
+                    );
+                  }
+                  setState(() => _isEditingBilling = !_isEditingBilling);
+                },
+                child: Text(_isEditingBilling ? 'SAVE' : 'EDIT',
+                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
               ),
             ],
           ),
-          Divider(height: isCompact ? 12 : 16),
+          if (_isEditingBilling) ...[
+            const SizedBox(height: 12),
+            _buildBillingField('CARDHOLDER NAME', _cardHolderController, isCompact),
+            const SizedBox(height: 12),
+            _buildBillingField('CARD NUMBER', _cardNumberController, isCompact, keyboardType: TextInputType.number),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildBillingField('EXPIRY (MM/YY)', _expiryController, isCompact)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildBillingField('CVV', _cvvController, isCompact, keyboardType: TextInputType.number)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildBillingField('ZIP CODE', _zipController, isCompact, keyboardType: TextInputType.number),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text(
+              advisor.cardHolderName.isEmpty ? 'No card holder name' : advisor.cardHolderName.toUpperCase(),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              advisor.cardNumber.isEmpty ? 'No card on file' : '•••• •••• •••• $last4',
+              style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600),
+            ),
+          ],
+          Divider(height: isCompact ? 24 : 32),
           Row(
             children: [
               Icon(Icons.history, size: isCompact ? 16 : 18, color: Colors.black54),
@@ -381,6 +447,25 @@ class _SettingsViewState extends State<SettingsView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBillingField(String label, TextEditingController controller, bool isCompact, {TextInputType? keyboardType}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.grey.shade600)),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: TextStyle(fontSize: isCompact ? 12 : 13, fontWeight: FontWeight.w600),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 8),
+            border: UnderlineInputBorder(),
+          ),
+        ),
+      ],
     );
   }
 
