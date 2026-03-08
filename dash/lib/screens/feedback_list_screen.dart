@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../providers/admin_provider.dart';
 import '../models/feedback_item.dart';
 import '../widgets/feedback_detail_sidebar.dart';
@@ -19,6 +20,10 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
   
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Multi-selection state
+  final Set<String> _selectedFeedbackIds = {};
+  bool get _isSelectionMode => _selectedFeedbackIds.isNotEmpty;
 
   // Filter State
   final Set<String> _selectedStatuses = {'open', 'inProgress', 'resolved', 'backlog'};
@@ -57,13 +62,48 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FEEDBACK MANAGEMENT'),
+        title: _isSelectionMode
+            ? Text('${_selectedFeedbackIds.length} SELECTED')
+            : const Text('FEEDBACK MANAGEMENT'),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _selectedFeedbackIds.clear()),
+                tooltip: 'Clear Selection',
+              )
+            : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            onPressed: () => provider.logout(),
-            tooltip: 'Logout',
-          ),
+          if (_isSelectionMode)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('DELETE SELECTED'),
+                    content: Text('Delete ${_selectedFeedbackIds.length} feedback items?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                      TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  for (final id in _selectedFeedbackIds) {
+                    await provider.deleteFeedback(id);
+                  }
+                  setState(() => _selectedFeedbackIds.clear());
+                }
+              },
+              tooltip: 'Delete Selected',
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.logout_outlined),
+              onPressed: () => provider.logout(),
+              tooltip: 'Logout',
+            ),
+          ],
           const SizedBox(width: 8),
         ],
       ),
@@ -192,62 +232,133 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                             itemBuilder: (context, index) {
                               final item = feedbacks[index];
                               final isSelected = _selectedFeedback?.id == item.id;
-                              return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                tileColor: isSelected ? Colors.black.withValues(alpha: 0.02) : null,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                title: Row(
+                              final isMultiSelected = _selectedFeedbackIds.contains(item.id);
+
+                              return Slidable(
+                                key: Key(item.id),
+                                endActionPane: ActionPane(
+                                  motion: const ScrollMotion(),
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        item.advisorName,
-                                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-                                      ),
+                                    SlidableAction(
+                                      onPressed: (context) async {
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('DELETE FEEDBACK'),
+                                            content: const Text('Are you sure you want to delete this entry?'),
+                                            actions: [
+                                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+                                              TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true) {
+                                          provider.deleteFeedback(item.id);
+                                          if (_selectedFeedback?.id == item.id) {
+                                            setState(() {
+                                              _selectedFeedback = null;
+                                              _isSidebarOpen = false;
+                                            });
+                                          }
+                                        }
+                                      },
+                                      backgroundColor: Colors.redAccent,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.delete,
+                                      label: 'Delete',
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(item.status).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: _getStatusColor(item.status).withValues(alpha: 0.2)),
-                                      ),
-                                      child: Text(
-                                        item.status.toUpperCase(),
-                                        style: TextStyle(
-                                          color: _getStatusColor(item.status),
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 0.5,
+                                  ],
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  tileColor: isMultiSelected 
+                                      ? Colors.black.withValues(alpha: 0.05) 
+                                      : (isSelected ? Colors.black.withValues(alpha: 0.02) : null),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  leading: _isSelectionMode
+                                      ? Checkbox(
+                                          value: isMultiSelected,
+                                          activeColor: Colors.black,
+                                          onChanged: (val) {
+                                            setState(() {
+                                              if (val == true) {
+                                                _selectedFeedbackIds.add(item.id);
+                                              } else {
+                                                _selectedFeedbackIds.remove(item.id);
+                                              }
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.advisorName,
+                                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(item.status).withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: _getStatusColor(item.status).withValues(alpha: 0.2)),
+                                        ),
+                                        child: Text(
+                                          item.status.toUpperCase(),
+                                          style: TextStyle(
+                                            color: _getStatusColor(item.status),
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.text,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        DateFormat('MMM d, y • HH:mm').format(item.createdAt),
+                                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: _isSelectionMode ? null : const Icon(Icons.chevron_right, size: 20, color: Colors.black12),
+                                  onTap: () {
+                                    if (_isSelectionMode) {
+                                      setState(() {
+                                        if (isMultiSelected) {
+                                          _selectedFeedbackIds.remove(item.id);
+                                        } else {
+                                          _selectedFeedbackIds.add(item.id);
+                                        }
+                                      });
+                                    } else {
+                                      setState(() {
+                                        _selectedFeedback = item;
+                                        _isSidebarOpen = true;
+                                        _isFilterSidebarOpen = false;
+                                      });
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      _selectedFeedbackIds.add(item.id);
+                                    });
+                                  },
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.text,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      DateFormat('MMM d, y • HH:mm').format(item.createdAt),
-                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                                    ),
-                                  ],
-                                ),
-                                trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.black12),
-                                onTap: () {
-                                  setState(() {
-                                    _selectedFeedback = item;
-                                    _isSidebarOpen = true;
-                                    _isFilterSidebarOpen = false;
-                                  });
-                                },
                               );
                             },
                           );
@@ -353,8 +464,11 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                       label: Text(status.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       onSelected: (val) {
                         setState(() {
-                          if (val) _selectedStatuses.add(status);
-                          else _selectedStatuses.remove(status);
+                          if (val) {
+                            _selectedStatuses.add(status);
+                          } else {
+                            _selectedStatuses.remove(status);
+                          }
                         });
                       },
                       selectedColor: Colors.black,

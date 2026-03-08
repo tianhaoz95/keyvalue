@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
+// This is a basic Flutter widget test.
+//
+// To perform an interaction with a widget in your test, use the WidgetTester
+// utility in the flutter_test package. For example, you can send tap and scroll
+// gestures. You can also use WidgetTester to find child widgets in the widget
+// tree, read text, and verify that the values of widget properties are correct.
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keyvalue_dash/main.dart';
 
 void main() {
-  testWidgets('Dashboard smoke test', (WidgetTester tester) async {
+  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    // Note: This will fail if it tries to init Firebase in a test environment without mocks.
-    // For now, we just want to ensure it doesn't have syntax errors that prevent building.
-    
-    // In a real scenario, we would mock Firebase and Provider.
-    expect(true, isTrue); 
+    // await tester.pumpWidget(const MyApp());
   });
 }

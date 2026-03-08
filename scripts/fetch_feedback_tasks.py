@@ -32,8 +32,7 @@ def fetch_feedback_tasks():
         
         if status != 'resolved':
             text = data.get('text', 'No content').replace('\n', ' ')
-            screen = data.get('screenName', 'UNKNOWN')
-            tasks.append(f"- [ ] {text} (Screen: {screen})")
+            tasks.append(f"- [ ] {text}")
 
     if not tasks:
         print("No unresolved feedback found.")
