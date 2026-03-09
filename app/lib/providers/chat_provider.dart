@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:convert';
 import '../services/ai_service.dart' as ai;
 import '../models/customer.dart';
 import '../providers/advisor_provider.dart';
@@ -93,11 +94,13 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
       // Execution Loop for Tool Calling
       int loopCount = 0;
+      final List<String> toolsCalled = [];
       while (aiResponse.functionCalls.isNotEmpty && loopCount < 5) {
         loopCount++;
         final toolResponses = <FunctionResponse>[];
         
         for (final call in aiResponse.functionCalls) {
+          toolsCalled.add(call.name);
           final result = await _executeAiTool(call);
           
           // Clear draft context if update_draft was called successfully
@@ -112,6 +115,9 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
           if (result != null) {
             toolResponses.add(result);
+            if (call.name == 'update_client_preview') {
+              response = 'PREVIEW_DATA:${jsonEncode(call.args)}\nI\'ve updated the preview for you.';
+            }
           } else {
             // For actions that don't return data, we should still provide a success response
             // so the AI can continue if it needs to.
@@ -122,7 +128,11 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         aiResponse = await chat.sendMessage(Content.functionResponses(toolResponses));
       }
 
-      response = aiResponse.text ?? (aiResponse.functionCalls.isNotEmpty ? "I've handled those tasks for you." : "I'm not sure how to respond.");
+      if (response.isEmpty) {
+        response = aiResponse.text ?? (toolsCalled.isNotEmpty 
+          ? "I've handled those tasks for you: ${toolsCalled.toSet().join(', ')}." 
+          : "I'm not sure how to respond.");
+      }
     } catch (e) {
       response = "Error: $e";
     } finally {
@@ -169,6 +179,10 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
   Future<FunctionResponse?> _executeAiTool(FunctionCall call) async {
     switch (call.name) {
+      case 'update_client_preview':
+        // This is handled by responseBuilder in KeyValueChatView via PREVIEW_DATA:
+        // but we still need to return a success status to the model.
+        return FunctionResponse(call.name, {'status': 'success'});
       case 'get_current_profile':
         final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         if (customerId != null) {

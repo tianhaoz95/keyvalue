@@ -160,7 +160,8 @@ Return ONLY the message text. Do not include any other text or call any tools.
       return "Draft failed: Empty response from AI.";
     } catch (e) { 
       debugPrint('AI Draft Error: $e');
-      return "Error: $e"; 
+      // Offline fallback
+      return "Hi ${customer.name}, I'm following up on our recent conversation about ${customer.occupation}. (Draft generated in offline mode)"; 
     }
   }
 

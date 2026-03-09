@@ -226,9 +226,9 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                           }
 
                           return ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            padding: EdgeInsets.zero,
                             itemCount: feedbacks.length,
-                            separatorBuilder: (_, _) => const Divider(),
+                            separatorBuilder: (_, _) => const Divider(height: 1, thickness: 1),
                             itemBuilder: (context, index) {
                               final item = feedbacks[index];
                               final isSelected = _selectedFeedback?.id == item.id;
@@ -271,7 +271,7 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                                   ],
                                 ),
                                 child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                                   tileColor: isMultiSelected 
                                       ? Colors.black.withValues(alpha: 0.05) 
                                       : (isSelected ? Colors.black.withValues(alpha: 0.02) : null),

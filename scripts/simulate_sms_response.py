@@ -4,6 +4,7 @@ from firebase_admin import firestore
 import sys
 import argparse
 import re
+import os
 from datetime import datetime
 
 def normalize_phone(phone):
@@ -26,11 +27,17 @@ def simulate_response(advisor_phone, client_phone, response_text):
     print(f"Normalized Client Phone: {client_phone}")
 
     # Initialize Firebase Admin SDK
-    # Requires admin-sdk.json in the root directory
+    # Requires admin-sdk.json in the root directory for production
     try:
         if not firebase_admin._apps:
-            cred = credentials.Certificate('admin-sdk.json')
-            firebase_admin.initialize_app(cred)
+            if os.environ.get('FIRESTORE_EMULATOR_HOST'):
+                # When using emulators, we can initialize with a dummy project ID
+                # and no credentials if we want to bypass real Auth.
+                print(f"Connecting to Firestore Emulator at {os.environ.get('FIRESTORE_EMULATOR_HOST')}")
+                firebase_admin.initialize_app(options={'projectId': 'demo-keyvalue-app'})
+            else:
+                cred = credentials.Certificate('admin-sdk.json')
+                firebase_admin.initialize_app(cred)
     except Exception as e:
         print(f"Error initializing Firebase Admin: {e}")
         print("Make sure 'admin-sdk.json' exists in the root directory.")

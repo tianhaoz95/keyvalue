@@ -73,7 +73,7 @@ if [ "$READY" = true ]; then
   
   # Run the simulation script from the root
   cd "$ROOT_DIR"
-  python3 scripts/simulate_sms_response.py --to "$ADVISOR_PHONE" --from "$CLIENT_PHONE" --msg "Simulation successful! I want to upgrade my policy."
+  FIRESTORE_EMULATOR_HOST=localhost:8080 python3 scripts/simulate_sms_response.py --to "$ADVISOR_PHONE" --from "$CLIENT_PHONE" --msg "Simulation successful! I want to upgrade my policy."
   
   echo "✅ Simulation triggered. Waiting for test to complete..."
 else
