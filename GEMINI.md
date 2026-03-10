@@ -54,7 +54,16 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 
 - **Image Manipulation:** Use the `magick` command-line tool for cropping, resizing, or modifying image assets (e.g., logos).
 - **Run App:** `flutter run`
-- **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
+- **Run Integration Tests:**
+  1. Check for available devices: `flutter devices`
+     - **1st preference:** Physical Android devices.
+     - **2nd preference:** Running Android emulator.
+  2. If no devices are running, list available emulators:
+     `~/Android/Sdk/emulator/emulator -list-avds`
+  3. Start an emulator:
+     `~/Android/Sdk/emulator/emulator -avd Name_Of_Your_Device`
+  4. Run the tests:
+     `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
 
 ## 📦 App Distribution
