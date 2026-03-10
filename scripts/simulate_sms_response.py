@@ -102,7 +102,11 @@ if __name__ == "__main__":
     parser.add_argument('--to', required=True, help='The Twilio phone number of the advisor (The "To" number)')
     parser.add_argument('--from', dest='client_from', required=True, help='The phone number of the client (The "From" number)')
     parser.add_argument('--msg', required=True, help='The response text from the client')
+    parser.add_argument('--emulator', action='store_true', help='Use the local Firebase emulator instead of production')
 
     args = parser.parse_args()
+
+    if args.emulator:
+        os.environ['FIRESTORE_EMULATOR_HOST'] = '127.0.0.1:8080'
 
     simulate_response(args.to, args.client_from, args.msg)
