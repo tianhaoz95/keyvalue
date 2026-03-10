@@ -27,7 +27,7 @@ android {
         applicationId = "com.hejitech.keyvalue_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -40,6 +40,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    // Hybrid On-Device Inference for Firebase AI Logic
+    implementation("com.google.firebase:firebase-ai:17.10.0")
+    implementation("com.google.firebase:firebase-ai-ondevice:16.0.0-beta01")
 }
 
 flutter {

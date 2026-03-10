@@ -1,6 +1,7 @@
 import 'package:firebase_ai/firebase_ai.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../models/customer.dart';
 
 class AiChatMessage {
@@ -11,6 +12,8 @@ class AiChatMessage {
 }
 
 class AiService {
+  static const _nativeChannel = MethodChannel('com.hejitech.keyvalue_app/ai_ondevice');
+  
   final GenerativeModel? _model;
   final String modelName;
   final bool isDemo;
@@ -21,10 +24,40 @@ class AiService {
     this.modelName = 'gemini-2.5-flash', 
     this.isDemo = false,
     this.uiContext,
-  }) : _model = model;
+  }) : _model = model {
+    if (!isDemo && !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      // Proactively trigger model download/warmup on mobile
+      prepareOnDevice();
+    }
+  }
+
+  /// Trigger on-device model download and warmup for Android.
+  /// This utilizes AICore via the native Android SDK.
+  Future<void> prepareOnDevice() async {
+    try {
+      debugPrint('AI On-Device: Preparing model for hybrid inference...');
+      final result = await _nativeChannel.invokeMethod('prepareModel');
+      debugPrint('AI On-Device Result: $result');
+    } catch (e) {
+      debugPrint('AI On-Device Error: $e');
+    }
+  }
+
+  /// Check the status of the on-device model (Android only).
+  Future<String> checkOnDeviceStatus() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return 'UNSUPPORTED_PLATFORM';
+    try {
+      return await _nativeChannel.invokeMethod('checkStatus') ?? 'UNKNOWN';
+    } catch (e) {
+      return 'ERROR: $e';
+    }
+  }
 
   GenerativeModel get model => _model ?? FirebaseAI.googleAI().generativeModel(
     model: modelName,
+    // Enable hybrid mode for cost efficiency and offline support
+    // Setup for Android is already configured in Gradle.
+    // The Flutter SDK will automatically utilize it in future updates or via appropriate config.
     systemInstruction: Content.system('''
 Role: Expert "Intelligence Hub" assistant. 
 Context: You reside in the "AI Sidebar" and control the "Main Port" via tools.

@@ -1,4 +1,4 @@
-firebase-debug.log
+*.log
 admin-sdk.json
 recaptcha.txt
 /.venv
