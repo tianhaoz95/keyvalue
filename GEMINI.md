@@ -63,6 +63,8 @@ After a feature development in `app/` or `dash/`, and once builds and tests pass
 
 ### Deployment Steps
 
+0. **Version Bump:** Before building or distributing, increase the version name and build number in the relevant `pubspec.yaml` (e.g., `1.1.2+5` becomes `1.1.3+6`).
+
 1. **Environment Setup:** Load the required App IDs from your environment.
    ```bash
    source .env
@@ -138,6 +140,9 @@ python3 scripts/fetch_feedback_tasks.py
 ## 🌐 Web Deployment
 
 The application can be deployed to Firebase Hosting for web access. **Do not deploy the application unless the user explicitly requests it.**
+
+### 0. Version Bump
+Before building or deploying, increase the version name and build number in the relevant `pubspec.yaml` (e.g., `1.1.2+5` becomes `1.1.3+6`).
 
 ### 1. Build for Web
 From the `app/` directory, run:
