@@ -3,12 +3,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/customer.dart';
+import '../models/engagement.dart';
 
 class AiChatMessage {
   final String text;
   final bool isUser;
 
   AiChatMessage({required this.text, required this.isUser});
+}
+
+class AiDraftResult {
+  final String text;
+  final AiSource source;
+
+  AiDraftResult({required this.text, required this.source});
 }
 
 class AiService {
@@ -41,6 +49,17 @@ class AiService {
     } catch (e) {
       debugPrint('AI On-Device Error: $e');
     }
+  }
+
+  Future<AiSource> getAiSource() async {
+    if (isDemo) return AiSource.unknown;
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final status = await checkOnDeviceStatus();
+      if (status.contains('AVAILABLE') || status.contains('Ready')) {
+        return AiSource.onDevice;
+      }
+    }
+    return AiSource.cloud;
   }
 
   /// Check the status of the on-device model (Android only).
@@ -159,8 +178,15 @@ Assistant:''';
     } catch (e) { return null; }
   }
 
-  Future<String> generateDraftMessage(Customer customer) async {
-    if (isDemo) return "Hi ${customer.name}, just checking in regarding ${customer.occupation}.";
+  Future<AiDraftResult> generateDraftMessage(Customer customer) async {
+    final source = await getAiSource();
+    if (isDemo) {
+      return AiDraftResult(
+        text: "Hi ${customer.name}, just checking in regarding ${customer.occupation}.",
+        source: source,
+      );
+    }
+
     try {
       final prompt = '''
 Draft a professional check-in message for ${customer.name}.
@@ -171,30 +197,36 @@ Return ONLY the message text. Do not include any other text or call any tools.
 ''';
       final res = await model.generateContent([Content.text(prompt)]);
       
-      if (res.text != null && res.text!.trim().isNotEmpty) return res.text!.trim();
-      
-      // If model called a tool instead of returning text (happens due to systemInstruction)
-      if (res.functionCalls.isNotEmpty) {
+      String? resultText;
+      if (res.text != null && res.text!.trim().isNotEmpty) {
+        resultText = res.text!.trim();
+      } else if (res.functionCalls.isNotEmpty) {
         final call = res.functionCalls.first;
         if (call.name == 'update_draft' && call.args['refined_draft'] != null) {
-          return call.args['refined_draft'] as String;
+          resultText = call.args['refined_draft'] as String;
         }
+      }
+      
+      if (resultText != null) {
+        return AiDraftResult(text: resultText, source: source);
       }
       
       // If text is null, investigate why
       if (res.candidates.isNotEmpty) {
         final candidate = res.candidates.first;
         if (candidate.finishReason == FinishReason.safety) {
-          return "Draft failed: Blocked by safety filters.";
+          return AiDraftResult(text: "Draft failed: Blocked by safety filters.", source: AiSource.cloud);
         }
-        return "Draft failed: Finish reason: ${candidate.finishReason}";
       }
       
-      return "Draft failed: Empty response from AI.";
+      return AiDraftResult(text: "Draft failed: Empty response from AI.", source: AiSource.cloud);
     } catch (e) { 
       debugPrint('AI Draft Error: $e');
       // Offline fallback
-      return "Hi ${customer.name}, I'm following up on our recent conversation about ${customer.occupation}. (Draft generated in offline mode)"; 
+      return AiDraftResult(
+        text: "Hi ${customer.name}, I'm following up on our recent conversation about ${customer.occupation}. (Draft generated in offline mode)",
+        source: AiSource.onDevice, // Assuming offline means it was forced to use on-device or it failed
+      );
     }
   }
 

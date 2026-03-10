@@ -25,13 +25,14 @@ class EngagementAdapter extends TypeAdapter<Engagement> {
       pointsOfInterest: (fields[5] as List).cast<String>(),
       updatedDetailsDiff: fields[6] as String,
       createdAt: fields[7] as DateTime,
+      aiSource: fields[8] as AiSource,
     );
   }
 
   @override
   void write(BinaryWriter writer, Engagement obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.engagementId)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class EngagementAdapter extends TypeAdapter<Engagement> {
       ..writeByte(6)
       ..write(obj.updatedDetailsDiff)
       ..writeByte(7)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.aiSource);
   }
 
   @override
@@ -111,6 +114,50 @@ class EngagementStatusAdapter extends TypeAdapter<EngagementStatus> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is EngagementStatusAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class AiSourceAdapter extends TypeAdapter<AiSource> {
+  @override
+  final int typeId = 4;
+
+  @override
+  AiSource read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return AiSource.onDevice;
+      case 1:
+        return AiSource.cloud;
+      case 2:
+        return AiSource.unknown;
+      default:
+        return AiSource.onDevice;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, AiSource obj) {
+    switch (obj) {
+      case AiSource.onDevice:
+        writer.writeByte(0);
+        break;
+      case AiSource.cloud:
+        writer.writeByte(1);
+        break;
+      case AiSource.unknown:
+        writer.writeByte(2);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AiSourceAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

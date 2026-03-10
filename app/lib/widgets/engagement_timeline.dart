@@ -206,6 +206,8 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                 'AI DRAFT READY',
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 1.5),
               ),
+              const SizedBox(width: 8),
+              _buildSourceIndicator(engagement.aiSource, isCompact),
               const Spacer(),
               if (!isCompact) ...[
                 TextButton.icon(
@@ -426,6 +428,8 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                           'AI INSIGHTS',
                           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: isCompact ? 9 : 10),
                         ),
+                        const SizedBox(width: 8),
+                        _buildSourceIndicator(engagement.aiSource, isCompact),
                       ],
                     ),
                     IconButton(
@@ -625,5 +629,51 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
       case EngagementStatus.completed: return 'COMPLETED';
       default: return 'ENGAGEMENT';
     }
+  }
+
+  Widget _buildSourceIndicator(AiSource source, bool isCompact) {
+    String label;
+    IconData icon;
+    Color color;
+
+    switch (source) {
+      case AiSource.onDevice:
+        label = 'ON-DEVICE';
+        icon = Icons.phonelink_setup;
+        color = Colors.green;
+        break;
+      case AiSource.cloud:
+        label = 'CLOUD';
+        icon = Icons.cloud_outlined;
+        color = Colors.blue;
+        break;
+      case AiSource.unknown:
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isCompact ? 10 : 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isCompact ? 7 : 8,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

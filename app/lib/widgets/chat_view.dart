@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'dart:convert';
+import '../models/engagement.dart';
 import '../providers/advisor_provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/ui_context_provider.dart';
@@ -138,13 +139,35 @@ class KeyValueChatView extends StatelessWidget {
             enableAttachments: advisorProvider.isMultimodalAiEnabled,
             enableVoiceNotes: advisorProvider.isMultimodalAiEnabled,
             responseBuilder: (context, message) {
-              if (message.startsWith('PREVIEW_DATA:')) {
-                final parts = message.split('\n');
+              AiSource source = AiSource.unknown;
+              String displayMessage = message;
+              
+              if (message.startsWith('AI_SOURCE:')) {
+                final lines = message.split('\n');
+                final sourceStr = lines[0].substring(10);
+                try {
+                  source = AiSource.values.byName(sourceStr);
+                } catch (_) {}
+                displayMessage = lines.length > 1 ? lines.sublist(1).join('\n') : "";
+              }
+
+              if (displayMessage.startsWith('PREVIEW_DATA:')) {
+                final parts = displayMessage.split('\n');
                 final previewHeader = parts[0];
                 final followUpText = parts.length > 1 ? parts.sublist(1).join('\n') : "";
                 
                 if (!advisorProvider.isExpressiveAiEnabled) {
-                  return followUpText.isNotEmpty ? MarkdownBody(data: followUpText) : const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (source != AiSource.unknown)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _buildSourceIndicator(source, isMobile),
+                        ),
+                      followUpText.isNotEmpty ? MarkdownBody(data: followUpText) : const SizedBox.shrink(),
+                    ],
+                  );
                 }
 
                 try {
@@ -153,6 +176,11 @@ class KeyValueChatView extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (source != AiSource.unknown)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _buildSourceIndicator(source, isMobile),
+                        ),
                       EmbeddedClientCard(data: data),
                       if (followUpText.isNotEmpty)
                         Padding(
@@ -165,7 +193,17 @@ class KeyValueChatView extends StatelessWidget {
                   return Text("Error parsing preview: $e");
                 }
               }
-              return MarkdownBody(data: message);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (source != AiSource.unknown)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildSourceIndicator(source, isMobile),
+                    ),
+                  MarkdownBody(data: displayMessage),
+                ],
+              );
             },
             style: LlmChatViewStyle(
               backgroundColor: Colors.white,
@@ -234,5 +272,50 @@ class KeyValueChatView extends StatelessWidget {
       case AiEditContextType.guidelines:
         return 'GUIDELINES';
     }
+  }
+
+  Widget _buildSourceIndicator(AiSource source, bool isMobile) {
+    String label;
+    IconData icon;
+    Color color;
+
+    switch (source) {
+      case AiSource.onDevice:
+        label = 'ON-DEVICE';
+        icon = Icons.phonelink_setup;
+        color = Colors.green;
+        break;
+      case AiSource.cloud:
+        label = 'CLOUD';
+        icon = Icons.cloud_outlined;
+        color = Colors.blue;
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

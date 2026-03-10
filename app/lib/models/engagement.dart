@@ -17,6 +17,16 @@ enum EngagementStatus {
   completed
 }
 
+@HiveType(typeId: 4)
+enum AiSource {
+  @HiveField(0)
+  onDevice,
+  @HiveField(1)
+  cloud,
+  @HiveField(2)
+  unknown
+}
+
 @HiveType(typeId: 3)
 class Engagement {
   @HiveField(0)
@@ -35,6 +45,8 @@ class Engagement {
   final String updatedDetailsDiff;
   @HiveField(7)
   final DateTime createdAt;
+  @HiveField(8)
+  final AiSource aiSource;
 
   Engagement({
     required this.engagementId,
@@ -45,6 +57,7 @@ class Engagement {
     required this.pointsOfInterest,
     required this.updatedDetailsDiff,
     required this.createdAt,
+    this.aiSource = AiSource.unknown,
   });
 
   factory Engagement.fromMap(Map<String, dynamic> map) {
@@ -57,6 +70,9 @@ class Engagement {
       pointsOfInterest: (map['pointsOfInterest'] as List).cast<String>(),
       updatedDetailsDiff: map['updatedDetailsDiff'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      aiSource: map['aiSource'] != null 
+          ? AiSource.values.byName(map['aiSource'] as String)
+          : AiSource.unknown,
     );
   }
 
@@ -70,6 +86,7 @@ class Engagement {
       'pointsOfInterest': pointsOfInterest,
       'updatedDetailsDiff': updatedDetailsDiff,
       'createdAt': Timestamp.fromDate(createdAt),
+      'aiSource': aiSource.name,
     };
   }
 
@@ -80,6 +97,7 @@ class Engagement {
     String? customerResponse,
     List<String>? pointsOfInterest,
     String? updatedDetailsDiff,
+    AiSource? aiSource,
   }) {
     return Engagement(
       engagementId: engagementId,
@@ -90,6 +108,7 @@ class Engagement {
       pointsOfInterest: pointsOfInterest ?? this.pointsOfInterest,
       updatedDetailsDiff: updatedDetailsDiff ?? this.updatedDetailsDiff,
       createdAt: createdAt,
+      aiSource: aiSource ?? this.aiSource,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import '../services/ai_service.dart' as ai;
 import '../models/customer.dart';
+import '../models/engagement.dart';
 import '../providers/advisor_provider.dart';
 import '../providers/ui_context_provider.dart';
 
@@ -78,9 +79,12 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
     // 4. Get AI response based on current UI context
     String response = "";
+    AiSource source = AiSource.cloud;
     try {
       _isLoading = true;
       notifyListeners();
+
+      source = await aiService.getAiSource();
 
       // Convert aiHistory (excluding the current prompt) to Content list for startChat
       final List<Content> chatHistory = aiHistory.length > 1 
@@ -145,37 +149,32 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
     // 5. Handle response tokens
     if (response == 'CONFERENCE_READY') {
       final llmMsg = ChatMessage(
-        text: "I've gathered all the information. Ready to proceed!",
+        text: "AI_SOURCE:${source.name}\nI've gathered all the information. Ready to proceed!",
         origin: MessageOrigin.llm,
         attachments: const [],
       );
       _history.add(llmMsg);
       notifyListeners();
-      yield "Ready to proceed!";
+      yield "AI_SOURCE:${source.name}\nReady to proceed!";
     } else if (response.startsWith('PREVIEW_DATA:')) {
       final llmMsg = ChatMessage(
-        text: response,
+        text: "AI_SOURCE:${source.name}\n$response",
         origin: MessageOrigin.llm,
         attachments: const [],
       );
       _history.add(llmMsg);
       notifyListeners();
 
-      final lines = response.split('\n');
-      if (lines.length > 1) {
-        yield lines.sublist(1).join('\n');
-      } else {
-        yield "I've updated the record preview.";
-      }
+      yield "AI_SOURCE:${source.name}\n$response";
     } else {
       final llmMsg = ChatMessage(
-        text: response,
+        text: "AI_SOURCE:${source.name}\n$response",
         origin: MessageOrigin.llm,
         attachments: const [],
       );
       _history.add(llmMsg);
       notifyListeners();
-      yield response;
+      yield "AI_SOURCE:${source.name}\n$response";
     }
   }
 

@@ -391,16 +391,17 @@ class AdvisorProvider with ChangeNotifier {
             : await _engagementRepo.hasDraft(_currentAdvisor!.uid, customer.customerId);
 
         if (!hasDraft) {
-          final draft = await _aiService.generateDraftMessage(customer);
+          final result = await _aiService.generateDraftMessage(customer);
           final engagement = Engagement(
             engagementId: const Uuid().v4(),
             status: EngagementStatus.draft,
-            draftMessage: draft,
+            draftMessage: result.text,
             sentMessage: '',
             customerResponse: '',
             pointsOfInterest: [],
             updatedDetailsDiff: '',
             createdAt: DateTime.now(),
+            aiSource: result.source,
           );
           
           if (isGuestMode) {
@@ -465,6 +466,7 @@ class AdvisorProvider with ChangeNotifier {
     _isProcessingResponse = true;
     notifyListeners();
     try {
+      final source = await _aiService.getAiSource();
       final poi = await _aiService.extractPointsOfInterest(response, customer.guidelines);
       final updatedDetails = await _aiService.updateCustomerDetails(customer.details, response);
 
@@ -473,6 +475,7 @@ class AdvisorProvider with ChangeNotifier {
         customerResponse: response,
         pointsOfInterest: poi,
         updatedDetailsDiff: updatedDetails,
+        aiSource: source,
       );
       
       if (isGuestMode) {
@@ -655,16 +658,17 @@ class AdvisorProvider with ChangeNotifier {
     _isGeneratingDraft = true;
     notifyListeners();
     try {
-      final draft = await _aiService.generateDraftMessage(customer);
+      final result = await _aiService.generateDraftMessage(customer);
       final engagement = Engagement(
         engagementId: const Uuid().v4(),
         status: EngagementStatus.draft,
-        draftMessage: draft,
+        draftMessage: result.text,
         sentMessage: '',
         customerResponse: '',
         pointsOfInterest: [],
         updatedDetailsDiff: '',
         createdAt: DateTime.now(),
+        aiSource: result.source,
       );
       
       if (isGuestMode) {
