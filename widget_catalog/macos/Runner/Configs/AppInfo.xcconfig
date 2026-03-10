@@ -8,7 +8,7 @@
 PRODUCT_NAME = widget_catalog
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.widgetCatalog
+PRODUCT_BUNDLE_IDENTIFIER = com.hejitech.widgetCatalog
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.hejitech. All rights reserved.

@@ -714,14 +714,14 @@ packages:
       path: "../app"
       relative: true
     source: path
-    version: "1.0.0+1"
+    version: "1.0.2+3"
   keyvalue_dash:
     dependency: "direct main"
     description:
       path: "../dash"
       relative: true
     source: path
-    version: "1.0.0+1"
+    version: "1.0.2+3"
   leak_tracker:
     dependency: transitive
     description:
