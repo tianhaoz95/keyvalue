@@ -32,6 +32,7 @@ class UiContextProvider with ChangeNotifier {
   AiEditContext? _activeEditContext;
   bool _isSidebarExpanded = true;
   SidebarMode _sidebarMode = SidebarMode.ai;
+  bool _isMobile = false;
 
   AppView get currentView => _currentView;
   String? get activeCustomerId => _activeCustomerId;
@@ -39,6 +40,15 @@ class UiContextProvider with ChangeNotifier {
   AiEditContext? get activeEditContext => _activeEditContext;
   bool get isSidebarExpanded => _isSidebarExpanded;
   SidebarMode get sidebarMode => _sidebarMode;
+  bool get isMobile => _isMobile;
+
+  void setIsMobile(bool isMobile) {
+    if (_isMobile != isMobile) {
+      _isMobile = isMobile;
+      // Use microtask to avoid calling notifyListeners() during build
+      Future.microtask(() => notifyListeners());
+    }
+  }
 
   void setView(AppView view, {String? customerId, Map<String, dynamic>? draftData}) {
     _currentView = view;

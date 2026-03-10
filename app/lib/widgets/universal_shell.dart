@@ -22,6 +22,9 @@ class UniversalShell extends StatelessWidget {
     final isDesktop = screenWidth > 900;
     final isMobile = screenWidth < 600;
     
+    // Update mobile state in context
+    uiContext.setIsMobile(isMobile);
+    
     if (advisorProvider.currentAdvisor == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
