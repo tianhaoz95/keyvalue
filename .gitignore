@@ -3,3 +3,4 @@ admin-sdk.json
 recaptcha.txt
 /.venv
 /temp
+/.env

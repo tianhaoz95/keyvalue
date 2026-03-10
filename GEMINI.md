@@ -57,6 +57,35 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 - **Run Integration Tests:** `cd app && flutter test integration_test/auth_flow_test.dart`
 - **Build APK:** `cd app && flutter build apk` (Ensures project integrity and buildability)
 
+## 📦 App Distribution
+
+After a feature development in `app/` or `dash/`, and once builds and tests pass successfully, the application must be deployed to **Firebase App Distribution**.
+
+### Deployment Steps
+
+1. **Environment Setup:** Load the required App IDs from your environment.
+   ```bash
+   source .env
+   ```
+   This ensures `FIREBASE_ANDROID_APP_ID` (for the `app/` folder) and `FIREBASE_ANDROID_DASH_ID` (for the `dash/` folder) are set.
+
+2. **Distribute:** Run the following command from the respective project root (`app/` or `dash/`):
+   ```bash
+   # For 'app/'
+   firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+     --app $FIREBASE_ANDROID_APP_ID \
+     --release-notes "Detailed description of the current feature or improvement" \
+     --groups "dev"
+
+   # For 'dash/'
+   firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+     --app $FIREBASE_ANDROID_DASH_ID \
+     --release-notes "Detailed description of the current feature or improvement" \
+     --groups "dev"
+   ```
+
+Always replace the release notes with a clear description of the specific feature or improvement being released.
+
 ## 📱 SMS Testing & Simulation
 
 The app is currently configured with a `FakeSmsService` to avoid Twilio costs during development.
