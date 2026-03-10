@@ -162,13 +162,66 @@ class _SettingsViewState extends State<SettingsView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
-                radius: isCompact ? 18 : 20,
+                radius: isCompact ? 22 : 24,
                 backgroundColor: Colors.black,
-                child: Icon(Icons.person, color: Colors.white, size: isCompact ? 18 : 20),
+                child: Icon(Icons.person, color: Colors.white, size: isCompact ? 22 : 24),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _isEditingProfile 
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _nameController,
+                          style: TextStyle(fontSize: isCompact ? 12 : 13),
+                          decoration: const InputDecoration(labelText: 'NAME', isDense: true),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _firmController,
+                          style: TextStyle(fontSize: isCompact ? 12 : 13),
+                          decoration: const InputDecoration(labelText: 'FIRM NAME', isDense: true),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                advisor.name, 
+                                style: TextStyle(fontSize: isCompact ? 14 : 15, fontWeight: FontWeight.w900), 
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text('•', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                advisor.firmName, 
+                                style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600), 
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          advisor.email, 
+                          style: TextStyle(fontSize: isCompact ? 10 : 11, color: Colors.grey), 
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+              ),
+              const SizedBox(width: 8),
               IconButton(
                 icon: Icon(_isEditingProfile ? Icons.check_circle_outline : Icons.edit_outlined, size: isCompact ? 16 : 18),
                 onPressed: () async {
@@ -184,26 +237,6 @@ class _SettingsViewState extends State<SettingsView> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (_isEditingProfile) ...[
-            TextField(
-              controller: _nameController,
-              style: TextStyle(fontSize: isCompact ? 12 : 13),
-              decoration: const InputDecoration(labelText: 'NAME', isDense: true),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _firmController,
-              style: TextStyle(fontSize: isCompact ? 12 : 13),
-              decoration: const InputDecoration(labelText: 'FIRM NAME', isDense: true),
-            ),
-          ] else ...[
-            Text(advisor.name, style: TextStyle(fontSize: isCompact ? 15 : 16, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 2),
-            Text(advisor.firmName, style: TextStyle(fontSize: isCompact ? 12 : 13, color: Colors.black54, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 12),
-            Text(advisor.email, style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.grey), overflow: TextOverflow.ellipsis),
-          ],
           const Divider(height: 32),
           Text(
             'VIRTUAL PHONE NUMBER',
