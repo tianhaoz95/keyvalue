@@ -77,4 +77,10 @@ class CustomerRepository {
     if (advisorUid == 'demo_user') return;
     await _customersRef(advisorUid).doc(customerId).delete();
   }
+
+  Future<List<String>> getAllCustomerIds(String advisorUid) async {
+    if (advisorUid == 'demo_user') return [];
+    final snapshot = await _customersRef(advisorUid).get();
+    return snapshot.docs.map((doc) => doc.id).toList();
+  }
 }
