@@ -18,6 +18,8 @@ class Advisor {
   final bool isExpressiveAiEnabled;
   @HiveField(6)
   final bool isMultimodalAiEnabled;
+  @HiveField(15)
+  final bool preferOnDeviceAi;
   @HiveField(7)
   final String subscriptionPlan;
   @HiveField(8)
@@ -43,6 +45,7 @@ class Advisor {
     this.aiCapability = 'pro',
     this.isExpressiveAiEnabled = true,
     this.isMultimodalAiEnabled = false,
+    this.preferOnDeviceAi = false,
     this.subscriptionPlan = 'Starter',
     this.cardHolderName = '',
     this.cardNumber = '',
@@ -61,6 +64,7 @@ class Advisor {
     String? aiCapability,
     bool? isExpressiveAiEnabled,
     bool? isMultimodalAiEnabled,
+    bool? preferOnDeviceAi,
     String? subscriptionPlan,
     String? cardHolderName,
     String? cardNumber,
@@ -78,6 +82,7 @@ class Advisor {
       aiCapability: aiCapability ?? this.aiCapability,
       isExpressiveAiEnabled: isExpressiveAiEnabled ?? this.isExpressiveAiEnabled,
       isMultimodalAiEnabled: isMultimodalAiEnabled ?? this.isMultimodalAiEnabled,
+      preferOnDeviceAi: preferOnDeviceAi ?? this.preferOnDeviceAi,
       subscriptionPlan: subscriptionPlan ?? this.subscriptionPlan,
       cardHolderName: cardHolderName ?? this.cardHolderName,
       cardNumber: cardNumber ?? this.cardNumber,
@@ -98,6 +103,7 @@ class Advisor {
       'aiCapability': aiCapability,
       'isExpressiveAiEnabled': isExpressiveAiEnabled,
       'isMultimodalAiEnabled': isMultimodalAiEnabled,
+      'preferOnDeviceAi': preferOnDeviceAi,
       'subscriptionPlan': subscriptionPlan,
       'cardHolderName': cardHolderName,
       'cardNumber': cardNumber,
@@ -118,6 +124,7 @@ class Advisor {
       aiCapability: map['aiCapability'] ?? 'pro',
       isExpressiveAiEnabled: map['isExpressiveAiEnabled'] ?? true,
       isMultimodalAiEnabled: map['isMultimodalAiEnabled'] ?? false,
+      preferOnDeviceAi: map['preferOnDeviceAi'] ?? false,
       subscriptionPlan: map['subscriptionPlan'] ?? 'Starter',
       cardHolderName: map['cardHolderName'] ?? '',
       cardNumber: map['cardNumber'] ?? '',

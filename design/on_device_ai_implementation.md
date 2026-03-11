@@ -49,11 +49,13 @@ dependencies {
     - If the on-device model is unavailable or fails, the SDK transparently falls back to the cloud-hosted Gemini model.
 5.  **Offline Fallback**: `AiService` includes explicit `try-catch` logic to provide hardcoded or simplified drafts if both on-device and cloud inference fail (e.g., total offline state without model).
 
-### 4. Intelligence Hub Indicator (`app/lib/widgets/chat_view.dart`)
-The main AI chat interface (AI Sidebar/Intelligence Hub) now also displays the source indicator for every AI response.
+### 5. User Preference Toggle
+Users can now manually choose to prioritize the on-device model even when cloud connectivity is available.
 
-- **Metadata Encoding**: The `GlobalChatProvider` encodes the `AiSource` into the message string using an `AI_SOURCE:name` prefix.
-- **Parsing and Rendering**: The `KeyValueChatView.responseBuilder` parses this prefix to determine the source and renders a consistent indicator at the top of each message bubble.
+- **Location**: Settings Sidebar -> AI Capability section.
+- **Availability**: The toggle ("Prefer Local AI") only appears if `checkOnDeviceStatus()` returns an `AVAILABLE` or `Ready` state.
+- **Persistence**: The preference is stored in the `Advisor` master record in Firestore (or local Hive in guest mode) via the `preferOnDeviceAi` boolean field.
+- **Impact**: When enabled, `AiService.getAiSource()` will return `AiSource.onDevice` as long as the model is available, bypassing the cloud fallback logic for supported tasks.
 
 ## Benefits of this Implementation
 - **Performance**: Near-instant response times for text generation when running locally.

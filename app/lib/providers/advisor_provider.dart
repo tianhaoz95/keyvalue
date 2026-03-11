@@ -44,6 +44,8 @@ class AdvisorProvider with ChangeNotifier {
 
   bool get isMultimodalAiEnabled => _currentAdvisor?.isMultimodalAiEnabled ?? false;
 
+  bool get preferOnDeviceAi => _currentAdvisor?.preferOnDeviceAi ?? false;
+
   Locale _locale = const Locale('en');
   Locale get locale => _locale;
 
@@ -99,6 +101,14 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
+  Future<void> setPreferOnDeviceAi(bool enabled) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(preferOnDeviceAi: enabled);
+      await updateProfile(updated);
+      _updateAiService();
+    }
+  }
+
   void _updateAiService() {
     String modelName;
     switch (aiCapability) {
@@ -121,6 +131,7 @@ class AdvisorProvider with ChangeNotifier {
       modelName: modelName, 
       isDemo: isGuestMode,
       uiContext: _uiContext?.toAiContext(),
+      preferOnDeviceAi: preferOnDeviceAi,
     );
   }
 

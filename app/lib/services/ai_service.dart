@@ -34,12 +34,14 @@ class AiService {
   final String modelName;
   final bool isDemo;
   final Map<String, dynamic>? uiContext;
+  final bool preferOnDeviceAi;
 
   AiService({
     GenerativeModel? model, 
     this.modelName = 'gemini-2.5-flash', 
     this.isDemo = false,
     this.uiContext,
+    this.preferOnDeviceAi = false,
   }) : _model = model {
     if (!isDemo && !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       // Proactively trigger model download/warmup on mobile
@@ -68,6 +70,7 @@ class AiService {
       final online = web_utils.isWebOnline();
       
       if (!online && available) return AiSource.onDevice;
+      if (preferOnDeviceAi && available) return AiSource.onDevice;
       return AiSource.cloud; 
     }
 
@@ -79,6 +82,7 @@ class AiService {
         // Only return onDevice if we are likely offline or specifically want it.
         // For now, let's keep it as is, but GlobalChatProvider will handle the fallback.
         // Actually, to fix the user's issue, if they are offline, we should return onDevice.
+        if (preferOnDeviceAi) return AiSource.onDevice;
         return AiSource.cloud; // Default to cloud, GlobalChatProvider will fallback.
       }
     }

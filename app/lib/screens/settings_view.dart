@@ -624,41 +624,56 @@ class _SettingsViewState extends State<SettingsView> {
               final isDownloadable = status.contains('DOWNLOADABLE') || status.contains('NeedsDownload');
               final isDownloading = status.contains('DOWNLOADING') || _isDownloadingModel;
               
-              return ListTile(
-                dense: true,
-                leading: isDownloading 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                  : Icon(
-                      isAvailable ? Icons.offline_bolt : Icons.offline_bolt_outlined,
-                      color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : Colors.grey),
-                      size: 20,
+              return Column(
+                children: [
+                  ListTile(
+                    dense: true,
+                    leading: isDownloading 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : Icon(
+                          isAvailable ? Icons.offline_bolt : Icons.offline_bolt_outlined,
+                          color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : Colors.grey),
+                          size: 20,
+                        ),
+                    title: Text('On-Device Model', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+                    subtitle: Text(
+                      isDownloading ? 'Downloading model...' : status, 
+                      style: TextStyle(
+                        fontSize: isCompact ? 10 : 11, 
+                        color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : null),
+                      ),
                     ),
-                title: Text('On-Device Model', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
-                subtitle: Text(
-                  isDownloading ? 'Downloading model...' : status, 
-                  style: TextStyle(
-                    fontSize: isCompact ? 10 : 11, 
-                    color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : null),
+                    trailing: isDownloadable && !isDownloading
+                      ? TextButton(
+                          onPressed: () async {
+                            setState(() => _isDownloadingModel = true);
+                            try {
+                              await provider.prepareOnDeviceModel();
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isDownloadingModel = false);
+                              }
+                            }
+                          },
+                          child: Text('DOWNLOAD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.refresh, size: 16),
+                          onPressed: () => setState(() {}),
+                        ),
                   ),
-                ),
-                trailing: isDownloadable && !isDownloading
-                  ? TextButton(
-                      onPressed: () async {
-                        setState(() => _isDownloadingModel = true);
-                        try {
-                          await provider.prepareOnDeviceModel();
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isDownloadingModel = false);
-                          }
-                        }
-                      },
-                      child: Text('DOWNLOAD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.refresh, size: 16),
-                      onPressed: () => setState(() {}),
+                  if (isAvailable) ...[
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      dense: true,
+                      title: Text('Prefer Local AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+                      subtitle: Text('Use on-device model', style: TextStyle(fontSize: isCompact ? 10 : 11)),
+                      value: provider.preferOnDeviceAi,
+                      activeThumbColor: Colors.black,
+                      onChanged: (val) => provider.setPreferOnDeviceAi(val),
                     ),
+                  ],
+                ],
               );
             },
           ),
