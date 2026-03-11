@@ -1,6 +1,6 @@
 {
-    "name": "keyvalue_dash",
-    "short_name": "keyvalue_dash",
+    "name": "KV Dash",
+    "short_name": "KV Dash",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1A237E",

@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'KeyValue Dash',
+                  'KV Dash',
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.w900,
