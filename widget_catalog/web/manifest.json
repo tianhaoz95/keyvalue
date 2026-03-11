@@ -1,6 +1,6 @@
 {
-    "name": "widget_catalog",
-    "short_name": "widget_catalog",
+    "name": "KV Wiz",
+    "short_name": "KV Wiz",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="widget_catalog"
+        android:label="KV Wiz"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
