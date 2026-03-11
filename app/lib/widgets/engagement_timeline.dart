@@ -468,6 +468,23 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
                   'PROPOSED PROFILE UPDATE',
                   style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey),
                 ),
+                if (engagement.changeSummary.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'CHANGE SUMMARY',
+                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    engagement.changeSummary,
+                    style: TextStyle(
+                      fontSize: isCompact ? 12 : 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,

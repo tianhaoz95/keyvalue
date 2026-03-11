@@ -43,6 +43,8 @@ class Engagement {
   final List<String> pointsOfInterest;
   @HiveField(6)
   final String updatedDetailsDiff;
+  @HiveField(9)
+  final String changeSummary;
   @HiveField(7)
   final DateTime createdAt;
   @HiveField(8)
@@ -56,6 +58,7 @@ class Engagement {
     required this.customerResponse,
     required this.pointsOfInterest,
     required this.updatedDetailsDiff,
+    this.changeSummary = '',
     required this.createdAt,
     this.aiSource = AiSource.unknown,
   });
@@ -69,6 +72,7 @@ class Engagement {
       customerResponse: map['customerResponse'] as String,
       pointsOfInterest: (map['pointsOfInterest'] as List).cast<String>(),
       updatedDetailsDiff: map['updatedDetailsDiff'] as String,
+      changeSummary: map['changeSummary'] as String? ?? '',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       aiSource: map['aiSource'] != null 
           ? AiSource.values.byName(map['aiSource'] as String)
@@ -85,6 +89,7 @@ class Engagement {
       'customerResponse': customerResponse,
       'pointsOfInterest': pointsOfInterest,
       'updatedDetailsDiff': updatedDetailsDiff,
+      'changeSummary': changeSummary,
       'createdAt': Timestamp.fromDate(createdAt),
       'aiSource': aiSource.name,
     };
@@ -97,6 +102,7 @@ class Engagement {
     String? customerResponse,
     List<String>? pointsOfInterest,
     String? updatedDetailsDiff,
+    String? changeSummary,
     AiSource? aiSource,
   }) {
     return Engagement(
@@ -107,6 +113,7 @@ class Engagement {
       customerResponse: customerResponse ?? this.customerResponse,
       pointsOfInterest: pointsOfInterest ?? this.pointsOfInterest,
       updatedDetailsDiff: updatedDetailsDiff ?? this.updatedDetailsDiff,
+      changeSummary: changeSummary ?? this.changeSummary,
       createdAt: createdAt,
       aiSource: aiSource ?? this.aiSource,
     );

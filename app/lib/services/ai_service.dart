@@ -19,6 +19,13 @@ class AiDraftResult {
   AiDraftResult({required this.text, required this.source});
 }
 
+class AiProfileUpdate {
+  final String updatedContent;
+  final String summary;
+
+  AiProfileUpdate({required this.updatedContent, required this.summary});
+}
+
 class AiService {
   static const _nativeChannel = MethodChannel('com.hejitech.keyvalue_app/ai_ondevice');
   
@@ -96,6 +103,7 @@ Mandatory Rules:
 3. **Proactivity**: Synthesize info into high-quality Markdown. Don't ask for wording; suggest it.
 4. **Onboarding**: Once you have gathered the name, email, and basic background, call `create_client` to automatically register the client and navigate to their new profile.
 5. **AI-Assisted Editing**: If the user prompt starts with "CONTEXT: Editing [TYPE]", prioritize refining that specific content using the appropriate tool (`update_draft`, `update_profile`, or `update_guidelines`) based on the user's request.
+6. **Change Summaries**: When calling `update_profile` or `update_guidelines`, you MUST provide a concise one-sentence summary of what specifically was changed in the "summary" argument.
 '''),
     tools: [
       Tool.functionDeclarations([
@@ -116,12 +124,14 @@ Mandatory Rules:
           parameters: {
             'customerId': Schema.string(),
             'updated_profile': Schema.string(description: 'Full Markdown profile.'),
+            'summary': Schema.string(description: 'One sentence summary of what changed.'),
           },
         ),
         FunctionDeclaration('update_guidelines', 'Update engagement guidelines.',
           parameters: {
             'customerId': Schema.string(),
             'updated_guidelines': Schema.string(description: 'Full Markdown guidelines.'),
+            'summary': Schema.string(description: 'One sentence summary of what changed.'),
           },
         ),
         FunctionDeclaration('update_draft', 'Refine message draft.',
@@ -247,13 +257,47 @@ Return ONLY the message text. Do not include any other text or call any tools.
     } catch (e) { return ["Error: $e"]; }
   }
 
-  Future<String> updateCustomerDetails(String currentDetails, String response) async {
-    if (isDemo) return "$currentDetails\n- Update: Info added.";
+  Future<AiProfileUpdate> updateCustomerDetails(String currentDetails, String response) async {
+    if (isDemo) {
+      return AiProfileUpdate(
+        updatedContent: "$currentDetails\n- Update: Info added.",
+        summary: "Added a new update based on customer response.",
+      );
+    }
     try {
-      final prompt = 'Merge new info into profile. Preserve Markdown.\nProfile: $currentDetails\nResponse: $response\nUpdated Profile:';
+      final prompt = '''
+Merge new info from the response into the current profile. Preserve Markdown.
+Profile: $currentDetails
+Response: $response
+
+Return the result as a JSON object with exactly two fields:
+1. "updated_profile": The full updated Markdown profile.
+2. "summary": A very brief (1 sentence) summary of what specifically changed or was added.
+
+JSON:''';
       final res = await model.generateContent([Content.text(prompt)]);
-      return res.text ?? currentDetails;
-    } catch (e) { return currentDetails; }
+      final text = res.text ?? "";
+      
+      // Try to parse JSON
+      try {
+        final jsonStart = text.indexOf('{');
+        final jsonEnd = text.lastIndexOf('}');
+        if (jsonStart != -1 && jsonEnd != -1) {
+          final jsonStr = text.substring(jsonStart, jsonEnd + 1);
+          final data = jsonDecode(jsonStr);
+          return AiProfileUpdate(
+            updatedContent: data['updated_profile'] as String? ?? currentDetails,
+            summary: data['summary'] as String? ?? "Profile updated.",
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to parse AI profile update JSON: $e');
+      }
+      
+      return AiProfileUpdate(updatedContent: text.isNotEmpty ? text : currentDetails, summary: "Profile updated.");
+    } catch (e) { 
+      return AiProfileUpdate(updatedContent: currentDetails, summary: "Update failed."); 
+    }
   }
 
   Future<GenerateContentResponse?> _getRefinementRaw(String type, String current, String target, List<AiChatMessage> history) async {

@@ -109,6 +109,10 @@ class Customer {
   final String? proposedDetails;
   @HiveField(17)
   final String? proposedGuidelines;
+  @HiveField(18)
+  final String? proposedDetailsSummary;
+  @HiveField(19)
+  final String? proposedGuidelinesSummary;
 
   Customer({
     required this.customerId,
@@ -128,6 +132,8 @@ class Customer {
     this.schedules = const [],
     this.proposedDetails,
     this.proposedGuidelines,
+    this.proposedDetailsSummary,
+    this.proposedGuidelinesSummary,
   });
 
   factory Customer.fromMap(Map<String, dynamic> map) {
@@ -152,6 +158,8 @@ class Customer {
           [],
       proposedDetails: map['proposedDetails'] as String?,
       proposedGuidelines: map['proposedGuidelines'] as String?,
+      proposedDetailsSummary: map['proposedDetailsSummary'] as String?,
+      proposedGuidelinesSummary: map['proposedGuidelinesSummary'] as String?,
     );
   }
 
@@ -174,6 +182,8 @@ class Customer {
       'schedules': schedules.map((e) => e.toMap()).toList(),
       'proposedDetails': proposedDetails,
       'proposedGuidelines': proposedGuidelines,
+      'proposedDetailsSummary': proposedDetailsSummary,
+      'proposedGuidelinesSummary': proposedGuidelinesSummary,
     };
   }
 
@@ -194,6 +204,8 @@ class Customer {
     List<EngagementSchedule>? schedules,
     Object? proposedDetails = _sentinel,
     Object? proposedGuidelines = _sentinel,
+    Object? proposedDetailsSummary = _sentinel,
+    Object? proposedGuidelinesSummary = _sentinel,
   }) {
     return Customer(
       customerId: customerId,
@@ -213,6 +225,8 @@ class Customer {
       schedules: schedules ?? this.schedules,
       proposedDetails: proposedDetails == _sentinel ? this.proposedDetails : proposedDetails as String?,
       proposedGuidelines: proposedGuidelines == _sentinel ? this.proposedGuidelines : proposedGuidelines as String?,
+      proposedDetailsSummary: proposedDetailsSummary == _sentinel ? this.proposedDetailsSummary : proposedDetailsSummary as String?,
+      proposedGuidelinesSummary: proposedGuidelinesSummary == _sentinel ? this.proposedGuidelinesSummary : proposedGuidelinesSummary as String?,
     );
   }
 

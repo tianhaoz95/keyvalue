@@ -80,13 +80,15 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       schedules: (fields[15] as List).cast<EngagementSchedule>(),
       proposedDetails: fields[16] as String?,
       proposedGuidelines: fields[17] as String?,
+      proposedDetailsSummary: fields[18] as String?,
+      proposedGuidelinesSummary: fields[19] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Customer obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(19)
       ..writeByte(0)
       ..write(obj.customerId)
       ..writeByte(1)
@@ -120,7 +122,11 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       ..writeByte(16)
       ..write(obj.proposedDetails)
       ..writeByte(17)
-      ..write(obj.proposedGuidelines);
+      ..write(obj.proposedGuidelines)
+      ..writeByte(18)
+      ..write(obj.proposedDetailsSummary)
+      ..writeByte(19)
+      ..write(obj.proposedGuidelinesSummary);
   }
 
   @override

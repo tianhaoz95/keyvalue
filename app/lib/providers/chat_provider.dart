@@ -287,9 +287,13 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
       case 'update_profile':
         final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         final updatedProfile = call.args['updated_profile'] as String?;
+        final summary = call.args['summary'] as String?;
         if (updatedProfile != null && customerId != null) {
            final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
-           final updated = customer.copyWith(proposedDetails: updatedProfile);
+           final updated = customer.copyWith(
+             proposedDetails: updatedProfile,
+             proposedDetailsSummary: summary ?? "Profile updated.",
+           );
            await _advisorProvider.addCustomer(updated);
            _uiContext.setView(AppView.customerDetail, customerId: customerId);
            
@@ -301,6 +305,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
                'occupation': customer.occupation,
                'details': updatedProfile,
                'guidelines': customer.guidelines,
+               'summary': summary,
              });
            }
         }
@@ -308,9 +313,13 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
       case 'update_guidelines':
         final customerId = call.args['customerId'] as String? ?? _uiContext.activeCustomerId;
         final updatedGuidelines = call.args['updated_guidelines'] as String?;
+        final summary = call.args['summary'] as String?;
         if (updatedGuidelines != null && customerId != null) {
            final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
-           final updated = customer.copyWith(proposedGuidelines: updatedGuidelines);
+           final updated = customer.copyWith(
+             proposedGuidelines: updatedGuidelines,
+             proposedGuidelinesSummary: summary ?? "Guidelines updated.",
+           );
            await _advisorProvider.addCustomer(updated);
            _uiContext.setView(AppView.customerDetail, customerId: customerId);
         }

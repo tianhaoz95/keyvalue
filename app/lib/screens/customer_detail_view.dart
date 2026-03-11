@@ -134,6 +134,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                           title: 'PROPOSED PROFILE UPDATE',
                           original: currentCustomer.details,
                           proposed: currentCustomer.proposedDetails!,
+                          summary: currentCustomer.proposedDetailsSummary,
                           onApprove: () => provider.approveProposedDetails(currentCustomer),
                           onDismiss: () => provider.dismissProposedDetails(currentCustomer),
                           isCompact: isCompact,
@@ -151,6 +152,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                           title: 'PROPOSED GUIDELINES UPDATE',
                           original: currentCustomer.guidelines,
                           proposed: currentCustomer.proposedGuidelines!,
+                          summary: currentCustomer.proposedGuidelinesSummary,
                           onApprove: () => provider.approveProposedGuidelines(currentCustomer),
                           onDismiss: () => provider.dismissProposedGuidelines(currentCustomer),
                           isCompact: isCompact,
@@ -183,6 +185,7 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     required String title,
     required String original,
     required String proposed,
+    String? summary,
     required VoidCallback onApprove,
     required VoidCallback onDismiss,
     bool isCompact = false,
@@ -214,7 +217,21 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('AI SUGGESTION:', style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, color: Colors.grey)),
-                const SizedBox(height: 8),
+                if (summary != null && summary.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text('CHANGE SUMMARY', style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1.0)),
+                  const SizedBox(height: 4),
+                  Text(
+                    summary,
+                    style: TextStyle(
+                      fontSize: isCompact ? 12 : 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: const Color(0xFFF9F9F9), borderRadius: BorderRadius.circular(8)),

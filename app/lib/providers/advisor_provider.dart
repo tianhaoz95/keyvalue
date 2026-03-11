@@ -493,13 +493,14 @@ class AdvisorProvider with ChangeNotifier {
     try {
       final source = await _aiService.getAiSource();
       final poi = await _aiService.extractPointsOfInterest(response, customer.guidelines);
-      final updatedDetails = await _aiService.updateCustomerDetails(customer.details, response);
+      final update = await _aiService.updateCustomerDetails(customer.details, response);
 
       final updatedEngagement = engagement.copyWith(
         status: EngagementStatus.received,
         customerResponse: response,
         pointsOfInterest: poi,
-        updatedDetailsDiff: updatedDetails,
+        updatedDetailsDiff: update.updatedContent,
+        changeSummary: update.summary,
         aiSource: source,
       );
       
@@ -533,6 +534,7 @@ class AdvisorProvider with ChangeNotifier {
     final updated = customer.copyWith(
       details: customer.proposedDetails,
       proposedDetails: null,
+      proposedDetailsSummary: null,
     );
     await addCustomer(updated);
   }
@@ -542,19 +544,26 @@ class AdvisorProvider with ChangeNotifier {
     final updated = customer.copyWith(
       guidelines: customer.proposedGuidelines,
       proposedGuidelines: null,
+      proposedGuidelinesSummary: null,
     );
     await addCustomer(updated);
   }
 
   Future<void> dismissProposedDetails(Customer customer) async {
     if (_currentAdvisor == null) return;
-    final updated = customer.copyWith(proposedDetails: null);
+    final updated = customer.copyWith(
+      proposedDetails: null,
+      proposedDetailsSummary: null,
+    );
     await addCustomer(updated);
   }
 
   Future<void> dismissProposedGuidelines(Customer customer) async {
     if (_currentAdvisor == null) return;
-    final updated = customer.copyWith(proposedGuidelines: null);
+    final updated = customer.copyWith(
+      proposedGuidelines: null,
+      proposedGuidelinesSummary: null,
+    );
     await addCustomer(updated);
   }
 

@@ -24,6 +24,7 @@ class EngagementAdapter extends TypeAdapter<Engagement> {
       customerResponse: fields[4] as String,
       pointsOfInterest: (fields[5] as List).cast<String>(),
       updatedDetailsDiff: fields[6] as String,
+      changeSummary: fields[9] as String,
       createdAt: fields[7] as DateTime,
       aiSource: fields[8] as AiSource,
     );
@@ -32,7 +33,7 @@ class EngagementAdapter extends TypeAdapter<Engagement> {
   @override
   void write(BinaryWriter writer, Engagement obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.engagementId)
       ..writeByte(1)
@@ -47,6 +48,8 @@ class EngagementAdapter extends TypeAdapter<Engagement> {
       ..write(obj.pointsOfInterest)
       ..writeByte(6)
       ..write(obj.updatedDetailsDiff)
+      ..writeByte(9)
+      ..write(obj.changeSummary)
       ..writeByte(7)
       ..write(obj.createdAt)
       ..writeByte(8)
