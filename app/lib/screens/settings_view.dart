@@ -554,6 +554,8 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  bool _isDownloadingModel = false;
+
   Widget _buildAiSettingsCard(AdvisorProvider provider, AppLocalizations l10n, bool isCompact) {
     String capabilityText;
     switch (provider.aiCapability) {
@@ -619,20 +621,44 @@ class _SettingsViewState extends State<SettingsView> {
             builder: (context, snapshot) {
               final status = snapshot.data ?? 'Checking...';
               final isAvailable = status.contains('AVAILABLE') || status.contains('Ready');
+              final isDownloadable = status.contains('DOWNLOADABLE') || status.contains('NeedsDownload');
+              final isDownloading = status.contains('DOWNLOADING') || _isDownloadingModel;
               
               return ListTile(
                 dense: true,
-                leading: Icon(
-                  isAvailable ? Icons.offline_bolt : Icons.offline_bolt_outlined,
-                  color: isAvailable ? Colors.green : Colors.grey,
-                  size: 20,
-                ),
+                leading: isDownloading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : Icon(
+                      isAvailable ? Icons.offline_bolt : Icons.offline_bolt_outlined,
+                      color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : Colors.grey),
+                      size: 20,
+                    ),
                 title: Text('On-Device Model', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
-                subtitle: Text(status, style: TextStyle(fontSize: isCompact ? 10 : 11, color: isAvailable ? Colors.green : null)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.refresh, size: 16),
-                  onPressed: () => setState(() {}),
+                subtitle: Text(
+                  isDownloading ? 'Downloading model...' : status, 
+                  style: TextStyle(
+                    fontSize: isCompact ? 10 : 11, 
+                    color: isAvailable ? Colors.green : (isDownloadable ? Colors.amber : null),
+                  ),
                 ),
+                trailing: isDownloadable && !isDownloading
+                  ? TextButton(
+                      onPressed: () async {
+                        setState(() => _isDownloadingModel = true);
+                        try {
+                          await provider.prepareOnDeviceModel();
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isDownloadingModel = false);
+                          }
+                        }
+                      },
+                      child: Text('DOWNLOAD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.refresh, size: 16),
+                      onPressed: () => setState(() {}),
+                    ),
               );
             },
           ),

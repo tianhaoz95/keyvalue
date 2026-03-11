@@ -1,6 +1,13 @@
+@file:OptIn(com.google.firebase.ai.type.PublicPreviewAPI::class)
+
 package com.hejitech.keyvalue_app
 
 import android.os.Bundle
+import com.google.firebase.Firebase
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.GenerativeModel
+import com.google.firebase.ai.InferenceMode
+import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ondevice.FirebaseAIOnDevice
 import com.google.firebase.ai.ondevice.OnDeviceModelStatus
 import io.flutter.embedding.android.FlutterActivity
@@ -21,6 +28,14 @@ class MainActivity: FlutterActivity() {
             when (call.method) {
                 "prepareModel" -> prepareModel(result)
                 "checkStatus" -> checkStatus(result)
+                "generateContent" -> {
+                    val prompt = call.argument<String>("prompt")
+                    if (prompt != null) {
+                        generateContent(prompt, result)
+                    } else {
+                        result.error("INVALID_ARGUMENT", "Prompt is null", null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -32,9 +47,37 @@ class MainActivity: FlutterActivity() {
                 val status = withContext(Dispatchers.IO) {
                     FirebaseAIOnDevice.checkStatus()
                 }
-                result.success(status.toString())
+                
+                val friendlyStatus = when (status) {
+                    OnDeviceModelStatus.AVAILABLE -> "AVAILABLE"
+                    OnDeviceModelStatus.DOWNLOADING -> "DOWNLOADING"
+                    OnDeviceModelStatus.DOWNLOADABLE -> "DOWNLOADABLE"
+                    OnDeviceModelStatus.UNAVAILABLE -> "UNSUPPORTED"
+                    else -> "UNSUPPORTED"
+                }
+                
+                result.success(friendlyStatus)
             } catch (e: Exception) {
                 result.error("STATUS_ERROR", e.message, null)
+            }
+        }
+    }
+
+    private fun generateContent(prompt: String, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Initialize the GenerativeModel with on-device config
+                val model = Firebase.ai.generativeModel(
+                    modelName = "gemini-2.0-flash",
+                    onDeviceConfig = OnDeviceConfig(mode = InferenceMode.ONLY_ON_DEVICE)
+                )
+                
+                val response = withContext(Dispatchers.IO) {
+                    model.generateContent(prompt)
+                }
+                result.success(response.text)
+            } catch (e: Exception) {
+                result.error("GENERATE_ERROR", e.message, null)
             }
         }
     }
@@ -46,18 +89,17 @@ class MainActivity: FlutterActivity() {
                     FirebaseAIOnDevice.checkStatus()
                 }
                 
-                // Use string comparison or type check if it's a sealed class
-                val statusStr = status.toString()
-                
-                if (statusStr.contains("DOWNLOADABLE") || statusStr.contains("NeedsDownload")) {
+                if (status == OnDeviceModelStatus.DOWNLOADABLE || 
+                    status == OnDeviceModelStatus.DOWNLOADING) {
+                    
                     withContext(Dispatchers.IO) {
                         FirebaseAIOnDevice.download().collect { _ -> }
                     }
                     result.success("DOWNLOADED")
-                } else if (statusStr.contains("AVAILABLE") || statusStr.contains("Ready")) {
+                } else if (status == OnDeviceModelStatus.AVAILABLE) {
                     result.success("AVAILABLE")
                 } else {
-                    result.success(statusStr)
+                    result.success("UNSUPPORTED")
                 }
             } catch (e: Exception) {
                 result.error("PREPARE_ERROR", e.message, null)
