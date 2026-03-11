@@ -53,7 +53,15 @@ class AiService {
 
   Future<AiSource> getAiSource() async {
     if (isDemo) return AiSource.unknown;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    
+    if (kIsWeb) {
+      // Placeholder for Web On-Device AI (Chrome Prompt API)
+      // In a full implementation, we would check window.ai here.
+      // For now, we allow the potential for on-device to be signaled.
+      return AiSource.cloud; 
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final status = await checkOnDeviceStatus();
       if (status.contains('AVAILABLE') || status.contains('Ready')) {
         return AiSource.onDevice;

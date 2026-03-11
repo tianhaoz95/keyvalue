@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
@@ -281,8 +282,8 @@ class KeyValueChatView extends StatelessWidget {
 
     switch (source) {
       case AiSource.onDevice:
-        label = 'ON-DEVICE';
-        icon = Icons.phonelink_setup;
+        label = kIsWeb ? 'BROWSER' : 'ON-DEVICE';
+        icon = kIsWeb ? Icons.browser_updated : Icons.phonelink_setup;
         color = Colors.green;
         break;
       case AiSource.cloud:

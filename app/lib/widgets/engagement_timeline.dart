@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -638,8 +639,8 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
 
     switch (source) {
       case AiSource.onDevice:
-        label = 'ON-DEVICE';
-        icon = Icons.phonelink_setup;
+        label = kIsWeb ? 'BROWSER' : 'ON-DEVICE';
+        icon = kIsWeb ? Icons.browser_updated : Icons.phonelink_setup;
         color = Colors.green;
         break;
       case AiSource.cloud:
