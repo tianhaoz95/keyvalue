@@ -26,6 +26,18 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   widgetbook_generator: ^3.22.0
   build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon_no_bg.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/images/icon_no_bg.png"
+    favicon_path: "web/favicon.png"
 
 flutter:
   uses-material-design: true
