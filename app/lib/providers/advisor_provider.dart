@@ -687,6 +687,8 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
+  Future<String> checkOnDeviceStatus() => _aiService.checkOnDeviceStatus();
+
   Future<void> generateManualDraft(Customer customer) async {
     if (_currentAdvisor == null || _isGeneratingDraft) return;
     _isGeneratingDraft = true;

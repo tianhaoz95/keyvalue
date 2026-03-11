@@ -363,7 +363,7 @@ class _SettingsViewState extends State<SettingsView> {
           const SizedBox(height: 16),
           if (isCompact) ...[
             ConfirmSlider(
-              text: 'Slide to confirm ${_pendingPlan}',
+              text: 'Slide to confirm $_pendingPlan',
               isCompact: isCompact,
               onConfirm: () => _handlePlanChange(provider),
             ),
@@ -601,7 +601,7 @@ class _SettingsViewState extends State<SettingsView> {
             title: Text('Expressive AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
             subtitle: Text('Visual feedback', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isExpressiveAiEnabled,
-            activeColor: Colors.black,
+            activeThumbColor: Colors.black,
             onChanged: provider.isGuestMode ? null : (val) => provider.setExpressiveAiEnabled(val),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
@@ -610,8 +610,31 @@ class _SettingsViewState extends State<SettingsView> {
             title: Text('Multimodal AI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
             subtitle: Text('Voice & images', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isMultimodalAiEnabled,
-            activeColor: Colors.black,
+            activeThumbColor: Colors.black,
             onChanged: provider.isGuestMode ? null : (val) => provider.setMultimodalAiEnabled(val),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          FutureBuilder<String>(
+            future: provider.checkOnDeviceStatus(),
+            builder: (context, snapshot) {
+              final status = snapshot.data ?? 'Checking...';
+              final isAvailable = status.contains('AVAILABLE') || status.contains('Ready');
+              
+              return ListTile(
+                dense: true,
+                leading: Icon(
+                  isAvailable ? Icons.offline_bolt : Icons.offline_bolt_outlined,
+                  color: isAvailable ? Colors.green : Colors.grey,
+                  size: 20,
+                ),
+                title: Text('On-Device Model', style: TextStyle(fontWeight: FontWeight.w700, fontSize: isCompact ? 12 : 13)),
+                subtitle: Text(status, style: TextStyle(fontSize: isCompact ? 10 : 11, color: isAvailable ? Colors.green : null)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.refresh, size: 16),
+                  onPressed: () => setState(() {}),
+                ),
+              );
+            },
           ),
         ],
       ),

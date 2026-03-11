@@ -86,61 +86,73 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
 
       source = await aiService.getAiSource();
 
-      // Convert aiHistory (excluding the current prompt) to Content list for startChat
-      final List<Content> chatHistory = aiHistory.length > 1 
-          ? aiHistory.sublist(0, aiHistory.length - 1).map((m) {
-              return Content(m.isUser ? 'user' : 'model', [TextPart(m.text)]);
-            }).toList()
-          : [];
+      if (source == AiSource.onDevice) {
+        // If we already know we are on-device (e.g. offline), try local immediately
+        response = await aiService.generateOnDeviceResponse(effectivePrompt);
+      } else {
+        // Convert aiHistory (excluding the current prompt) to Content list for startChat
+        final List<Content> chatHistory = aiHistory.length > 1 
+            ? aiHistory.sublist(0, aiHistory.length - 1).map((m) {
+                return Content(m.isUser ? 'user' : 'model', [TextPart(m.text)]);
+              }).toList()
+            : [];
 
-      final chat = aiService.model.startChat(history: chatHistory);
-      var aiResponse = await chat.sendMessage(Content.text(effectivePrompt));
+        final chat = aiService.model.startChat(history: chatHistory);
+        var aiResponse = await chat.sendMessage(Content.text(effectivePrompt));
 
-      // Execution Loop for Tool Calling
-      int loopCount = 0;
-      final List<String> toolsCalled = [];
-      while (aiResponse.functionCalls.isNotEmpty && loopCount < 5) {
-        loopCount++;
-        final toolResponses = <FunctionResponse>[];
-        
-        for (final call in aiResponse.functionCalls) {
-          toolsCalled.add(call.name);
-          final result = await _executeAiTool(call);
+        // Execution Loop for Tool Calling
+        int loopCount = 0;
+        final List<String> toolsCalled = [];
+        while (aiResponse.functionCalls.isNotEmpty && loopCount < 5) {
+          loopCount++;
+          final toolResponses = <FunctionResponse>[];
           
-          // Clear draft context if update_draft was called successfully
-          if (call.name == 'update_draft' && result == null) {
-            _uiContext.clearEditContext();
-          }
-          
-          // Clear edit context if profile or guidelines were updated
-          if ((call.name == 'update_profile' || call.name == 'update_guidelines') && result == null) {
-            _uiContext.clearEditContext();
-          }
-
-          if (result != null) {
-            toolResponses.add(result);
-            if (call.name == 'update_client_preview') {
-              response = 'PREVIEW_DATA:${jsonEncode(call.args)}\nI\'ve updated the preview for you.';
-            } else if (call.name == 'update_profile' && _uiContext.isMobile) {
-              response = 'PREVIEW_DATA:${jsonEncode(result.response)}\nI\'ve updated the client profile for you.';
+          for (final call in aiResponse.functionCalls) {
+            toolsCalled.add(call.name);
+            final result = await _executeAiTool(call);
+            
+            // Clear draft context if update_draft was called successfully
+            if (call.name == 'update_draft' && result == null) {
+              _uiContext.clearEditContext();
             }
-          } else {
-            // For actions that don't return data, we should still provide a success response
-            // so the AI can continue if it needs to.
-            toolResponses.add(FunctionResponse(call.name, {'status': 'success'}));
-          }
-        }
-        
-        aiResponse = await chat.sendMessage(Content.functionResponses(toolResponses));
-      }
+            
+            // Clear edit context if profile or guidelines were updated
+            if ((call.name == 'update_profile' || call.name == 'update_guidelines') && result == null) {
+              _uiContext.clearEditContext();
+            }
 
-      if (response.isEmpty) {
-        response = aiResponse.text ?? (toolsCalled.isNotEmpty 
-          ? "I've handled those tasks for you: ${toolsCalled.toSet().join(', ')}." 
-          : "I'm not sure how to respond.");
+            if (result != null) {
+              toolResponses.add(result);
+              if (call.name == 'update_client_preview') {
+                response = 'PREVIEW_DATA:${jsonEncode(call.args)}\nI\'ve updated the preview for you.';
+              } else if (call.name == 'update_profile' && _uiContext.isMobile) {
+                response = 'PREVIEW_DATA:${jsonEncode(result.response)}\nI\'ve updated the client profile for you.';
+              }
+            } else {
+              // For actions that don't return data, we should still provide a success response
+              // so the AI can continue if it needs to.
+              toolResponses.add(FunctionResponse(call.name, {'status': 'success'}));
+            }
+          }
+          
+          aiResponse = await chat.sendMessage(Content.functionResponses(toolResponses));
+        }
+
+        if (response.isEmpty) {
+          response = aiResponse.text ?? (toolsCalled.isNotEmpty 
+            ? "I've handled those tasks for you: ${toolsCalled.toSet().join(', ')}." 
+            : "I'm not sure how to respond.");
+        }
       }
     } catch (e) {
-      response = "Error: $e";
+      debugPrint('Cloud AI Hub Error: $e. Attempting on-device fallback...');
+      try {
+        final onDeviceResponse = await aiService.generateOnDeviceResponse(effectivePrompt);
+        response = onDeviceResponse;
+        source = AiSource.onDevice;
+      } catch (fallbackError) {
+        response = "Error: $e (Fallback failed: $fallbackError)";
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
