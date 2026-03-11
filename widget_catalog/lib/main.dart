@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:keyvalue_app/l10n/app_localizations.dart' as app_l10n;
 import 'package:keyvalue_app/theme.dart' as app_theme;
 import 'package:keyvalue_dash/theme.dart' as dash_theme;
 import 'package:widgetbook/widgetbook.dart';
@@ -30,6 +32,18 @@ class WidgetbookApp extends StatelessWidget {
               name: 'Dash Light',
               data: dash_theme.AppTheme.lightTheme,
             ),
+          ],
+        ),
+        LocalizationAddon(
+          locales: [
+            const Locale('en'),
+            const Locale('zh'),
+          ],
+          localizationsDelegates: [
+            app_l10n.AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
           ],
         ),
         DeviceFrameAddon(
