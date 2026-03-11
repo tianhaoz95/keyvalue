@@ -27,6 +27,7 @@ app/
 │   └── theme.dart      # Custom professional UI theme (Indigo/Amber)
 └── pubspec.yaml        # Project dependencies
 dash/                   # Admin Dashboard site for viewing feedback and admin info
+widget_catalog/         # Component gallery for developing and testing UI widgets
 design/                 # Design system, UX reports, and task tracking
 ```
 
@@ -68,7 +69,7 @@ Includes a functional **Demo Mode** that bypasses Firebase Auth, allowing users 
 
 ## 📦 App Distribution
 
-After a feature development in `app/` or `dash/`, and once builds and tests pass successfully, the application must be deployed to **Firebase App Distribution**.
+After a feature development in `app/`, `dash/`, or `widget_catalog/`, and once builds and tests pass successfully, the application must be deployed to **Firebase App Distribution**.
 
 ### Deployment Steps
 
@@ -78,9 +79,9 @@ After a feature development in `app/` or `dash/`, and once builds and tests pass
    ```bash
    source .env
    ```
-   This ensures `FIREBASE_ANDROID_APP_ID` (for the `app/` folder) and `FIREBASE_ANDROID_DASH_ID` (for the `dash/` folder) are set.
+   This ensures `FIREBASE_ANDROID_APP_ID` (for `app/`), `FIREBASE_ANDROID_DASH_ID` (for `dash/`), and `FIREBASE_ANDROID_CATALOG_ID` (for `widget_catalog/`) are set.
 
-2. **Distribute:** Run the following command from the respective project root (`app/` or `dash/`):
+2. **Distribute:** Run the following command from the respective project root (`app/`, `dash/`, or `widget_catalog/`):
    ```bash
    # For 'app/'
    firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
@@ -91,6 +92,12 @@ After a feature development in `app/` or `dash/`, and once builds and tests pass
    # For 'dash/'
    firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
      --app $FIREBASE_ANDROID_DASH_ID \
+     --release-notes "Detailed description of the current feature or improvement" \
+     --groups "dev"
+
+   # For 'widget_catalog/'
+   firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+     --app $FIREBASE_ANDROID_CATALOG_ID \
      --release-notes "Detailed description of the current feature or improvement" \
      --groups "dev"
    ```
