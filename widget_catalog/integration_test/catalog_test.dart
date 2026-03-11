@@ -33,8 +33,6 @@ void main() {
       'ConfirmSlider',
       'Compact',
       'Default', // This is for ConfirmSlider
-      'FeedbackDetailSidebar',
-      'Default', // This is for FeedbackDetailSidebar
     ];
 
     for (final name in listToClick) {

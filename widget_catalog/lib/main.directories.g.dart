@@ -12,8 +12,6 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:widget_catalog/app/confirm_slider.widgetbook.dart'
     as _widget_catalog_app_confirm_slider_widgetbook;
-import 'package:widget_catalog/dash/feedback_detail_sidebar.widgetbook.dart'
-    as _widget_catalog_dash_feedback_detail_sidebar_widgetbook;
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 
 final directories = <_widgetbook.WidgetbookNode>[
@@ -32,16 +30,6 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'Default',
             builder: _widget_catalog_app_confirm_slider_widgetbook
                 .buildConfirmSliderUseCase,
-          ),
-        ],
-      ),
-      _widgetbook.WidgetbookComponent(
-        name: 'FeedbackDetailSidebar',
-        useCases: [
-          _widgetbook.WidgetbookUseCase(
-            name: 'Default',
-            builder: _widget_catalog_dash_feedback_detail_sidebar_widgetbook
-                .buildFeedbackDetailSidebarUseCase,
           ),
         ],
       ),
