@@ -1,5 +1,7 @@
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/customer.dart';
@@ -339,6 +341,23 @@ JSON:''';
       return AiProfileUpdate(updatedContent: text.isNotEmpty ? text : currentDetails, summary: "Profile updated.");
     } catch (e) { 
       return AiProfileUpdate(updatedContent: currentDetails, summary: "Update failed."); 
+    }
+  }
+
+  Stream<String> transcribeAudio(XFile file) async* {
+    try {
+      final bytes = await file.readAsBytes();
+      final prompt = [
+        Content.multi([
+          TextPart('Transcribe this audio. Return ONLY the transcription text.'),
+          InlineDataPart(file.mimeType ?? 'audio/wav', bytes),
+        ])
+      ];
+      final response = await model.generateContent(prompt);
+      yield response.text ?? "";
+    } catch (e) {
+      debugPrint('Transcription error: $e');
+      yield "Error transcribing audio: $e";
     }
   }
 

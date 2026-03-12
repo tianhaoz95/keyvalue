@@ -139,6 +139,7 @@ class KeyValueChatView extends StatelessWidget {
             provider: provider,
             enableAttachments: advisorProvider.isMultimodalAiEnabled,
             enableVoiceNotes: advisorProvider.isMultimodalAiEnabled,
+            speechToText: advisorProvider.aiService.transcribeAudio,
             responseBuilder: (context, message) {
               AiSource source = AiSource.unknown;
               String displayMessage = message;

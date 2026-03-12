@@ -3,6 +3,7 @@ import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import '../services/ai_service.dart' as ai;
 import '../models/customer.dart';
 import '../models/engagement.dart';
@@ -98,7 +99,16 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
             : [];
 
         final chat = aiService.model.startChat(history: chatHistory);
-        var aiResponse = await chat.sendMessage(Content.text(effectivePrompt));
+        
+        // 5. Convert attachments to Parts for the model
+        final List<Part> parts = [TextPart(effectivePrompt)];
+        for (final a in attachments) {
+          if (a is FileAttachment) {
+            parts.add(InlineDataPart(a.mimeType ?? 'application/octet-stream', Uint8List.fromList(a.bytes)));
+          }
+        }
+        
+        var aiResponse = await chat.sendMessage(Content.multi(parts));
 
         // Execution Loop for Tool Calling
         int loopCount = 0;
