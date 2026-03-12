@@ -125,8 +125,9 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
               toolResponses.add(result);
               if (call.name == 'update_client_preview') {
                 response = 'PREVIEW_DATA:${jsonEncode(call.args)}\nI\'ve updated the preview for you.';
-              } else if (call.name == 'update_profile' && _uiContext.isMobile) {
-                response = 'PREVIEW_DATA:${jsonEncode(result.response)}\nI\'ve updated the client profile for you.';
+              } else if ((call.name == 'update_profile' || call.name == 'update_guidelines') && _uiContext.isMobile) {
+                final label = call.name == 'update_profile' ? 'profile' : 'guidelines';
+                response = 'PREVIEW_DATA:${jsonEncode(result.response)}\nI\'ve updated the client $label for you.';
               }
             } else {
               // For actions that don't return data, we should still provide a success response
@@ -334,6 +335,18 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
            );
            await _advisorProvider.addCustomer(updated);
            _uiContext.setView(AppView.customerDetail, customerId: customerId);
+
+           if (_uiContext.isMobile) {
+             return FunctionResponse(call.name, {
+               'status': 'success',
+               'name': customer.name,
+               'email': customer.email,
+               'occupation': customer.occupation,
+               'details': customer.details,
+               'guidelines': updatedGuidelines,
+               'summary': summary,
+             });
+           }
         }
         break;
       case 'update_draft':

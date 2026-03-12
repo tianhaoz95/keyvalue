@@ -38,6 +38,8 @@ class EmbeddedClientCard extends StatelessWidget {
           _buildInfoRow('NAME', data['name'] ?? '-'),
           _buildInfoRow('EMAIL', data['email'] ?? '-'),
           _buildInfoRow('OCCUPATION', data['occupation'] ?? '-'),
+          if (data['summary'] != null && data['summary'].toString().isNotEmpty)
+            _buildInfoRow('UPDATE SUMMARY', data['summary']),
           if (data['details'] != null && data['details'].toString().isNotEmpty)
             _buildInfoRow('BACKGROUND', 'Available', isMarkdown: true, content: data['details']),
           if (data['guidelines'] != null && data['guidelines'].toString().isNotEmpty)

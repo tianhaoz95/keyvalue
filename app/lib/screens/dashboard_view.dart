@@ -69,8 +69,12 @@ class _DashboardViewState extends State<DashboardView> {
 
     if (cpa == null) return const Center(child: CircularProgressIndicator());
 
-    // Filter customers with drafts for Urgent Actions
-    final pendingReviews = allCustomers.where((c) => c.hasActiveDraft).toList();
+    // Filter customers with any pending AI actions for Urgent Actions
+    final pendingReviews = allCustomers.where((c) => 
+      c.hasActiveDraft || 
+      c.proposedDetails != null || 
+      c.proposedGuidelines != null
+    ).toList();
 
     // Filter and sort customers for the main list based on search and sort option
     final filteredCustomers = allCustomers.where((c) {

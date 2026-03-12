@@ -40,6 +40,17 @@ class PendingReviewList extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding - 8),
             itemBuilder: (context, index) {
               final customer = customers[index];
+              
+              String label = 'PROACTIVE DRAFT READY';
+              String? summary;
+              if (customer.proposedDetails != null) {
+                label = 'PROPOSED PROFILE UPDATE';
+                summary = customer.proposedDetailsSummary;
+              } else if (customer.proposedGuidelines != null) {
+                label = 'PROPOSED GUIDELINES UPDATE';
+                summary = customer.proposedGuidelinesSummary;
+              }
+
               return Container(
                 width: isCompact ? 240 : 280,
                 margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -79,17 +90,31 @@ class PendingReviewList extends StatelessWidget {
                               ),
                             ],
                           ),
-                          SizedBox(height: isCompact ? 8 : 12),
+                          SizedBox(height: isCompact ? 8 : 10),
                           Text(
-                            'PROACTIVE DRAFT READY',
+                            label,
                             style: TextStyle(
                               color: Colors.white54,
-                              fontSize: isCompact ? 8 : 10,
+                              fontSize: isCompact ? 8 : 9,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1,
                             ),
                           ),
-                          SizedBox(height: isCompact ? 8 : 12),
+                          if (summary != null && summary.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              summary,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: isCompact ? 10 : 11,
+                                fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: isCompact ? 8 : 10),
                           Row(
                             children: [
                               Text(
