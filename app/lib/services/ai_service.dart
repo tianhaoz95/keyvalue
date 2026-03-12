@@ -144,6 +144,7 @@ Mandatory Rules:
           parameters: {
             'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
             'details': Schema.string(), 'guidelines': Schema.string(),
+            'preferredChannel': Schema.string(description: 'Preferred channel: "email" or "sms".'),
           },
         ),
         FunctionDeclaration('create_client', 'Register a new client and navigate to their profile. Call this once name, email, and background are gathered.',
@@ -151,6 +152,7 @@ Mandatory Rules:
             'name': Schema.string(), 'email': Schema.string(), 'occupation': Schema.string(),
             'details': Schema.string(description: 'Initial background profile in Markdown.'),
             'guidelines': Schema.string(description: 'Initial engagement guidelines in Markdown.'),
+            'preferredChannel': Schema.string(description: 'Preferred channel: "email" or "sms".'),
           },
         ),
         FunctionDeclaration('update_profile', 'Update client background profile.',
@@ -183,6 +185,7 @@ Mandatory Rules:
           parameters: {
             'customerId': Schema.string(), 'name': Schema.string(),
             'email': Schema.string(), 'occupation': Schema.string(),
+            'preferredChannel': Schema.string(description: 'Preferred channel: "email" or "sms".'),
           },
         ),
         FunctionDeclaration('generate_outreach', 'Trigger new proactive draft.',

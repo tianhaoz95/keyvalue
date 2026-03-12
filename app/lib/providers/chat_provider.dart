@@ -228,6 +228,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         final occupation = call.args['occupation'] as String?;
         final details = call.args['details'] as String?;
         final guidelines = call.args['guidelines'] as String?;
+        final preferredChannel = call.args['preferredChannel'] as String?;
         
         if (name != null && email != null) {
           final customerId = DateTime.now().millisecondsSinceEpoch.toString();
@@ -241,6 +242,7 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
             engagementFrequencyDays: 30,
             nextEngagementDate: DateTime.now(),
             lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+            preferredChannel: preferredChannel ?? 'email',
           );
           
           await _advisorProvider.addCustomer(newCustomer);
@@ -253,12 +255,14 @@ class GlobalChatProvider extends ChangeNotifier implements LlmProvider {
         final name = call.args['name'] as String?;
         final email = call.args['email'] as String?;
         final occupation = call.args['occupation'] as String?;
+        final preferredChannel = call.args['preferredChannel'] as String?;
         if (customerId != null) {
           final customer = _advisorProvider.customers.firstWhere((c) => c.customerId == customerId);
           final updated = customer.copyWith(
             name: name ?? customer.name,
             email: email ?? customer.email,
             occupation: occupation ?? customer.occupation,
+            preferredChannel: preferredChannel ?? customer.preferredChannel,
           );
           await _advisorProvider.addCustomer(updated);
           _uiContext.setView(AppView.customerDetail, customerId: customerId);

@@ -82,13 +82,14 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       proposedGuidelines: fields[17] as String?,
       proposedDetailsSummary: fields[18] as String?,
       proposedGuidelinesSummary: fields[19] as String?,
+      preferredChannel: fields[20] as String? ?? 'email',
     );
   }
 
   @override
   void write(BinaryWriter writer, Customer obj) {
     writer
-      ..writeByte(19)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.customerId)
       ..writeByte(1)
@@ -126,7 +127,9 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       ..writeByte(18)
       ..write(obj.proposedDetailsSummary)
       ..writeByte(19)
-      ..write(obj.proposedGuidelinesSummary);
+      ..write(obj.proposedGuidelinesSummary)
+      ..writeByte(20)
+      ..write(obj.preferredChannel);
   }
 
   @override

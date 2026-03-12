@@ -158,6 +158,8 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
                           isCompact: isCompact,
                         ),
                       _buildGuidelinesSection(currentCustomer, provider, l10n, isCompact),
+                      const SizedBox(height: 32),
+                      _buildChannelSection(currentCustomer, provider, isCompact),
                       const SizedBox(height: 48),
                       _buildSchedulesSection(currentCustomer, provider, isCompact),
                     ],
@@ -589,6 +591,72 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildChannelSection(Customer customer, AdvisorProvider provider, bool isCompact) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('COMMUNICATION CHANNEL', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildChannelOption(
+              icon: Icons.email_outlined,
+              label: 'EMAIL',
+              isSelected: customer.preferredChannel == 'email',
+              onTap: () => provider.addCustomer(customer.copyWith(preferredChannel: 'email')),
+              isCompact: isCompact,
+            ),
+            const SizedBox(width: 12),
+            _buildChannelOption(
+              icon: Icons.sms_outlined,
+              label: 'SMS MESSAGE',
+              isSelected: customer.preferredChannel == 'sms',
+              onTap: () => provider.addCustomer(customer.copyWith(preferredChannel: 'sms')),
+              isCompact: isCompact,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelOption({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isCompact = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.black, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: isCompact ? 14 : 16, color: isSelected ? Colors.white : Colors.black),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: isCompact ? 10 : 11,
+                fontWeight: FontWeight.w900,
+                color: isSelected ? Colors.white : Colors.black,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

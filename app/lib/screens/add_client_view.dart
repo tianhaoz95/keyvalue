@@ -17,6 +17,7 @@ class _AddClientViewState extends State<AddClientView> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _occupationController = TextEditingController();
+  String _preferredChannel = 'email';
 
   @override
   void initState() {
@@ -94,6 +95,8 @@ class _AddClientViewState extends State<AddClientView> {
               _buildTextField('EMAIL ADDRESS', _emailController, 'client@example.com', keyboardType: TextInputType.emailAddress),
               _buildTextField('PHONE NUMBER', _phoneController, '+1 (555) 000-0000', keyboardType: TextInputType.phone),
               _buildTextField('OCCUPATION', _occupationController, 'e.g. Small Business Owner'),
+              const SizedBox(height: 8),
+              _buildChannelSelection(isCompact),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -113,6 +116,7 @@ class _AddClientViewState extends State<AddClientView> {
                         engagementFrequencyDays: 30,
                         nextEngagementDate: DateTime.now(),
                         lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+                        preferredChannel: _preferredChannel,
                       );
                       await advisorProvider.addCustomer(newCustomer);
                       uiContext.setView(AppView.dashboard);
@@ -124,6 +128,72 @@ class _AddClientViewState extends State<AddClientView> {
               const SizedBox(height: 40),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChannelSelection(bool isCompact) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('COMMUNICATION CHANNEL', style: TextStyle(fontSize: isCompact ? 10 : 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildChannelOption(
+              icon: Icons.email_outlined,
+              label: 'EMAIL',
+              isSelected: _preferredChannel == 'email',
+              onTap: () => setState(() => _preferredChannel = 'email'),
+              isCompact: isCompact,
+            ),
+            const SizedBox(width: 12),
+            _buildChannelOption(
+              icon: Icons.sms_outlined,
+              label: 'SMS MESSAGE',
+              isSelected: _preferredChannel == 'sms',
+              onTap: () => setState(() => _preferredChannel = 'sms'),
+              isCompact: isCompact,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelOption({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isCompact = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.black, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: isCompact ? 14 : 16, color: isSelected ? Colors.white : Colors.black),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: isCompact ? 10 : 11,
+                fontWeight: FontWeight.w900,
+                color: isSelected ? Colors.white : Colors.black,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
       ),
     );

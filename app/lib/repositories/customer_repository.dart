@@ -28,6 +28,7 @@ class CustomerRepository {
           engagementFrequencyDays: 30,
           nextEngagementDate: DateTime.now(),
           lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+          preferredChannel: 'email',
         ),
         Customer(
           customerId: 'demo_2',
@@ -38,6 +39,7 @@ class CustomerRepository {
           engagementFrequencyDays: 30,
           nextEngagementDate: DateTime.now().add(const Duration(days: 5)),
           lastEngagementDate: DateTime.now().subtract(const Duration(days: 25)),
+          preferredChannel: 'sms',
         ),
       ]);
     }
@@ -58,6 +60,7 @@ class CustomerRepository {
           engagementFrequencyDays: 30,
           nextEngagementDate: DateTime.now(),
           lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+          preferredChannel: 'email',
         )
       ];
     }

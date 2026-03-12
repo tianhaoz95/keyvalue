@@ -113,6 +113,8 @@ class Customer {
   final String? proposedDetailsSummary;
   @HiveField(19)
   final String? proposedGuidelinesSummary;
+  @HiveField(20)
+  final String preferredChannel; // 'email' or 'sms'
 
   Customer({
     required this.customerId,
@@ -134,6 +136,7 @@ class Customer {
     this.proposedGuidelines,
     this.proposedDetailsSummary,
     this.proposedGuidelinesSummary,
+    this.preferredChannel = 'email',
   });
 
   factory Customer.fromMap(Map<String, dynamic> map) {
@@ -160,6 +163,7 @@ class Customer {
       proposedGuidelines: map['proposedGuidelines'] as String?,
       proposedDetailsSummary: map['proposedDetailsSummary'] as String?,
       proposedGuidelinesSummary: map['proposedGuidelinesSummary'] as String?,
+      preferredChannel: map['preferredChannel'] as String? ?? 'email',
     );
   }
 
@@ -184,6 +188,7 @@ class Customer {
       'proposedGuidelines': proposedGuidelines,
       'proposedDetailsSummary': proposedDetailsSummary,
       'proposedGuidelinesSummary': proposedGuidelinesSummary,
+      'preferredChannel': preferredChannel,
     };
   }
 
@@ -206,6 +211,7 @@ class Customer {
     Object? proposedGuidelines = _sentinel,
     Object? proposedDetailsSummary = _sentinel,
     Object? proposedGuidelinesSummary = _sentinel,
+    String? preferredChannel,
   }) {
     return Customer(
       customerId: customerId,
@@ -227,6 +233,7 @@ class Customer {
       proposedGuidelines: proposedGuidelines == _sentinel ? this.proposedGuidelines : proposedGuidelines as String?,
       proposedDetailsSummary: proposedDetailsSummary == _sentinel ? this.proposedDetailsSummary : proposedDetailsSummary as String?,
       proposedGuidelinesSummary: proposedGuidelinesSummary == _sentinel ? this.proposedGuidelinesSummary : proposedGuidelinesSummary as String?,
+      preferredChannel: preferredChannel ?? this.preferredChannel,
     );
   }
 
