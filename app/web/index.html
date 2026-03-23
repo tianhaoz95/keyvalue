@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="keyvalue_app">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>keyvalue_app</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body style="background-color: #ffffff;">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #ffffff;
+    }
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease-out;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+      object-fit: contain;
+      filter: brightness(0); /* Ensures logo is black */
+    }
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #000000;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Hide default Flutter progress bar if any */
+    .flutter-loader,
+    #loading-indicator,
+    .loading {
+      display: none !important;
+    }
+  </style>
+  <div id="loading">
+    <img src="assets/assets/images/logo_cropped.png" class="logo" alt="KeyValue Logo" onerror="this.style.display='none'">
+    <div class="loader"></div>
+  </div>
+  <script>
+    // Remove the loading screen once the Flutter app is initialized
+    (function() {
+      var checkFlutterInterval = setInterval(function() {
+        if (document.querySelector('flt-glass-pane')) {
+          removeLoadingScreen();
+        }
+      }, 100);
+
+      function removeLoadingScreen() {
+        var loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(function() {
+            if (loading.parentNode) {
+              loading.remove();
+            }
+          }, 500);
+        }
+        clearInterval(checkFlutterInterval);
+        clearTimeout(fallbackTimeout);
+      }
+
+      // Fallback: force remove after 10 seconds if Flutter fails to load
+      var fallbackTimeout = setTimeout(function() {
+        removeLoadingScreen();
+      }, 10000);
+    })();
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

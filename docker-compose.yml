@@ -1,0 +1,16 @@
+services:
+  firebase-emulators:
+    image: andreysenov/firebase-tools:latest
+    ports:
+      - "4000:4000" # Emulator UI
+      - "8080:8080" # Firestore
+      - "9099:9099" # Auth
+    volumes:
+      - .:/home/node/firebase
+    working_dir: /home/node/firebase
+    entrypoint: firebase
+    command: emulators:start --project demo-keyvalue-app
+    stdin_open: true
+    tty: true
+    environment:
+      - FIREBASE_TOKEN=fake-token

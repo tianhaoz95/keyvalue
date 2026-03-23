@@ -1,0 +1,43 @@
+name: widget_catalog
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.5+7
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  widgetbook: ^3.22.0
+  widgetbook_annotation: ^3.11.0
+  keyvalue_app:
+    path: ../app
+  keyvalue_dash:
+    path: ../dash
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  widgetbook_generator: ^3.22.0
+  build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/icon_no_bg.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/images/icon_no_bg.png"
+    favicon_path: "web/favicon.png"
+
+flutter:
+  uses-material-design: true

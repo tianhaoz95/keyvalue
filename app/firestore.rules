@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is an admin
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Advisors can read and write their own profile
+    match /advisors/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Advisors can read and write customers that belong to them
+      match /customers/{customerId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        // Advisors can read and write engagements for their customers
+        match /engagements/{engagementId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+
+    // Admin collection: No public access (managed via Admin SDK)
+    match /admins/{uid} {
+      allow read, write: if false;
+    }
+
+    // Feedbacks collection
+    match /feedbacks/{feedbackId} {
+      // Any authenticated user can create feedback
+      allow create: if request.auth != null;
+      
+      // Admins can read/update/delete all feedback. Users can only read their own.
+      allow read: if request.auth != null && (isAdmin() || (resource != null && resource.data.advisorUid == request.auth.uid));
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+  }
+}

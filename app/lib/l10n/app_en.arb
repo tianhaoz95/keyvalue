@@ -1,0 +1,35 @@
+{
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "rememberMe": "Remember me",
+  "createAccount": "CREATE AN ACCOUNT",
+  "continueAsGuest": "CONTINUE AS GUEST",
+  "welcomeBack": "Welcome back",
+  "clients": "Clients",
+  "pendingActions": "REVIEWS",
+  "reviewNow": "REVIEW",
+  "aiOnboarding": "AI CLIENT ONBOARDING",
+  "addClient": "Add New Client",
+  "settings": "SETTINGS",
+  "profile": "PROFILE",
+  "account": "ACCOUNT",
+  "logout": "LOGOUT",
+  "deleteAccount": "DELETE ACCOUNT",
+  "language": "Language",
+  "saveChanges": "SAVE CHANGES",
+  "engagement": "ENGAGEMENT",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "sendResetLink": "SEND RESET LINK",
+  "enterEmailToReset": "Enter your email to receive a password reset link.",
+  "resetLinkSent": "Password reset link sent to your email.",
+  "errorSendingReset": "Failed to send reset link: {error}",
+  "@errorSendingReset": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

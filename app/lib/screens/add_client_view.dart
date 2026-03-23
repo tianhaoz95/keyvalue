@@ -1,0 +1,233 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/advisor_provider.dart';
+import '../providers/ui_context_provider.dart';
+import '../models/customer.dart';
+
+class AddClientView extends StatefulWidget {
+  const AddClientView({super.key});
+
+  @override
+  State<AddClientView> createState() => _AddClientViewState();
+}
+
+class _AddClientViewState extends State<AddClientView> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _occupationController = TextEditingController();
+  String _preferredChannel = 'email';
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProvider();
+  }
+
+  void _prefillFromProvider() {
+    final uiContext = Provider.of<UiContextProvider>(context, listen: false);
+    final draft = uiContext.draftClientData;
+    if (draft == null) return;
+
+    if (draft.containsKey('name')) _nameController.text = draft['name'] as String? ?? '';
+    if (draft.containsKey('email')) _emailController.text = draft['email'] as String? ?? '';
+    if (draft.containsKey('phone')) _phoneController.text = draft['phone'] as String? ?? '';
+    if (draft.containsKey('occupation')) _occupationController.text = draft['occupation'] as String? ?? '';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _occupationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final uiContext = Provider.of<UiContextProvider>(context);
+    final advisorProvider = Provider.of<AdvisorProvider>(context, listen: false);
+    
+    // Listen for updates while on screen
+    if (uiContext.draftClientData != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _prefillFromProvider();
+          uiContext.clearDraftData();
+        });
+      });
+    }
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(isCompact ? 16 : 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      uiContext.setView(AppView.dashboard);
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Add New Client',
+                    style: TextStyle(fontSize: isCompact ? 20 : 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                  ),
+                ],
+              ),
+              SizedBox(height: isCompact ? 24 : 32),
+              _buildTextField('FULL NAME', _nameController, 'Enter client name'),
+              _buildTextField('EMAIL ADDRESS', _emailController, 'client@example.com', keyboardType: TextInputType.emailAddress),
+              _buildTextField('PHONE NUMBER', _phoneController, '+1 (555) 000-0000', keyboardType: TextInputType.phone),
+              _buildTextField('OCCUPATION', _occupationController, 'e.g. Small Business Owner'),
+              const SizedBox(height: 8),
+              _buildChannelSelection(isCompact),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      final newCustomer = Customer(
+                        customerId: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: _nameController.text.trim(),
+                        email: _emailController.text.trim(),
+                        phoneNumber: _phoneController.text.trim(),
+                        occupation: _occupationController.text.trim(),
+                        details: '',
+                        guidelines: '',
+                        engagementFrequencyDays: 30,
+                        nextEngagementDate: DateTime.now(),
+                        lastEngagementDate: DateTime.now().subtract(const Duration(days: 30)),
+                        preferredChannel: _preferredChannel,
+                      );
+                      await advisorProvider.addCustomer(newCustomer);
+                      uiContext.setView(AppView.dashboard);
+                    }
+                  },
+                  child: const Text('CREATE CLIENT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChannelSelection(bool isCompact) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('COMMUNICATION CHANNEL', style: TextStyle(fontSize: isCompact ? 10 : 12, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildChannelOption(
+              icon: Icons.email_outlined,
+              label: 'EMAIL',
+              isSelected: _preferredChannel == 'email',
+              onTap: () => setState(() => _preferredChannel = 'email'),
+              isCompact: isCompact,
+            ),
+            const SizedBox(width: 12),
+            _buildChannelOption(
+              icon: Icons.sms_outlined,
+              label: 'SMS MESSAGE',
+              isSelected: _preferredChannel == 'sms',
+              onTap: () => setState(() => _preferredChannel = 'sms'),
+              isCompact: isCompact,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelOption({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isCompact = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.black, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: isCompact ? 14 : 16, color: isSelected ? Colors.white : Colors.black),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: isCompact ? 10 : 11,
+                fontWeight: FontWeight.w900,
+                color: isSelected ? Colors.white : Colors.black,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, String hint, {TextInputType? keyboardType}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: Colors.grey.shade300, fontWeight: FontWeight.normal),
+              filled: true,
+              fillColor: const Color(0xFFF9F9F9),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFEEEEEE))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFEEEEEE))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.black, width: 2.0)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'This field is required';
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
