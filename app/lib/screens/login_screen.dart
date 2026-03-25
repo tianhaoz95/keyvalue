@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
 import '../widgets/universal_shell.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -147,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     TextButton(
-                      onPressed: _showForgotPasswordDialog,
+                      onPressed: _navigateToForgotPassword,
                       child: Text(
                         l10n.forgotPassword,
                         style: const TextStyle(
@@ -272,67 +273,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showForgotPasswordDialog() {
-    final emailController = TextEditingController(text: _emailController.text);
-    final l10n = AppLocalizations.of(context)!;
-    bool isSending = false;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(l10n.resetPassword, style: const TextStyle(fontWeight: FontWeight.w900)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.enterEmailToReset, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: l10n.email.toUpperCase()),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              if (isSending)
-                const Padding(
-                  padding: EdgeInsets.only(top: 16.0),
-                  child: CircularProgressIndicator(color: Colors.black),
-                ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isSending ? null : () => Navigator.pop(dialogContext),
-              child: const Text('CANCEL'),
-            ),
-            ElevatedButton(
-              onPressed: isSending ? null : () async {
-                final email = emailController.text.trim();
-                if (email.isEmpty) return;
-
-                setDialogState(() => isSending = true);
-                try {
-                  final provider = Provider.of<AdvisorProvider>(context, listen: false);
-                  await provider.sendPasswordResetEmail(email);
-                  if (mounted) {
-                    Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.resetLinkSent)),
-                    );
-                  }
-                } catch (e) {
-                  setDialogState(() => isSending = false);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.errorSendingReset(e.toString()))),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.sendResetLink),
-            ),
-          ],
+  void _navigateToForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(
+          initialEmail: _emailController.text,
         ),
       ),
     );
   }
 }
+
