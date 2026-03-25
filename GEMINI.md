@@ -167,9 +167,16 @@ flutter build web --release
 ```
 
 ### 2. Deploy to Firebase Hosting
-Ensure you have the [Firebase CLI](https://firebase.google.com/docs/cli) installed and are logged in (`firebase login`). From the `app/` directory, run:
+Ensure you have the [Firebase CLI](https://firebase.google.com/docs/cli) installed and are logged in (`firebase login`). 
+
+To deploy to the **production** environment (`keyvalue-app.web.app`), from the `app/` directory run:
 ```bash
-firebase deploy --only hosting
+firebase deploy --only hosting:production
+```
+
+To deploy to the **staging** environment (`keyvalue-staging.web.app`), from the `app/` directory run:
+```bash
+firebase deploy --only hosting:staging
 ```
 
 The configuration is managed in `app/firebase.json` and `app/.firebaserc`.
