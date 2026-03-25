@@ -10,6 +10,7 @@ import '../providers/advisor_provider.dart';
 import '../providers/ui_context_provider.dart';
 import '../widgets/engagement_timeline.dart';
 import '../widgets/loading_overlay.dart';
+import 'add_schedule_screen.dart';
 
 class CustomerDetailView extends StatefulWidget {
   final Customer customer;
@@ -792,7 +793,10 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             Text('ENGAGEMENT SCHEDULES', style: TextStyle(fontSize: isCompact ? 9 : 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.grey)),
             IconButton(
               icon: Icon(Icons.add_circle_outline, size: isCompact ? 16 : 18),
-              onPressed: () => _showAddScheduleDialog(context, customer, provider),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddScheduleScreen(customer: widget.customer)),
+              ),
             ),
           ],
         ),
@@ -834,78 +838,6 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
             },
           ),
       ],
-    );
-  }
-
-  void _showAddScheduleDialog(BuildContext context, Customer customer, AdvisorProvider provider) {
-    int cadenceValue = 1;
-    String cadencePeriod = 'months';
-    DateTime startDate = DateTime.now();
-    DateTime? endDate;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Add Engagement Schedule', style: TextStyle(fontWeight: FontWeight.w900)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  const Text('Every'),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 50,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(isDense: true),
-                      onChanged: (val) => cadenceValue = int.tryParse(val) ?? 1,
-                      controller: TextEditingController(text: '1'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  DropdownButton<String>(
-                    value: cadencePeriod,
-                    items: ['days', 'weeks', 'months', 'years'].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-                    onChanged: (val) => setDialogState(() => cadencePeriod = val!),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Start Date', style: TextStyle(fontSize: 14)),
-                subtitle: Text(DateFormat('MMM d, y').format(startDate)),
-                trailing: const Icon(Icons.calendar_today, size: 18),
-                onTap: () async {
-                  final picked = await showDatePicker(context: context, initialDate: startDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365 * 5)));
-                  if (picked != null) setDialogState(() => startDate = picked);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-            ElevatedButton(
-              onPressed: () async {
-                final schedule = EngagementSchedule(
-                  scheduleId: const Uuid().v4(),
-                  startDate: startDate,
-                  endDate: endDate,
-                  cadenceValue: cadenceValue,
-                  cadencePeriod: cadencePeriod,
-                );
-                final updatedSchedules = List<EngagementSchedule>.from(customer.schedules)..add(schedule);
-                final updated = customer.copyWith(schedules: updatedSchedules);
-                await provider.addCustomer(updated);
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-              },
-              child: const Text('ADD SCHEDULE'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
