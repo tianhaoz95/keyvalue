@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/confirm_slider.dart';
+import '../theme.dart';
 import 'login_screen.dart';
 
 class SettingsView extends StatefulWidget {
@@ -713,22 +714,34 @@ class _SettingsViewState extends State<SettingsView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('DELETE ACCOUNT?'),
         content: const Text('This action is permanent and will delete all your client data. Are you sure?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              await provider.deleteAccount();
-              if (context.mounted) {
-                Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('DELETE PERMANENTLY'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  await provider.deleteAccount();
+                  if (context.mounted) {
+                    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  minimumSize: const Size(100, 44),
+                ),
+                child: const Text('DELETE'),
+              ),
+            ],
           ),
         ],
       ),

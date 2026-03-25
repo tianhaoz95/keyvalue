@@ -9,6 +9,7 @@ import '../models/engagement.dart';
 import '../providers/advisor_provider.dart';
 import '../providers/ui_context_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 class EngagementTimeline extends StatefulWidget {
   final Customer customer;
@@ -588,41 +589,41 @@ class _EngagementTimelineState extends State<EngagementTimeline> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Delete Engagement?', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('DELETE ENGAGEMENT?'),
         content: const Text('Are you sure you want to delete this engagement record? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext), 
-            child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black, 
-              foregroundColor: Colors.white, 
-              elevation: 0,
-              minimumSize: const Size(100, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () async {
-              // Unfocus to prevent SelectionContainer errors
-              FocusManager.instance.primaryFocus?.unfocus();
-              // Allow one frame for the focus change to propagate
-              await Future.delayed(Duration.zero);
-              
-              if (!context.mounted) return;
-              
-              await widget.provider.deleteEngagement(widget.customer, engagement);
-              
-              if (context.mounted) {
-                final messenger = ScaffoldMessenger.of(context);
-                Navigator.pop(dialogContext);
-                messenger.showSnackBar(const SnackBar(content: Text('Engagement deleted')));
-              }
-            },
-            child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 11)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext), 
+                child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  minimumSize: const Size(100, 44),
+                ),
+                onPressed: () async {
+                  // Unfocus to prevent SelectionContainer errors
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  // Allow one frame for the focus change to propagate
+                  await Future.delayed(Duration.zero);
+                  
+                  if (!context.mounted) return;
+                  
+                  await widget.provider.deleteEngagement(widget.customer, engagement);
+                  
+                  if (context.mounted) {
+                    final messenger = ScaffoldMessenger.of(context);
+                    Navigator.pop(dialogContext);
+                    messenger.showSnackBar(const SnackBar(content: Text('Engagement deleted')));
+                  }
+                },
+                child: const Text('DELETE'),
+              ),
+            ],
           ),
         ],
       ),

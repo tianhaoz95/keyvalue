@@ -10,6 +10,7 @@ import '../providers/advisor_provider.dart';
 import '../providers/ui_context_provider.dart';
 import '../widgets/engagement_timeline.dart';
 import '../widgets/loading_overlay.dart';
+import '../theme.dart';
 import 'add_schedule_screen.dart';
 
 class CustomerDetailView extends StatefulWidget {
@@ -284,24 +285,36 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Record Customer Response'),
+        title: const Text('RECORD CUSTOMER RESPONSE'),
         content: TextField(
           controller: controller,
           maxLines: 5,
           decoration: const InputDecoration(hintText: 'Enter what the customer said...'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              final response = controller.text.trim();
-              if (response.isNotEmpty) {
-                FocusManager.instance.primaryFocus?.unfocus();
-                Navigator.pop(dialogContext);
-                await provider.receiveResponse(customer, engagement, response);
-              }
-            },
-            child: const Text('PROCESS WITH AI'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext), 
+                child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  final response = controller.text.trim();
+                  if (response.isNotEmpty) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    Navigator.pop(dialogContext);
+                    await provider.receiveResponse(customer, engagement, response);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(140, 44),
+                ),
+                child: const Text('PROCESS WITH AI'),
+              ),
+            ],
           ),
         ],
       ),
@@ -761,22 +774,34 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Client?', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('DELETE CLIENT?'),
         content: Text('Are you sure you want to delete ${customer.name}? This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              await provider.deleteCustomer(customer.customerId);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-                if (mounted) {
-                  context.read<UiContextProvider>().setView(AppView.dashboard);
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('DELETE PERMANENTLY'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext), 
+                child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  await provider.deleteCustomer(customer.customerId);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    if (mounted) {
+                      context.read<UiContextProvider>().setView(AppView.dashboard);
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  minimumSize: const Size(100, 44),
+                ),
+                child: const Text('DELETE'),
+              ),
+            ],
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/feedback_item.dart';
 import '../providers/admin_provider.dart';
+import '../theme.dart';
 
 class FeedbackDetailSidebar extends StatelessWidget {
   final FeedbackItem item;
@@ -156,10 +157,7 @@ class FeedbackDetailSidebar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Feedback?', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text('DELETE FEEDBACK?'),
         content: const Text('Are you sure you want to delete this feedback? This action cannot be undone.'),
         actions: [
           Row(
@@ -167,14 +165,12 @@ class FeedbackDetailSidebar extends StatelessWidget {
             children: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
+                  backgroundColor: Colors.redAccent,
                   minimumSize: const Size(100, 44),
                 ),
                 onPressed: () async {
