@@ -61,7 +61,7 @@ class AdvisorProvider with ChangeNotifier {
   bool _isGeneratingDraft = false;
   bool get isGeneratingDraft => _isGeneratingDraft;
 
-  bool get isGuestMode => _currentAdvisor?.uid == 'local_user';
+  bool get isDemoMode => _currentAdvisor?.uid == 'local_user';
 
   AdvisorProvider({
     AdvisorRepository? advisorRepo,
@@ -129,7 +129,7 @@ class AdvisorProvider with ChangeNotifier {
     
     _aiService = AiService(
       modelName: modelName, 
-      isDemo: isGuestMode,
+      isDemo: isDemoMode,
       uiContext: _uiContext?.toAiContext(),
       preferOnDeviceAi: preferOnDeviceAi,
     );
@@ -218,7 +218,7 @@ class AdvisorProvider with ChangeNotifier {
     final lastLoginMethod = prefs.getString('lastLoginMethod');
 
     if (rememberMe) {
-      if (lastLoginMethod == 'guest') {
+      if (lastLoginMethod == 'demo') {
         _currentAdvisor = await _localAdvisorRepo.getAdvisor('local_user');
       } else {
         final user = _firebaseAuth.currentUser;
@@ -268,14 +268,14 @@ class AdvisorProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loginGuest({bool rememberMe = false}) async {
+  Future<void> loginDemo({bool rememberMe = false}) async {
     final existing = await _localAdvisorRepo.getAdvisor('local_user');
     if (existing == null) {
       _currentAdvisor = const Advisor(
         uid: 'local_user',
-        name: 'Guest Advisor',
+        name: 'Demo Advisor',
         firmName: 'My Local Business',
-        email: 'guest@local.app',
+        email: 'demo@local.app',
       );
       await _localAdvisorRepo.saveAdvisor(_currentAdvisor!);
     } else {
@@ -286,7 +286,7 @@ class AdvisorProvider with ChangeNotifier {
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberMe', rememberMe);
-    await prefs.setString('lastLoginMethod', 'guest');
+    await prefs.setString('lastLoginMethod', 'demo');
     
     notifyListeners();
     _setupCustomerListener();
@@ -321,12 +321,12 @@ class AdvisorProvider with ChangeNotifier {
   }
 
   Future<void> deleteAccount() async {
-    // 1. Always clear local repositories to remove any guest-mode remnants
+    // 1. Always clear local repositories to remove any demo-mode remnants
     await _localAdvisorRepo.deleteAdvisor('local_user');
     await _localCustomerRepo.clearAll();
     await _localEngagementRepo.clearAll();
 
-    if (isGuestMode) {
+    if (isDemoMode) {
       await logout();
       return;
     }
@@ -364,7 +364,7 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> updateProfile(Advisor updatedAdvisor) async {
     if (_currentAdvisor != null) {
-      if (isGuestMode) {
+      if (isDemoMode) {
         await _localAdvisorRepo.saveAdvisor(updatedAdvisor);
       } else {
         await _advisorRepo.saveAdvisor(updatedAdvisor);
@@ -391,7 +391,7 @@ class AdvisorProvider with ChangeNotifier {
   void _setupCustomerListener() {
     if (_currentAdvisor == null) return;
     
-    final stream = isGuestMode 
+    final stream = isDemoMode 
         ? _localCustomerRepo.getCustomers(_currentAdvisor!.uid)
         : _customerRepo.getCustomers(_currentAdvisor!.uid);
 
@@ -412,7 +412,7 @@ class AdvisorProvider with ChangeNotifier {
         return;
       }
 
-      var dueCustomers = isGuestMode 
+      var dueCustomers = isDemoMode 
           ? await _localCustomerRepo.getCustomersDue(_currentAdvisor!.uid)
           : await _customerRepo.getCustomersDue(_currentAdvisor!.uid);
 
@@ -422,7 +422,7 @@ class AdvisorProvider with ChangeNotifier {
       }
 
       for (var customer in dueCustomers) {
-        final hasDraft = isGuestMode
+        final hasDraft = isDemoMode
             ? await _localEngagementRepo.hasDraft(_currentAdvisor!.uid, customer.customerId)
             : await _engagementRepo.hasDraft(_currentAdvisor!.uid, customer.customerId);
 
@@ -440,7 +440,7 @@ class AdvisorProvider with ChangeNotifier {
             aiSource: result.source,
           );
           
-          if (isGuestMode) {
+          if (isDemoMode) {
             await _localEngagementRepo.saveEngagement(_currentAdvisor!.uid, customer.customerId, engagement);
             final updatedCustomer = customer.copyWith(hasActiveDraft: true);
             await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
@@ -453,7 +453,7 @@ class AdvisorProvider with ChangeNotifier {
           notifyListeners();
         } else if (!customer.hasActiveDraft) {
           final updatedCustomer = customer.copyWith(hasActiveDraft: true);
-          if (isGuestMode) {
+          if (isDemoMode) {
             await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
           } else {
             await _customerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
@@ -480,7 +480,7 @@ class AdvisorProvider with ChangeNotifier {
       sentMessage: message,
     );
     
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     } else {
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
@@ -515,7 +515,7 @@ class AdvisorProvider with ChangeNotifier {
         aiSource: source,
       );
       
-      if (isGuestMode) {
+      if (isDemoMode) {
         await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
       } else {
         await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
@@ -532,7 +532,7 @@ class AdvisorProvider with ChangeNotifier {
     final updatedCustomer = customer.copyWith(details: engagement.updatedDetailsDiff);
     
     final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     } else {
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
@@ -583,7 +583,7 @@ class AdvisorProvider with ChangeNotifier {
     
     final updatedEngagement = engagement.copyWith(status: EngagementStatus.completed);
     
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
     } else {
       await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customer.customerId, updatedEngagement);
@@ -594,7 +594,7 @@ class AdvisorProvider with ChangeNotifier {
   Future<void> deleteEngagement(Customer customer, Engagement engagement) async {
     if (_currentAdvisor == null) return;
     
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localEngagementRepo.deleteEngagement(_currentAdvisor!.uid, customer.customerId, engagement.engagementId);
     } else {
       await _engagementRepo.deleteEngagement(_currentAdvisor!.uid, customer.customerId, engagement.engagementId);
@@ -603,7 +603,7 @@ class AdvisorProvider with ChangeNotifier {
     // If it was a draft, update customer flag
     if (engagement.status == EngagementStatus.draft) {
       final updatedCustomer = customer.copyWith(hasActiveDraft: false);
-      if (isGuestMode) {
+      if (isDemoMode) {
         await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
       } else {
         await _customerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);
@@ -613,7 +613,7 @@ class AdvisorProvider with ChangeNotifier {
 
   Stream<List<Engagement>> getCustomerEngagements(String customerId) {
     if (_currentAdvisor == null) return Stream.value([]);
-    return isGuestMode 
+    return isDemoMode 
         ? _localEngagementRepo.getEngagements(_currentAdvisor!.uid, customerId)
         : _engagementRepo.getEngagements(_currentAdvisor!.uid, customerId);
   }
@@ -659,7 +659,7 @@ class AdvisorProvider with ChangeNotifier {
 
     if (draftIndex != -1) {
       final updatedDraft = engagements[draftIndex].copyWith(draftMessage: refinedDraft);
-      if (isGuestMode) {
+      if (isDemoMode) {
         await _localEngagementRepo.updateEngagement(_currentAdvisor!.uid, customerId, updatedDraft);
       } else {
         await _engagementRepo.updateEngagement(_currentAdvisor!.uid, customerId, updatedDraft);
@@ -680,7 +680,7 @@ class AdvisorProvider with ChangeNotifier {
     }
     notifyListeners();
 
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localCustomerRepo.saveCustomer(_currentAdvisor!.uid, customer);
     } else {
       await _customerRepo.saveCustomer(_currentAdvisor!.uid, customer);
@@ -689,7 +689,7 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> deleteCustomer(String customerId) async {
     if (_currentAdvisor == null) return;
-    if (isGuestMode) {
+    if (isDemoMode) {
       await _localCustomerRepo.deleteCustomer(_currentAdvisor!.uid, customerId);
       await _localEngagementRepo.clearCustomerEngagements(_currentAdvisor!.uid, customerId);
     } else {
@@ -723,7 +723,7 @@ class AdvisorProvider with ChangeNotifier {
         aiSource: result.source,
       );
       
-      if (isGuestMode) {
+      if (isDemoMode) {
         await _localEngagementRepo.saveEngagement(_currentAdvisor!.uid, customer.customerId, engagement);
         final updatedCustomer = customer.copyWith(hasActiveDraft: true);
         await _localCustomerRepo.updateCustomer(_currentAdvisor!.uid, updatedCustomer);

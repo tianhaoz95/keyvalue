@@ -22,7 +22,7 @@ This report identifies and ranks 15 strategic improvements for the KeyValue appl
 | :--- | :--- | :--- | :--- |
 | 1 | **Universal Shell & Navigation** | **High** | Implement the `UniversalShell` architecture. Move navigation from fragmented screens to a single scaffold with a persistent AI Sidebar and a dynamic Main Port. |
 | 2 | **Domain Service Extraction** | **High** | Relocate complex orchestration logic (e.g., `discoverProactiveTasks`) from `AdvisorProvider` into dedicated Domain Services to reduce "God Class" bloat. |
-| 3 | **Unified Repository Strategy** | **Medium** | Abstract Cloud vs. Local storage behind a single interface. Currently, `AdvisorProvider` manually checks `isGuestMode` for every data operation. |
+| 3 | **Unified Repository Strategy** | **Medium** | Abstract Cloud vs. Local storage behind a single interface. Currently, `AdvisorProvider` manually checks `isDemoMode` for every data operation. |
 | 4 | **Standardized AI Context State** | **Medium** | Formally link `UiContextProvider` and `AiService`. Ensure the AI has "visual awareness" of what is currently rendered in the Main Port. |
 | 5 | **Dependency Injection (DI)** | **Low** | Replace manual service instantiation in `AdvisorProvider` with a DI container (e.g., `get_it`). Improves testability and configuration management. |
 

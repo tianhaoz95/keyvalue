@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "keyvalue-app"
-  }
+  },
+  "targets": {
+    "keyvalue-app": {
+      "hosting": {
+        "production": [
+          "keyvalue-app"
+        ],
+        "staging": [
+          "keyvalue-staging"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

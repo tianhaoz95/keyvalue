@@ -128,11 +128,11 @@ abstract class AppLocalizations {
   /// **'CREATE AN ACCOUNT'**
   String get createAccount;
 
-  /// No description provided for @continueAsGuest.
+  /// No description provided for @demoMode.
   ///
   /// In en, this message translates to:
-  /// **'CONTINUE AS GUEST'**
-  String get continueAsGuest;
+  /// **'Demo mode'**
+  String get demoMode;
 
   /// No description provided for @welcomeBack.
   ///

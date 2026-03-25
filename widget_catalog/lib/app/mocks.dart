@@ -56,7 +56,7 @@ class MockAdvisorProvider extends ChangeNotifier implements AdvisorProvider {
   bool get preferOnDeviceAi => _currentAdvisor?.preferOnDeviceAi ?? false;
 
   @override
-  bool get isGuestMode => _currentAdvisor?.uid == 'local_user';
+  bool get isDemoMode => _currentAdvisor?.uid == 'local_user';
 
   @override
   bool get isDiscovering => false;
@@ -71,7 +71,7 @@ class MockAdvisorProvider extends ChangeNotifier implements AdvisorProvider {
   Future<void> login(String email, String password, {bool rememberMe = false}) async {}
 
   @override
-  Future<void> loginGuest({bool rememberMe = false}) async {}
+  Future<void> loginDemo({bool rememberMe = false}) async {}
 
   @override
   Future<void> logout() async {

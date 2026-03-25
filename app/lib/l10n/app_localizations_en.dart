@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createAccount => 'CREATE AN ACCOUNT';
 
   @override
-  String get continueAsGuest => 'CONTINUE AS GUEST';
+  String get demoMode => 'Demo mode';
 
   @override
   String get welcomeBack => 'Welcome back';

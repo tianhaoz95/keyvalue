@@ -34,7 +34,7 @@ KeyValue respects the privacy of advisors and their clients. This policy explain
 
 ### 1. DATA COLLECTION & STORAGE
 - **Advisor Profiles:** We collect your name, firm name, and email to manage your account.
-- **Client Data:** We store client names, contact info, background details, and engagement history in Google Cloud Firestore (for registered users) or local Hive storage (for guest users).
+- **Client Data:** We store client names, contact info, background details, and engagement history in Google Cloud Firestore (for registered users) or local Hive storage (for demo mode users).
 - **Security:** We use industry-standard encryption and Firebase Security Rules to ensure that only you can access your clients' data.
 
 ### 2. AI PROCESSING (GOOGLE GEMINI)

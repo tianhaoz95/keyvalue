@@ -604,7 +604,7 @@ class _SettingsViewState extends State<SettingsView> {
             subtitle: Text('Visual feedback', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isExpressiveAiEnabled,
             activeThumbColor: Colors.black,
-            onChanged: provider.isGuestMode ? null : (val) => provider.setExpressiveAiEnabled(val),
+            onChanged: provider.isDemoMode ? null : (val) => provider.setExpressiveAiEnabled(val),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           SwitchListTile(
@@ -613,7 +613,7 @@ class _SettingsViewState extends State<SettingsView> {
             subtitle: Text('Voice & images', style: TextStyle(fontSize: isCompact ? 10 : 11)),
             value: provider.isMultimodalAiEnabled,
             activeThumbColor: Colors.black,
-            onChanged: provider.isGuestMode ? null : (val) => provider.setMultimodalAiEnabled(val),
+            onChanged: provider.isDemoMode ? null : (val) => provider.setMultimodalAiEnabled(val),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           FutureBuilder<String>(

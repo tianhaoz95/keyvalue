@@ -54,7 +54,7 @@ Users can now manually choose to prioritize the on-device model even when cloud 
 
 - **Location**: Settings Sidebar -> AI Capability section.
 - **Availability**: The toggle ("Prefer Local AI") only appears if `checkOnDeviceStatus()` returns an `AVAILABLE` or `Ready` state.
-- **Persistence**: The preference is stored in the `Advisor` master record in Firestore (or local Hive in guest mode) via the `preferOnDeviceAi` boolean field.
+- **Persistence**: The preference is stored in the `Advisor` master record in Firestore (or local Hive in demo mode) via the `preferOnDeviceAi` boolean field.
 - **Impact**: When enabled, `AiService.getAiSource()` will return `AiSource.onDevice` as long as the model is available, bypassing the cloud fallback logic for supported tasks.
 
 ## Benefits of this Implementation

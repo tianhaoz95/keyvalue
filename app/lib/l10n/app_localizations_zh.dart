@@ -24,7 +24,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get createAccount => '创建账户';
 
   @override
-  String get continueAsGuest => '以访客身份继续';
+  String get demoMode => '演示模式';
 
   @override
   String get welcomeBack => '欢迎回来';

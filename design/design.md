@@ -86,6 +86,6 @@ Managed via `cloud_firestore` and corresponding Dart models.
 - **Subscription**: Manage plans (Starter, Pro, Enterprise) and billing info.
 
 ## 6. Implementation Principles
-- **Demo Mode**: Limited functional workflow available via "Continue as Guest" with AI features disabled to encourage registration.
+- **Demo Mode**: Functional workflow available via "Demo mode" with AI features simulated to encourage registration.
 - **Human-in-the-Loop**: AI never updates master records directly; all suggested drafts and profile changes require advisor approval.
 - **Professional Aesthetic**: Custom theme using Indigo/Amber palette with rounded components (16dp) for a "Premium Professional" feel.

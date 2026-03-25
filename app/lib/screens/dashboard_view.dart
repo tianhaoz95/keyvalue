@@ -99,7 +99,7 @@ class _DashboardViewState extends State<DashboardView> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                if (provider.isGuestMode)
+                if (provider.isDemoMode)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
@@ -110,7 +110,7 @@ class _DashboardViewState extends State<DashboardView> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'DEMO MODE: AI features are disabled. Please register for full access.',
+                            'DEMO MODE: AI responses are simulated. Register for full real-time access.',
                             style: TextStyle(
                               fontSize: 12, 
                               fontWeight: FontWeight.bold, 
