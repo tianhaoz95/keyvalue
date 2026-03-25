@@ -135,30 +135,68 @@ class KeyValueChatView extends StatelessWidget {
             ),
           ),
         Expanded(
-          child: LlmChatView(
-            provider: provider,
-            enableAttachments: advisorProvider.isMultimodalAiEnabled,
-            enableVoiceNotes: advisorProvider.isMultimodalAiEnabled,
-            speechToText: advisorProvider.aiService.transcribeAudio,
-            responseBuilder: (context, message) {
-              AiSource source = AiSource.unknown;
-              String displayMessage = message;
-              
-              if (message.startsWith('AI_SOURCE:')) {
-                final lines = message.split('\n');
-                final sourceStr = lines[0].substring(10);
-                try {
-                  source = AiSource.values.byName(sourceStr);
-                } catch (_) {}
-                displayMessage = lines.length > 1 ? lines.sublist(1).join('\n') : "";
-              }
+          child: Stack(
+            children: [
+              LlmChatView(
+                provider: provider,
+                enableAttachments: advisorProvider.isMultimodalAiEnabled,
+                enableVoiceNotes: advisorProvider.isMultimodalAiEnabled,
+                speechToText: advisorProvider.aiService.transcribeAudio,
+                responseBuilder: (context, message) {
+                  AiSource source = AiSource.unknown;
+                  String displayMessage = message;
+                  
+                  if (message.startsWith('AI_SOURCE:')) {
+                    final lines = message.split('\n');
+                    final sourceStr = lines[0].substring(10);
+                    try {
+                      source = AiSource.values.byName(sourceStr);
+                    } catch (_) {}
+                    displayMessage = lines.length > 1 ? lines.sublist(1).join('\n') : "";
+                  }
 
-              if (displayMessage.startsWith('PREVIEW_DATA:')) {
-                final parts = displayMessage.split('\n');
-                final previewHeader = parts[0];
-                final followUpText = parts.length > 1 ? parts.sublist(1).join('\n') : "";
-                
-                if (!advisorProvider.isExpressiveAiEnabled) {
+                  if (displayMessage.startsWith('PREVIEW_DATA:')) {
+                    final parts = displayMessage.split('\n');
+                    final previewHeader = parts[0];
+                    final followUpText = parts.length > 1 ? parts.sublist(1).join('\n') : "";
+                    
+                    if (!advisorProvider.isExpressiveAiEnabled) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (source != AiSource.unknown)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _buildSourceIndicator(source, isMobile),
+                            ),
+                          followUpText.isNotEmpty ? MarkdownBody(data: followUpText) : const SizedBox.shrink(),
+                        ],
+                      );
+                    }
+
+                    try {
+                      final jsonStr = previewHeader.substring(13);
+                      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (source != AiSource.unknown)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _buildSourceIndicator(source, isMobile),
+                            ),
+                          EmbeddedClientCard(data: data),
+                          if (followUpText.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: MarkdownBody(data: followUpText),
+                            ),
+                        ],
+                      );
+                    } catch (e) {
+                      return Text("Error parsing preview: $e");
+                    }
+                  }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -167,98 +205,111 @@ class KeyValueChatView extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: _buildSourceIndicator(source, isMobile),
                         ),
-                      followUpText.isNotEmpty ? MarkdownBody(data: followUpText) : const SizedBox.shrink(),
+                      MarkdownBody(data: displayMessage),
                     ],
                   );
-                }
-
-                try {
-                  final jsonStr = previewHeader.substring(13);
-                  final data = jsonDecode(jsonStr) as Map<String, dynamic>;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (source != AiSource.unknown)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _buildSourceIndicator(source, isMobile),
-                        ),
-                      EmbeddedClientCard(data: data),
-                      if (followUpText.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: MarkdownBody(data: followUpText),
-                        ),
-                    ],
-                  );
-                } catch (e) {
-                  return Text("Error parsing preview: $e");
-                }
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (source != AiSource.unknown)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _buildSourceIndicator(source, isMobile),
+                },
+                style: LlmChatViewStyle(
+                  backgroundColor: Colors.white,
+                  messageSpacing: 16,
+                  padding: const EdgeInsets.all(24),
+                  progressIndicatorColor: Colors.black12,
+                  userMessageStyle: UserMessageStyle(
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(12).copyWith(
+                        bottomRight: const Radius.circular(0),
+                      ),
                     ),
-                  MarkdownBody(data: displayMessage),
-                ],
-              );
-            },
-            style: LlmChatViewStyle(
-              backgroundColor: Colors.white,
-              messageSpacing: 16,
-              padding: const EdgeInsets.all(24),
-              progressIndicatorColor: Colors.black12,
-              userMessageStyle: UserMessageStyle(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(12).copyWith(
-                    bottomRight: const Radius.circular(0),
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                  ),
+                  llmMessageStyle: LlmMessageStyle(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(12).copyWith(
+                        bottomLeft: const Radius.circular(0),
+                      ),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    markdownStyle: MarkdownStyleSheet(
+                      p: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  chatInputStyle: ChatInputStyle(
+                    backgroundColor: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    textStyle: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
+                    hintStyle: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                    hintText: 'Type message...',
                   ),
                 ),
-                textStyle: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
               ),
-              llmMessageStyle: LlmMessageStyle(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9F9F9),
-                  borderRadius: BorderRadius.circular(12).copyWith(
-                    bottomLeft: const Radius.circular(0),
+              if (chatProvider.isLoading)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      const LinearProgressIndicator(
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                        minHeight: 2,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          border: const Border(
+                            bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Gemini is thinking...',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black.withOpacity(0.6),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
                 ),
-                markdownStyle: MarkdownStyleSheet(
-                  p: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              chatInputStyle: ChatInputStyle(
-                backgroundColor: Colors.white,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
-                ),
-                textStyle: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                ),
-                hintStyle: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
-                hintText: 'Type message...',
-              ),
-            ),
+            ],
           ),
         ),
       ],

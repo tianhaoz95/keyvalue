@@ -167,16 +167,22 @@ flutter build web --release
 ```
 
 ### 2. Deploy to Firebase Hosting
-Ensure you have the [Firebase CLI](https://firebase.google.com/docs/cli) installed and are logged in (`firebase login`). 
+The project uses two environments: **Staging** and **Production**. Environment aliases are configured in `app/.firebaserc`.
 
-To deploy to the **production** environment (`keyvalue-app.web.app`), from the `app/` directory run:
+#### Staging Deployment
+Used for testing new features before they go live. Each feature should be deployed to a **Preview Channel** for review.
+**URL:** `https://keyvalue-staging.web.app` (Base URL for preview channels)
+```bash
+# Replace 'feature-name' with a descriptive name for the change
+firebase hosting:channel:deploy feature-name --only staging
+```
+
+#### Production Deployment
+The live environment for advisors.
+**URL:** `https://keyvalue-app.web.app`
 ```bash
 firebase deploy --only hosting:production
 ```
-
-To deploy to the **staging** environment (`keyvalue-staging.web.app`), from the `app/` directory run:
-```bash
-firebase deploy --only hosting:staging
 ```
 
 The configuration is managed in `app/firebase.json` and `app/.firebaserc`.
