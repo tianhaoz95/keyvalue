@@ -4,7 +4,7 @@
   "password": "Password",
   "rememberMe": "Remember me",
   "createAccount": "CREATE AN ACCOUNT",
-  "continueAsGuest": "CONTINUE AS GUEST",
+  "demoMode": "Demo mode",
   "welcomeBack": "Welcome back",
   "clients": "Clients",
   "pendingActions": "REVIEWS",

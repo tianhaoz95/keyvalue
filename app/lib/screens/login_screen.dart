@@ -207,8 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
                   Center(
                     child: OutlinedButton(
-                      onPressed: _enterGuestMode,
-                      child: Text(l10n.continueAsGuest.toUpperCase()),
+                      onPressed: _enterDemoMode,
+                      child: Text(l10n.demoMode.toUpperCase()),
                     ),
                   ),
                 ],
@@ -220,11 +220,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _enterGuestMode() async {
+  void _enterDemoMode() async {
     setState(() => _isLoading = true);
     final provider = Provider.of<AdvisorProvider>(context, listen: false);
     try {
-      await provider.loginGuest(rememberMe: _rememberMe);
+      await provider.loginDemo(rememberMe: _rememberMe);
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Guest mode failed: $e')),
+          SnackBar(content: Text('Demo mode failed: $e')),
         );
       }
     } finally {

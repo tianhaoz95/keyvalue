@@ -7,7 +7,7 @@
 
 The account deletion logic has been updated in `AdvisorProvider.deleteAccount()` to ensure a complete and secure removal of all user data.
 
-1.  **Uniform Local Cleanup:** Both Guest and Registered users now have their local Hive repositories (`LocalAdvisorRepository`, `LocalCustomerRepository`, `LocalEngagementRepository`) cleared immediately upon account deletion.
+1.  **Uniform Local Cleanup:** Both Demo mode and Registered users now have their local Hive repositories (`LocalAdvisorRepository`, `LocalCustomerRepository`, `LocalEngagementRepository`) cleared immediately upon account deletion.
 2.  **Cascading Firestore Delete (Registered Users):** 
     -   Before deleting the Auth user, the app now iterates through all customers.
     -   For each customer, it recursively deletes all documents in the `engagements` sub-collection.

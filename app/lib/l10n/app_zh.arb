@@ -4,7 +4,7 @@
   "password": "密码",
   "rememberMe": "记住我",
   "createAccount": "创建账户",
-  "continueAsGuest": "以访客身份继续",
+  "demoMode": "演示模式",
   "welcomeBack": "欢迎回来",
   "clients": "客户",
   "pendingActions": "待阅事项",
