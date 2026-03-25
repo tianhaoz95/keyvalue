@@ -5,6 +5,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../providers/admin_provider.dart';
 import '../models/feedback_item.dart';
 import '../widgets/feedback_detail_sidebar.dart';
+import '../theme.dart';
 
 class FeedbackListScreen extends StatefulWidget {
   const FeedbackListScreen({super.key});
@@ -83,8 +84,24 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                     title: const Text('DELETE SELECTED'),
                     content: Text('Delete ${_selectedFeedbackIds.length} feedback items?'),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
-                      TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false), 
+                            child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              minimumSize: const Size(100, 44),
+                            ),
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('DELETE'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 );
@@ -247,8 +264,24 @@ class _FeedbackListScreenState extends State<FeedbackListScreen> {
                                             title: const Text('DELETE FEEDBACK'),
                                             content: const Text('Are you sure you want to delete this entry?'),
                                             actions: [
-                                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
-                                              TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('DELETE', style: TextStyle(color: Colors.redAccent))),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context, false), 
+                                                    child: const Text('CANCEL', style: TextStyle(color: AppTheme.accentGrey, fontWeight: FontWeight.bold)),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: Colors.redAccent,
+                                                      minimumSize: const Size(100, 44),
+                                                    ),
+                                                    onPressed: () => Navigator.pop(context, true),
+                                                    child: const Text('DELETE'),
+                                                  ),
+                                                ],
+                                              ),
                                             ],
                                           ),
                                         );

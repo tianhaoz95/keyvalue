@@ -22,7 +22,12 @@ class LoadingOverlay extends StatelessWidget {
             color: Colors.black.withValues(alpha: 0.3),
             child: Center(
               child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFEEEEEE), width: 1),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
                   child: Column(

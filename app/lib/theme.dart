@@ -108,6 +108,59 @@ class AppTheme {
         thickness: 1,
         space: 24,
       ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: backgroundWhite,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: primaryBlack,
+        headerForegroundColor: Colors.white,
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return primaryBlack;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack;
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return primaryBlack;
+        }),
+        todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack;
+          return Colors.transparent;
+        }),
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return primaryBlack;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack;
+          return Colors.transparent;
+        }),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: primaryBlack,
+        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: backgroundWhite,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titleTextStyle: const TextStyle(
+          fontWeight: FontWeight.w900,
+          color: primaryBlack,
+          fontSize: 20,
+        ),
+        contentTextStyle: const TextStyle(
+          color: primaryBlack,
+          fontSize: 16,
+          height: 1.5,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      ),
       tabBarTheme: const TabBarThemeData(
         labelColor: primaryBlack,
         unselectedLabelColor: accentGrey,
@@ -119,6 +172,11 @@ class AppTheme {
       popupMenuTheme: const PopupMenuThemeData(
         color: backgroundWhite,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          side: BorderSide(color: lightGrey, width: 1),
+        ),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
@@ -130,6 +188,14 @@ class AppTheme {
           return lightGrey;
         }),
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primaryBlack;
+          return Colors.transparent;
+        }),
+        side: const BorderSide(color: primaryBlack, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     );
   }
