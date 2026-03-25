@@ -31,6 +31,10 @@ widget_catalog/         # Component gallery for developing and testing UI widget
 design/                 # Design system, UX reports, and task tracking
 ```
 
+## 🌿 Git Workflow
+
+- **Branching Mandate:** At the start of a task, if the local repository is on the `main` branch, you MUST check out to a new branch with a name reflecting the task to be implemented (e.g., `git checkout -b feature/describe-task-here`).
+
 ## 🔑 Core Features & Design Patterns
 
 ### 1. Proactive Discovery ("App-as-Engine")
