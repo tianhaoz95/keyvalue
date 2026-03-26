@@ -82,7 +82,7 @@ class CustomerAdapter extends TypeAdapter<Customer> {
       proposedGuidelines: fields[17] as String?,
       proposedDetailsSummary: fields[18] as String?,
       proposedGuidelinesSummary: fields[19] as String?,
-      preferredChannel: fields[20] as String? ?? 'email',
+      preferredChannel: fields[20] as String,
     );
   }
 

@@ -30,7 +30,7 @@ class AdvisorProvider with ChangeNotifier {
   AiService _aiService;
   AiService get aiService => _aiService;
 
-  final SmsService _smsService;
+  SmsService _smsService;
   SmsService get smsService => _smsService;
 
   UiContextProvider? _uiContext;
@@ -78,13 +78,71 @@ class AdvisorProvider with ChangeNotifier {
         _smsService = smsService ?? FakeSmsService(),
         _firebaseAuth = firebaseAuth ?? auth.FirebaseAuth.instance,
         _uiContext = uiContext {
-    _checkRememberedUser();
+    _checkRememberedUser().then((_) => _updateSmsService());
     _loadLocale();
+  }
+
+  void _updateSmsService() {
+    if (_currentAdvisor != null && 
+        _currentAdvisor!.twilioAccountSid.isNotEmpty && 
+        _currentAdvisor!.twilioAuthToken.isNotEmpty) {
+      _smsService = TwilioSmsService(
+        accountSid: _currentAdvisor!.twilioAccountSid,
+        authToken: _currentAdvisor!.twilioAuthToken,
+        fromNumber: _currentAdvisor!.firmPhoneNumber,
+      );
+    } else {
+      _smsService = FakeSmsService();
+    }
+    notifyListeners();
+  }
+
+  Future<void> updateTwilioSettings({
+    required String accountSid,
+    required String authToken,
+  }) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(
+        twilioAccountSid: accountSid,
+        twilioAuthToken: authToken,
+      );
+      await updateProfile(updated);
+      _updateSmsService();
+    }
+  }
+
+  Future<List<String>> searchTwilioNumbers({String areaCode = '201'}) async {
+    return _smsService.searchAvailableNumbers(areaCode: areaCode);
+  }
+
+  Future<void> provisionTwilioNumber(String phoneNumber) async {
+    if (_currentAdvisor != null) {
+      final provisioned = await _smsService.provisionNumber(phoneNumber);
+      final updated = _currentAdvisor!.copyWith(firmPhoneNumber: provisioned);
+      await updateProfile(updated);
+      _updateSmsService();
+    }
+  }
+
+  Future<void> updateSendGridSettings({
+    required String apiKey,
+    required String verifiedSender,
+    String? firmEmail,
+  }) async {
+    if (_currentAdvisor != null) {
+      final updated = _currentAdvisor!.copyWith(
+        sendgridApiKey: apiKey,
+        sendgridVerifiedSender: verifiedSender,
+        firmEmailAddress: firmEmail,
+      );
+      await updateProfile(updated);
+    }
   }
 
   void updateUiContext(UiContextProvider uiContext) {
     _uiContext = uiContext;
     _updateAiService();
+    _updateSmsService();
   }
 
   Future<void> setExpressiveAiEnabled(bool enabled) async {
@@ -106,6 +164,7 @@ class AdvisorProvider with ChangeNotifier {
       final updated = _currentAdvisor!.copyWith(preferOnDeviceAi: enabled);
       await updateProfile(updated);
       _updateAiService();
+    _updateSmsService();
     }
   }
 
@@ -140,6 +199,7 @@ class AdvisorProvider with ChangeNotifier {
       final updated = _currentAdvisor!.copyWith(aiCapability: capability);
       await updateProfile(updated);
       _updateAiService();
+    _updateSmsService();
     }
   }
 
@@ -229,6 +289,7 @@ class AdvisorProvider with ChangeNotifier {
 
       if (_currentAdvisor != null) {
         _updateAiService();
+    _updateSmsService();
         notifyListeners();
         _setupCustomerListener();
       }
@@ -245,6 +306,7 @@ class AdvisorProvider with ChangeNotifier {
         _currentAdvisor = await _advisorRepo.getAdvisor(credential.user!.uid);
         if (_currentAdvisor != null) {
           _updateAiService();
+    _updateSmsService();
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('rememberMe', rememberMe);
           await prefs.setString('lastLoginMethod', 'firebase');
@@ -283,6 +345,7 @@ class AdvisorProvider with ChangeNotifier {
     }
     
     _updateAiService();
+    _updateSmsService();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberMe', rememberMe);
