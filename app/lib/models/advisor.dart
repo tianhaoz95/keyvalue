@@ -36,6 +36,16 @@ class Advisor {
   final DateTime? nextBillingDate;
   @HiveField(14)
   final String firmPhoneNumber;
+  @HiveField(18)
+  final String firmEmailAddress;
+  @HiveField(16)
+  final String twilioAccountSid;
+  @HiveField(17)
+  final String twilioAuthToken;
+  @HiveField(19)
+  final String sendgridApiKey;
+  @HiveField(20)
+  final String sendgridVerifiedSender;
 
   const Advisor({
     required this.uid,
@@ -54,6 +64,11 @@ class Advisor {
     this.zipCode = '',
     this.nextBillingDate,
     this.firmPhoneNumber = '',
+    this.firmEmailAddress = '',
+    this.twilioAccountSid = '',
+    this.twilioAuthToken = '',
+    this.sendgridApiKey = '',
+    this.sendgridVerifiedSender = '',
   });
 
   Advisor copyWith({
@@ -73,6 +88,11 @@ class Advisor {
     String? zipCode,
     DateTime? nextBillingDate,
     String? firmPhoneNumber,
+    String? firmEmailAddress,
+    String? twilioAccountSid,
+    String? twilioAuthToken,
+    String? sendgridApiKey,
+    String? sendgridVerifiedSender,
   }) {
     return Advisor(
       uid: uid ?? this.uid,
@@ -91,6 +111,11 @@ class Advisor {
       zipCode: zipCode ?? this.zipCode,
       nextBillingDate: nextBillingDate ?? this.nextBillingDate,
       firmPhoneNumber: firmPhoneNumber ?? this.firmPhoneNumber,
+      firmEmailAddress: firmEmailAddress ?? this.firmEmailAddress,
+      twilioAccountSid: twilioAccountSid ?? this.twilioAccountSid,
+      twilioAuthToken: twilioAuthToken ?? this.twilioAuthToken,
+      sendgridApiKey: sendgridApiKey ?? this.sendgridApiKey,
+      sendgridVerifiedSender: sendgridVerifiedSender ?? this.sendgridVerifiedSender,
     );
   }
 
@@ -112,6 +137,11 @@ class Advisor {
       'zipCode': zipCode,
       'nextBillingDate': nextBillingDate?.toIso8601String(),
       'firmPhoneNumber': firmPhoneNumber,
+      'firmEmailAddress': firmEmailAddress,
+      'twilioAccountSid': twilioAccountSid,
+      'twilioAuthToken': twilioAuthToken,
+      'sendgridApiKey': sendgridApiKey,
+      'sendgridVerifiedSender': sendgridVerifiedSender,
     };
   }
 
@@ -135,6 +165,11 @@ class Advisor {
           ? DateTime.tryParse(map['nextBillingDate']) 
           : null,
       firmPhoneNumber: map['firmPhoneNumber'] ?? '',
+      firmEmailAddress: map['firmEmailAddress'] ?? '',
+      twilioAccountSid: map['twilioAccountSid'] ?? '',
+      twilioAuthToken: map['twilioAuthToken'] ?? '',
+      sendgridApiKey: map['sendgridApiKey'] ?? '',
+      sendgridVerifiedSender: map['sendgridVerifiedSender'] ?? '',
     );
   }
 }

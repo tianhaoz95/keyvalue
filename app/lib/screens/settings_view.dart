@@ -21,9 +21,19 @@ class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _expiryController;
   late TextEditingController _cvvController;
   late TextEditingController _zipController;
+  late TextEditingController _twilioSidController;
+  late TextEditingController _twilioTokenController;
+  late TextEditingController _sendgridApiKeyController;
+  late TextEditingController _sendgridSenderController;
+  late TextEditingController _firmEmailController;
 
   bool _isEditingProfile = false;
   bool _isEditingBilling = false;
+  bool _isEditingTwilio = false;
+  bool _isEditingSendGrid = false;
+  bool _isSearchingNumbers = false;
+  List<String> _availableNumbers = [];
+
   String _selectedPlan = 'Starter';
   String? _pendingPlan;
 
@@ -38,6 +48,11 @@ class _SettingsViewState extends State<SettingsView> {
     _expiryController = TextEditingController(text: advisor?.expiryDate ?? '');
     _cvvController = TextEditingController(text: advisor?.cvv ?? '');
     _zipController = TextEditingController(text: advisor?.zipCode ?? '');
+    _twilioSidController = TextEditingController(text: advisor?.twilioAccountSid ?? '');
+    _twilioTokenController = TextEditingController(text: advisor?.twilioAuthToken ?? '');
+    _sendgridApiKeyController = TextEditingController(text: advisor?.sendgridApiKey ?? '');
+    _sendgridSenderController = TextEditingController(text: advisor?.sendgridVerifiedSender ?? '');
+    _firmEmailController = TextEditingController(text: advisor?.firmEmailAddress ?? '');
     _selectedPlan = advisor?.subscriptionPlan ?? 'Starter';
   }
 
@@ -50,6 +65,11 @@ class _SettingsViewState extends State<SettingsView> {
     _expiryController.dispose();
     _cvvController.dispose();
     _zipController.dispose();
+    _twilioSidController.dispose();
+    _twilioTokenController.dispose();
+    _sendgridApiKeyController.dispose();
+    _sendgridSenderController.dispose();
+    _firmEmailController.dispose();
     super.dispose();
   }
 
@@ -88,6 +108,20 @@ class _SettingsViewState extends State<SettingsView> {
 
         const SizedBox(height: 32),
 
+        // Twilio Section
+        _buildSectionHeader('TWILIO SMS INTEGRATION', isCompact),
+        const SizedBox(height: 12),
+        _buildTwilioCard(provider, isCompact),
+
+        const SizedBox(height: 32),
+
+        // SendGrid Section
+        _buildSectionHeader('SENDGRID EMAIL INTEGRATION', isCompact),
+        const SizedBox(height: 12),
+        _buildSendGridCard(provider, isCompact),
+
+        const SizedBox(height: 32),
+
         // AI Settings Section
         _buildSectionHeader('AI CAPABILITIES', isCompact),
         const SizedBox(height: 12),
@@ -107,9 +141,10 @@ class _SettingsViewState extends State<SettingsView> {
         const SizedBox(height: 12),
         ElevatedButton(
           onPressed: () async {
+            final navigator = Navigator.of(context, rootNavigator: true);
             await provider.logout();
             if (mounted) {
-              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+              navigator.pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,
               );
@@ -252,6 +287,28 @@ class _SettingsViewState extends State<SettingsView> {
                 Expanded(
                   child: Text(
                     advisor.firmPhoneNumber.isEmpty ? 'Generating...' : advisor.firmPhoneNumber,
+                    style: TextStyle(
+                      fontSize: isCompact ? 13 : 14, 
+                      fontWeight: FontWeight.w900, 
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'VIRTUAL EMAIL ADDRESS',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 8 : 9, color: Colors.grey, letterSpacing: 0.5),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.email_outlined, size: isCompact ? 16 : 18, color: Colors.black),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    advisor.firmEmailAddress.isEmpty ? 'Not set' : advisor.firmEmailAddress,
                     style: TextStyle(
                       fontSize: isCompact ? 13 : 14, 
                       fontWeight: FontWeight.w900, 
@@ -536,7 +593,188 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildBillingField(String label, TextEditingController controller, bool isCompact, {TextInputType? keyboardType}) {
+  Widget _buildSendGridCard(AdvisorProvider provider, bool isCompact) {
+    final advisor = provider.currentAdvisor!;
+
+    return Container(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F9F9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.email_outlined, size: isCompact ? 16 : 18, color: Colors.black54),
+                  const SizedBox(width: 12),
+                  Text(
+                    'SENDGRID SETTINGS',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 0.5),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_isEditingSendGrid) {
+                    await provider.updateSendGridSettings(
+                      apiKey: _sendgridApiKeyController.text.trim(),
+                      verifiedSender: _sendgridSenderController.text.trim(),
+                      firmEmail: _firmEmailController.text.trim(),
+                    );
+                  }
+                  setState(() => _isEditingSendGrid = !_isEditingSendGrid);
+                },
+                child: Text(_isEditingSendGrid ? 'SAVE' : 'EDIT',
+                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          if (_isEditingSendGrid) ...[
+            const SizedBox(height: 12),
+            _buildBillingField('SENDGRID API KEY', _sendgridApiKeyController, isCompact, obscureText: true),
+            const SizedBox(height: 12),
+            _buildBillingField('VERIFIED SENDER EMAIL', _sendgridSenderController, isCompact, keyboardType: TextInputType.emailAddress),
+            const SizedBox(height: 12),
+            _buildBillingField('VIRTUAL FIRM EMAIL', _firmEmailController, isCompact, keyboardType: TextInputType.emailAddress),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text(
+              advisor.sendgridApiKey.isEmpty ? 'Not configured' : 'API Key: ••••••••••••',
+              style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              advisor.sendgridVerifiedSender.isEmpty ? 'No verified sender' : 'Sender: ${advisor.sendgridVerifiedSender}',
+              style: TextStyle(fontSize: isCompact ? 10 : 11, color: Colors.black54),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTwilioCard(AdvisorProvider provider, bool isCompact) {
+    final advisor = provider.currentAdvisor!;
+    final isPro = advisor.subscriptionPlan == 'Pro' || advisor.subscriptionPlan == 'Enterprise';
+
+    return Container(
+      padding: EdgeInsets.all(isCompact ? 12 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9F9F9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.sms_outlined, size: isCompact ? 16 : 18, color: Colors.black54),
+                  const SizedBox(width: 12),
+                  Text(
+                    'TWILIO SETTINGS',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 0.5),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_isEditingTwilio) {
+                    await provider.updateTwilioSettings(
+                      accountSid: _twilioSidController.text.trim(),
+                      authToken: _twilioTokenController.text.trim(),
+                    );
+                  }
+                  setState(() => _isEditingTwilio = !_isEditingTwilio);
+                },
+                child: Text(_isEditingTwilio ? 'SAVE' : 'EDIT',
+                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          if (_isEditingTwilio) ...[
+            const SizedBox(height: 12),
+            _buildBillingField('ACCOUNT SID', _twilioSidController, isCompact),
+            const SizedBox(height: 12),
+            _buildBillingField('AUTH TOKEN', _twilioTokenController, isCompact, obscureText: true),
+          ] else ...[
+            const SizedBox(height: 8),
+            Text(
+              advisor.twilioAccountSid.isEmpty ? 'Not configured' : 'SID: ${advisor.twilioAccountSid}',
+              style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600),
+            ),
+          ],
+          if (isPro && advisor.twilioAccountSid.isNotEmpty) ...[
+            const Divider(height: 32),
+            Text(
+              'PROVISION VIRTUAL NUMBER',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 8 : 9, color: Colors.grey, letterSpacing: 0.5),
+            ),
+            const SizedBox(height: 12),
+            if (_availableNumbers.isEmpty && !_isSearchingNumbers)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    setState(() => _isSearchingNumbers = true);
+                    try {
+                      final numbers = await provider.searchTwilioNumbers();
+                      setState(() => _availableNumbers = numbers);
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                      }
+                    } finally {
+                      setState(() => _isSearchingNumbers = false);
+                    }
+                  },
+                  child: Text('SEARCH AVAILABLE NUMBERS', style: TextStyle(fontSize: isCompact ? 10 : 11, fontWeight: FontWeight.bold)),
+                ),
+              )
+            else if (_isSearchingNumbers)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              ..._availableNumbers.take(3).map((number) => ListTile(
+                    dense: true,
+                    title: Text(number, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: TextButton(
+                      onPressed: () async {
+                        try {
+                          await provider.provisionTwilioNumber(number);
+                          setState(() => _availableNumbers = []);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Number provisioned!')));
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                          }
+                        }
+                      },
+                      child: const Text('PICK'),
+                    ),
+                  )),
+              TextButton(
+                onPressed: () => setState(() => _availableNumbers = []),
+                child: const Text('CANCEL', style: TextStyle(fontSize: 10, color: Colors.red)),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBillingField(String label, TextEditingController controller, bool isCompact, {TextInputType? keyboardType, bool obscureText = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -544,6 +782,7 @@ class _SettingsViewState extends State<SettingsView> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          obscureText: obscureText,
           style: TextStyle(fontSize: isCompact ? 12 : 13, fontWeight: FontWeight.w600),
           decoration: const InputDecoration(
             isDense: true,
