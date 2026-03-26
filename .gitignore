@@ -4,3 +4,4 @@ recaptcha.txt
 /.venv
 /temp
 /.env
+/functions/node_modules/

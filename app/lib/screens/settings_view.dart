@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -525,7 +526,7 @@ class _SettingsViewState extends State<SettingsView> {
                   Icon(Icons.credit_card, size: isCompact ? 16 : 18, color: Colors.black54),
                   const SizedBox(width: 12),
                   Text(
-                    _isEditingBilling ? 'EDIT BILLING' : 'PAYMENT METHOD',
+                    _isEditingBilling ? 'SECURE STRIPE BILLING' : 'PAYMENT METHOD',
                     style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 0.5),
                   ),
                 ],
@@ -535,9 +536,6 @@ class _SettingsViewState extends State<SettingsView> {
                   if (_isEditingBilling) {
                     await provider.updateBillingInfo(
                       cardHolderName: _cardHolderController.text.trim(),
-                      cardNumber: _cardNumberController.text.trim(),
-                      expiryDate: _expiryController.text.trim(),
-                      cvv: _cvvController.text.trim(),
                       zipCode: _zipController.text.trim(),
                     );
                   }
@@ -552,14 +550,17 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: 12),
             _buildBillingField('CARDHOLDER NAME', _cardHolderController, isCompact),
             const SizedBox(height: 12),
-            _buildBillingField('CARD NUMBER', _cardNumberController, isCompact, keyboardType: TextInputType.number),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildBillingField('EXPIRY (MM/YY)', _expiryController, isCompact)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildBillingField('CVV', _cvvController, isCompact, keyboardType: TextInputType.number)),
-              ],
+            Text('CARD DETAILS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            CardField(
+              onCardChanged: (card) {
+                // Handle card changes if needed
+              },
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
             ),
             const SizedBox(height: 12),
             _buildBillingField('ZIP CODE', _zipController, isCompact, keyboardType: TextInputType.number),
@@ -571,7 +572,7 @@ class _SettingsViewState extends State<SettingsView> {
             ),
             const SizedBox(height: 4),
             Text(
-              advisor.cardNumber.isEmpty ? 'No card on file' : '•••• •••• •••• $last4',
+              advisor.cardNumber.isEmpty ? 'Using Stripe Secure Payment' : '•••• •••• •••• $last4',
               style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600),
             ),
           ],

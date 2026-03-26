@@ -4,6 +4,8 @@ import 'l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:feedback/feedback.dart';
@@ -27,7 +29,12 @@ void main() async {
   if (useEmulator) {
     FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
     await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   }
+
+  // TODO: Set your Stripe publishable key here
+  // Stripe.publishableKey = "pk_test_...";
+  // await Stripe.instance.applySettings();
 
   await Hive.initFlutter();
   Hive.registerAdapter(AdvisorAdapter());
