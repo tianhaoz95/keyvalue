@@ -139,6 +139,20 @@ class _SettingsViewState extends State<SettingsView> {
         // Danger Zone
         _buildSectionHeader('ACCOUNT', isCompact),
         const SizedBox(height: 12),
+        if (!provider.isDemoMode) ...[
+          ElevatedButton(
+            onPressed: () => _showChangePasswordDialog(context, provider),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppTheme.primaryBlack,
+              elevation: 0,
+              side: const BorderSide(color: Color(0xFFEEEEEE)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: Text('CHANGE PASSWORD', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1, fontSize: isCompact ? 11 : 12)),
+          ),
+          const SizedBox(height: 12),
+        ],
         ElevatedButton(
           onPressed: () async {
             final navigator = Navigator.of(context, rootNavigator: true);
@@ -168,6 +182,87 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context, AdvisorProvider provider) {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('CHANGE PASSWORD', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: currentPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Current Password'),
+                validator: (val) => val == null || val.isEmpty ? 'Current password is required' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'New Password'),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'New password is required';
+                  if (val.length < 6) return 'Password must be at least 6 characters';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Confirm New Password'),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Confirm your new password';
+                  if (val != newPasswordController.text) return 'Passwords do not match';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                try {
+                  await provider.changePassword(
+                    currentPasswordController.text,
+                    newPasswordController.text,
+                  );
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password updated successfully!')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('UPDATE'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -383,6 +383,32 @@ class AdvisorProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    if (isDemoMode) {
+      throw 'Cannot change password in Demo Mode.';
+    }
+
+    final user = _firebaseAuth.currentUser;
+    if (user != null && user.email != null) {
+      try {
+        // Re-authenticate user first
+        final auth.AuthCredential credential = auth.EmailAuthProvider.credential(
+          email: user.email!,
+          password: currentPassword,
+        );
+        
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPassword);
+      } on auth.FirebaseAuthException catch (e) {
+        throw e.message ?? 'Failed to change password';
+      } catch (e) {
+        throw e.toString();
+      }
+    } else {
+      throw 'User not signed in.';
+    }
+  }
+
   Future<void> deleteAccount() async {
     // 1. Always clear local repositories to remove any demo-mode remnants
     await _localAdvisorRepo.deleteAdvisor('local_user');
