@@ -244,11 +244,13 @@ class AdvisorProvider with ChangeNotifier {
     String? email,
   }) async {
     if (_currentAdvisor != null) {
-      await _billingService.notifyBillingChange({
-        'cardHolderName': cardHolderName,
-        'zipCode': zipCode,
-        'email': email ?? _currentAdvisor!.email,
-      });
+      if (!isDemoMode) {
+        await _billingService.notifyBillingChange({
+          'cardHolderName': cardHolderName,
+          'zipCode': zipCode,
+          'email': email ?? _currentAdvisor!.email,
+        });
+      }
 
       final updated = _currentAdvisor!.copyWith(
         cardHolderName: cardHolderName,

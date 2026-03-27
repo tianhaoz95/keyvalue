@@ -30,6 +30,7 @@ class _SettingsViewState extends State<SettingsView> {
 
   bool _isEditingProfile = false;
   bool _isEditingBilling = false;
+  bool _isSavingBilling = false;
   bool _isEditingTwilio = false;
   bool _isEditingSendGrid = false;
   bool _isSearchingNumbers = false;
@@ -531,19 +532,42 @@ class _SettingsViewState extends State<SettingsView> {
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () async {
-                  if (_isEditingBilling) {
-                    await provider.updateBillingInfo(
-                      cardHolderName: _cardHolderController.text.trim(),
-                      zipCode: _zipController.text.trim(),
-                    );
-                  }
-                  setState(() => _isEditingBilling = !_isEditingBilling);
-                },
-                child: Text(_isEditingBilling ? 'SAVE' : 'EDIT',
-                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
-              ),
+              _isSavingBilling 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                : TextButton(
+                    onPressed: () async {
+                      if (_isEditingBilling) {
+                        setState(() => _isSavingBilling = true);
+                        try {
+                          await provider.updateBillingInfo(
+                            cardHolderName: _cardHolderController.text.trim(),
+                            zipCode: _zipController.text.trim(),
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Billing information updated securely.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: ${e.toString()}')),
+                            );
+                          }
+                          // Return early so we don't exit editing mode on error
+                          setState(() => _isSavingBilling = false);
+                          return;
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isSavingBilling = false);
+                          }
+                        }
+                      }
+                      setState(() => _isEditingBilling = !_isEditingBilling);
+                    },
+                    child: Text(_isEditingBilling ? 'SAVE' : 'EDIT',
+                        style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
+                  ),
             ],
           ),
           if (_isEditingBilling) ...[
