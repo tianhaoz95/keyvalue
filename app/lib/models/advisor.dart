@@ -46,6 +46,12 @@ class Advisor {
   final String sendgridApiKey;
   @HiveField(20)
   final String sendgridVerifiedSender;
+  @HiveField(21)
+  final String? stripeCustomerId;
+  @HiveField(22)
+  final String? subscriptionId;
+  @HiveField(23)
+  final String subscriptionStatus; // 'active', 'past_due', 'canceled', 'incomplete', 'none'
 
   const Advisor({
     required this.uid,
@@ -69,6 +75,9 @@ class Advisor {
     this.twilioAuthToken = '',
     this.sendgridApiKey = '',
     this.sendgridVerifiedSender = '',
+    this.stripeCustomerId,
+    this.subscriptionId,
+    this.subscriptionStatus = 'none',
   });
 
   Advisor copyWith({
@@ -93,6 +102,9 @@ class Advisor {
     String? twilioAuthToken,
     String? sendgridApiKey,
     String? sendgridVerifiedSender,
+    String? stripeCustomerId,
+    String? subscriptionId,
+    String? subscriptionStatus,
   }) {
     return Advisor(
       uid: uid ?? this.uid,
@@ -116,6 +128,9 @@ class Advisor {
       twilioAuthToken: twilioAuthToken ?? this.twilioAuthToken,
       sendgridApiKey: sendgridApiKey ?? this.sendgridApiKey,
       sendgridVerifiedSender: sendgridVerifiedSender ?? this.sendgridVerifiedSender,
+      stripeCustomerId: stripeCustomerId ?? this.stripeCustomerId,
+      subscriptionId: subscriptionId ?? this.subscriptionId,
+      subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
     );
   }
 
@@ -142,6 +157,9 @@ class Advisor {
       'twilioAuthToken': twilioAuthToken,
       'sendgridApiKey': sendgridApiKey,
       'sendgridVerifiedSender': sendgridVerifiedSender,
+      'stripeCustomerId': stripeCustomerId,
+      'subscriptionId': subscriptionId,
+      'subscriptionStatus': subscriptionStatus,
     };
   }
 
@@ -170,6 +188,10 @@ class Advisor {
       twilioAuthToken: map['twilioAuthToken'] ?? '',
       sendgridApiKey: map['sendgridApiKey'] ?? '',
       sendgridVerifiedSender: map['sendgridVerifiedSender'] ?? '',
+      stripeCustomerId: map['stripeCustomerId'],
+      subscriptionId: map['subscriptionId'],
+      subscriptionStatus: map['subscriptionStatus'] ?? 'none',
     );
   }
+
 }

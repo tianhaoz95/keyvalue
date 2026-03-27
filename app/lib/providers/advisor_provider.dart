@@ -64,6 +64,9 @@ class AdvisorProvider with ChangeNotifier {
   bool _isGeneratingDraft = false;
   bool get isGeneratingDraft => _isGeneratingDraft;
 
+  bool _isProcessingPayment = false;
+  bool get isProcessingPayment => _isProcessingPayment;
+
   bool get isDemoMode => _currentAdvisor?.uid == 'local_user';
 
   AdvisorProvider({
@@ -208,22 +211,48 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> setSubscriptionPlan(String plan) async {
     if (_currentAdvisor != null) {
-      String firmPhone = _currentAdvisor!.firmPhoneNumber;
-      
-      // If upgrading to Pro/Enterprise and no number exists, generate one
-      if ((plan == 'Pro' || plan == 'Enterprise') && firmPhone.isEmpty) {
-        firmPhone = _generateRandomPhoneNumber();
-      } 
-      // If downgrading to Starter, remove the number
-      else if (plan == 'Starter') {
-        firmPhone = '';
+      if (isDemoMode) {
+        String firmPhone = _currentAdvisor!.firmPhoneNumber;
+        if ((plan == 'Pro' || plan == 'Enterprise') && firmPhone.isEmpty) {
+          firmPhone = _generateRandomPhoneNumber();
+        } else if (plan == 'Starter') {
+          firmPhone = '';
+        }
+        final updated = _currentAdvisor!.copyWith(
+          subscriptionPlan: plan,
+          firmPhoneNumber: firmPhone,
+        );
+        await updateProfile(updated);
+      } else {
+        await subscribeToPlan(plan);
       }
+    }
+  }
 
+  Future<void> subscribeToPlan(String planName) async {
+    if (_currentAdvisor == null) return;
+    
+    _isProcessingPayment = true;
+    notifyListeners();
+
+    try {
+      final planId = planName.toLowerCase();
+      final subscriptionId = await _billingService.createSubscription(planId);
+      
+      // For local emulator/demo purposes, we immediately trigger a webhook simulation
+      await _billingService.simulatePaymentSuccess(subscriptionId);
+      
       final updated = _currentAdvisor!.copyWith(
-        subscriptionPlan: plan,
-        firmPhoneNumber: firmPhone,
+        subscriptionPlan: planName,
+        subscriptionId: subscriptionId,
       );
       await updateProfile(updated);
+    } catch (e) {
+      debugPrint('Subscription error: $e');
+      rethrow;
+    } finally {
+      _isProcessingPayment = false;
+      notifyListeners();
     }
   }
 

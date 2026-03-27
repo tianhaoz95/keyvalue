@@ -5,16 +5,11 @@ class BillingService {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   /// Refreshes the user's billing information using Stripe.
-  /// This creates a payment method and then calls a Cloud Function
-  /// to update the user's billing profile on the backend.
   Future<void> updateBillingInformation({
     required CardDetails cardDetails,
     required String billingEmail,
   }) async {
     try {
-      // 1. Create a Payment Method via Stripe SDK
-      // Note: In a real production app, you might use Stripe's CardField or PaymentSheet
-      // but for this refactor we'll show the mechanism of tokenizing/creating a PM.
       final paymentMethod = await Stripe.instance.createPaymentMethod(
         params: PaymentMethodParams.card(
           paymentMethodData: PaymentMethodData(
@@ -25,7 +20,6 @@ class BillingService {
         ),
       );
 
-      // 2. Call the Firebase Cloud Function to handle the billing change
       final result = await _functions.httpsCallable('updateUserBilling').call({
         'paymentMethodId': paymentMethod.id,
         'email': billingEmail,
@@ -39,8 +33,41 @@ class BillingService {
     }
   }
 
-  /// Simple version that just calls the function if you already have a payment method
-  /// or if you're using Stripe's native UI elements that handle the PM creation.
+  /// Creates a subscription and handles SCA if necessary.
+  Future<String> createSubscription(String planId) async {
+    try {
+      final result = await _functions.httpsCallable('createSubscription').call({
+        'planId': planId,
+      });
+
+      if (result.data['status'] != 'success') {
+        throw Exception(result.data['message'] ?? 'Failed to create subscription.');
+      }
+
+      final clientSecret = result.data['clientSecret'];
+      final subscriptionId = result.data['subscriptionId'];
+
+      // If clientSecret is provided, it might need SCA confirmation
+      if (clientSecret != null && !clientSecret.startsWith('pi_mock')) {
+        await Stripe.instance.confirmPayment(
+          paymentIntentClientSecret: clientSecret,
+        );
+      }
+
+      return subscriptionId;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Webhook simulator for local testing
+  Future<void> simulatePaymentSuccess(String subscriptionId) async {
+    await _functions.httpsCallable('simulateStripeWebhook').call({
+      'type': 'invoice.paid',
+      'subscriptionId': subscriptionId,
+    });
+  }
+
   Future<void> notifyBillingChange(Map<String, dynamic> data) async {
     await _functions.httpsCallable('updateUserBilling').call(data);
   }

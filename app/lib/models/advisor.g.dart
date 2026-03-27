@@ -38,13 +38,16 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       twilioAuthToken: fields[17] as String,
       sendgridApiKey: fields[19] as String,
       sendgridVerifiedSender: fields[20] as String,
+      stripeCustomerId: fields[21] as String?,
+      subscriptionId: fields[22] as String?,
+      subscriptionStatus: fields[23] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Advisor obj) {
     writer
-      ..writeByte(21)
+      ..writeByte(24)
       ..writeByte(0)
       ..write(obj.uid)
       ..writeByte(1)
@@ -86,7 +89,13 @@ class AdvisorAdapter extends TypeAdapter<Advisor> {
       ..writeByte(19)
       ..write(obj.sendgridApiKey)
       ..writeByte(20)
-      ..write(obj.sendgridVerifiedSender);
+      ..write(obj.sendgridVerifiedSender)
+      ..writeByte(21)
+      ..write(obj.stripeCustomerId)
+      ..writeByte(22)
+      ..write(obj.subscriptionId)
+      ..writeByte(23)
+      ..write(obj.subscriptionStatus);
   }
 
   @override

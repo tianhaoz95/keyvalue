@@ -86,10 +86,12 @@ class _SettingsViewState extends State<SettingsView> {
 
     if (advisor == null) return const Center(child: CircularProgressIndicator());
 
-    return ListView(
-      padding: EdgeInsets.all(horizontalPadding),
+    return Stack(
       children: [
-        // Advisor Profile Section
+        ListView(
+          padding: EdgeInsets.all(horizontalPadding),
+          children: [
+            // Advisor Profile Section
         _buildSectionHeader(l10n.profile.toUpperCase(), isCompact),
         const SizedBox(height: 12),
         _buildProfileCard(provider, l10n, isCompact),
@@ -184,8 +186,31 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         const SizedBox(height: 24),
       ],
-    );
-  }
+    ),
+    if (provider.isProcessingPayment)
+      Container(
+        color: Colors.black.withValues(alpha: 0.5),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'PROCESSING PAYMENT...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   void _showChangePasswordDialog(BuildContext context, AdvisorProvider provider) {
     final currentPasswordController = TextEditingController();
