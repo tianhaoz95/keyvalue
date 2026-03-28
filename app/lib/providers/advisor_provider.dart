@@ -15,6 +15,7 @@ import '../repositories/local_customer_repository.dart';
 import '../repositories/local_engagement_repository.dart';
 import '../services/ai_service.dart';
 import '../services/sms_service.dart';
+import '../services/billing_service.dart';
 import 'ui_context_provider.dart';
 
 class AdvisorProvider with ChangeNotifier {
@@ -32,6 +33,8 @@ class AdvisorProvider with ChangeNotifier {
 
   SmsService _smsService;
   SmsService get smsService => _smsService;
+
+  final BillingService _billingService = BillingService();
 
   UiContextProvider? _uiContext;
 
@@ -234,17 +237,23 @@ class AdvisorProvider with ChangeNotifier {
 
   Future<void> updateBillingInfo({
     required String cardHolderName,
-    required String cardNumber,
-    required String expiryDate,
-    required String cvv,
+    String? cardNumber,
+    String? expiryDate,
+    String? cvv,
     required String zipCode,
+    String? email,
   }) async {
     if (_currentAdvisor != null) {
+      if (!isDemoMode) {
+        await _billingService.notifyBillingChange({
+          'cardHolderName': cardHolderName,
+          'zipCode': zipCode,
+          'email': email ?? _currentAdvisor!.email,
+        });
+      }
+
       final updated = _currentAdvisor!.copyWith(
         cardHolderName: cardHolderName,
-        cardNumber: cardNumber,
-        expiryDate: expiryDate,
-        cvv: cvv,
         zipCode: zipCode,
       );
       await updateProfile(updated);

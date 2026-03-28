@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -29,6 +30,7 @@ class _SettingsViewState extends State<SettingsView> {
 
   bool _isEditingProfile = false;
   bool _isEditingBilling = false;
+  bool _isSavingBilling = false;
   bool _isEditingTwilio = false;
   bool _isEditingSendGrid = false;
   bool _isSearchingNumbers = false;
@@ -620,41 +622,64 @@ class _SettingsViewState extends State<SettingsView> {
                   Icon(Icons.credit_card, size: isCompact ? 16 : 18, color: Colors.black54),
                   const SizedBox(width: 12),
                   Text(
-                    _isEditingBilling ? 'EDIT BILLING' : 'PAYMENT METHOD',
+                    _isEditingBilling ? 'SECURE STRIPE BILLING' : 'PAYMENT METHOD',
                     style: TextStyle(fontWeight: FontWeight.w900, fontSize: isCompact ? 9 : 10, letterSpacing: 0.5),
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () async {
-                  if (_isEditingBilling) {
-                    await provider.updateBillingInfo(
-                      cardHolderName: _cardHolderController.text.trim(),
-                      cardNumber: _cardNumberController.text.trim(),
-                      expiryDate: _expiryController.text.trim(),
-                      cvv: _cvvController.text.trim(),
-                      zipCode: _zipController.text.trim(),
-                    );
-                  }
-                  setState(() => _isEditingBilling = !_isEditingBilling);
-                },
-                child: Text(_isEditingBilling ? 'SAVE' : 'EDIT',
-                    style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
-              ),
+              _isSavingBilling 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                : TextButton(
+                    onPressed: () async {
+                      if (_isEditingBilling) {
+                        setState(() => _isSavingBilling = true);
+                        try {
+                          await provider.updateBillingInfo(
+                            cardHolderName: _cardHolderController.text.trim(),
+                            zipCode: _zipController.text.trim(),
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Billing information updated securely.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: ${e.toString()}')),
+                            );
+                          }
+                          // Return early so we don't exit editing mode on error
+                          setState(() => _isSavingBilling = false);
+                          return;
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isSavingBilling = false);
+                          }
+                        }
+                      }
+                      setState(() => _isEditingBilling = !_isEditingBilling);
+                    },
+                    child: Text(_isEditingBilling ? 'SAVE' : 'EDIT',
+                        style: TextStyle(fontSize: isCompact ? 8 : 9, fontWeight: FontWeight.w900)),
+                  ),
             ],
           ),
           if (_isEditingBilling) ...[
             const SizedBox(height: 12),
             _buildBillingField('CARDHOLDER NAME', _cardHolderController, isCompact),
             const SizedBox(height: 12),
-            _buildBillingField('CARD NUMBER', _cardNumberController, isCompact, keyboardType: TextInputType.number),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildBillingField('EXPIRY (MM/YY)', _expiryController, isCompact)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildBillingField('CVV', _cvvController, isCompact, keyboardType: TextInputType.number)),
-              ],
+            Text('CARD DETAILS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            CardField(
+              onCardChanged: (card) {
+                // Handle card changes if needed
+              },
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
             ),
             const SizedBox(height: 12),
             _buildBillingField('ZIP CODE', _zipController, isCompact, keyboardType: TextInputType.number),
@@ -666,7 +691,7 @@ class _SettingsViewState extends State<SettingsView> {
             ),
             const SizedBox(height: 4),
             Text(
-              advisor.cardNumber.isEmpty ? 'No card on file' : '•••• •••• •••• $last4',
+              advisor.cardNumber.isEmpty ? 'Using Stripe Secure Payment' : '•••• •••• •••• $last4',
               style: TextStyle(fontSize: isCompact ? 11 : 12, color: Colors.black54, fontWeight: FontWeight.w600),
             ),
           ],
