@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-// import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:feedback/feedback.dart';
@@ -33,8 +33,13 @@ void main() async {
   }
 
   // TODO: Set your Stripe publishable key here
-  // Stripe.publishableKey = "pk_test_...";
-  // await Stripe.instance.applySettings();
+  try {
+    Stripe.publishableKey = "pk_test_51BTj7pL9q0rG7S4oM6pG0v0v0v0v0v0v0v0"; // 42 characters total
+    await Stripe.instance.applySettings();
+  } catch (e) {
+
+    debugPrint("Stripe initialization failed: $e");
+  }
 
   await Hive.initFlutter();
   Hive.registerAdapter(AdvisorAdapter());

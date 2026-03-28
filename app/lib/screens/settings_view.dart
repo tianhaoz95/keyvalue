@@ -696,14 +696,17 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: 12),
             Text('CARD DETAILS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.grey.shade600)),
             const SizedBox(height: 8),
-            CardField(
-              onCardChanged: (card) {
-                // Handle card changes if needed
-              },
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            SizedBox(
+              height: 50,
+              child: CardFormField(
+                onCardChanged: (card) {
+                  // Handle card changes if needed
+                },
+                style: CardFormStyle(
+                  borderColor: Colors.black26,
+                  textColor: Colors.black,
+                  placeholderColor: Colors.grey,
+                ),
               ),
             ),
             const SizedBox(height: 12),
