@@ -5,3 +5,5 @@ recaptcha.txt
 /temp
 /.env
 /functions/node_modules/
+
+node_modules
