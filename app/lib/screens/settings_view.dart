@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import '../providers/advisor_provider.dart';
@@ -27,6 +28,7 @@ class _SettingsViewState extends State<SettingsView> {
   late TextEditingController _sendgridApiKeyController;
   late TextEditingController _sendgridSenderController;
   late TextEditingController _firmEmailController;
+  late CardEditController _cardController;
 
   bool _isEditingProfile = false;
   bool _isEditingBilling = false;
@@ -55,6 +57,7 @@ class _SettingsViewState extends State<SettingsView> {
     _sendgridApiKeyController = TextEditingController(text: advisor?.sendgridApiKey ?? '');
     _sendgridSenderController = TextEditingController(text: advisor?.sendgridVerifiedSender ?? '');
     _firmEmailController = TextEditingController(text: advisor?.firmEmailAddress ?? '');
+    _cardController = CardEditController();
     _selectedPlan = advisor?.subscriptionPlan ?? 'Starter';
   }
 
@@ -72,6 +75,7 @@ class _SettingsViewState extends State<SettingsView> {
     _sendgridApiKeyController.dispose();
     _sendgridSenderController.dispose();
     _firmEmailController.dispose();
+    _cardController.dispose();
     super.dispose();
   }
 
@@ -86,10 +90,12 @@ class _SettingsViewState extends State<SettingsView> {
 
     if (advisor == null) return const Center(child: CircularProgressIndicator());
 
-    return ListView(
-      padding: EdgeInsets.all(horizontalPadding),
+    return Stack(
       children: [
-        // Advisor Profile Section
+        ListView(
+          padding: EdgeInsets.all(horizontalPadding),
+          children: [
+            // Advisor Profile Section
         _buildSectionHeader(l10n.profile.toUpperCase(), isCompact),
         const SizedBox(height: 12),
         _buildProfileCard(provider, l10n, isCompact),
@@ -184,8 +190,31 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         const SizedBox(height: 24),
       ],
-    );
-  }
+    ),
+    if (provider.isProcessingPayment)
+      Container(
+        color: Colors.black.withValues(alpha: 0.5),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'PROCESSING PAYMENT...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   void _showChangePasswordDialog(BuildContext context, AdvisorProvider provider) {
     final currentPasswordController = TextEditingController();
@@ -634,9 +663,13 @@ class _SettingsViewState extends State<SettingsView> {
                       if (_isEditingBilling) {
                         setState(() => _isSavingBilling = true);
                         try {
+                          final cardData = _cardController.details;
                           await provider.updateBillingInfo(
                             cardHolderName: _cardHolderController.text.trim(),
                             zipCode: _zipController.text.trim(),
+                            cardNumber: cardData.last4,
+                            expiryDate: cardData.expiryMonth != null ? '${cardData.expiryMonth}/${cardData.expiryYear}' : null,
+                            cvv: '***', // Don't store actual CVV, just a placeholder to show one exists
                           );
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -671,14 +704,19 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: 12),
             Text('CARD DETAILS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.grey.shade600)),
             const SizedBox(height: 8),
-            CardField(
-              onCardChanged: (card) {
-                // Handle card changes if needed
-              },
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.black12),
+              ),
+              child: CardField(
+                controller: _cardController,
+                onCardChanged: (card) {
+                  // Handle card changes if needed
+                },
               ),
             ),
             const SizedBox(height: 12),

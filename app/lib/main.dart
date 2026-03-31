@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,6 +20,8 @@ import 'models/advisor.dart';
 import 'models/customer.dart';
 import 'models/engagement.dart';
 
+import 'package:flutter_stripe_web/flutter_stripe_web.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -32,9 +35,18 @@ void main() async {
     FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   }
 
-  // TODO: Set your Stripe publishable key here
-  // Stripe.publishableKey = "pk_test_...";
-  // await Stripe.instance.applySettings();
+  // Set your Stripe publishable key using platform-specific logic
+  try {
+    const String publishableKey = "pk_test_51BTj7pL9q0rG7S4oM6pG0v0v0v0v0v0v0v0";
+    if (kIsWeb) {
+      WebStripe.instance.initialise(publishableKey: publishableKey);
+    } else {
+      Stripe.publishableKey = publishableKey;
+      await Stripe.instance.applySettings();
+    }
+  } catch (e) {
+    debugPrint("Stripe initialization failed: $e");
+  }
 
   await Hive.initFlutter();
   Hive.registerAdapter(AdvisorAdapter());
