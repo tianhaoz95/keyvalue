@@ -10,7 +10,7 @@ import com.google.firebase.ai.InferenceMode
 import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ondevice.FirebaseAIOnDevice
 import com.google.firebase.ai.ondevice.OnDeviceModelStatus
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collect
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "com.hejitech.keyvalue_app/ai_ondevice"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

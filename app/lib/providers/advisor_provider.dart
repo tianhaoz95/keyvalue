@@ -278,12 +278,18 @@ class AdvisorProvider with ChangeNotifier {
           'cardHolderName': cardHolderName,
           'zipCode': zipCode,
           'email': email ?? _currentAdvisor!.email,
+          'cardNumber': cardNumber,
+          'expiryDate': expiryDate,
+          'cvv': cvv,
         });
       }
 
       final updated = _currentAdvisor!.copyWith(
         cardHolderName: cardHolderName,
         zipCode: zipCode,
+        cardNumber: cardNumber,
+        expiryDate: expiryDate,
+        cvv: cvv,
       );
       await updateProfile(updated);
     }
